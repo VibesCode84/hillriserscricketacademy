@@ -115,3 +115,16 @@ create table if not exists enquiries (
   source text not null,
   created_at timestamptz not null default now()
 );
+
+create table if not exists camp_interests (
+  id uuid primary key,
+  camps text[] not null default '{}',
+  parent_name text not null,
+  email text not null,
+  mobile text,
+  child_name text not null,
+  child_age int not null,
+  interest text not null,
+  notes text,
+  created_at timestamptz not null default now()
+);

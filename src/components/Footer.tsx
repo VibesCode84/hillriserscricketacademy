@@ -19,6 +19,7 @@ const groups = [
     links: [
       { href: "/girls", label: "Girls Cricket" },
       { href: "/little-cricketers", label: "Little Cricketers" },
+      { href: "/camps", label: "Holiday Camps" },
       { href: "/sessions", label: "Timetable & Price" },
       { href: "/find-my-session", label: "Find My Session" },
       { href: "/coaches", label: "Coaches" },

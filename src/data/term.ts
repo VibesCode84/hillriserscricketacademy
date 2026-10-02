@@ -64,15 +64,19 @@ export function paymentDueDate(t: AcademyTerm) {
   return iso(new Date(parse(t.startsOn).getTime() - PAYMENT_DUE_DAYS_BEFORE * DAY_MS));
 }
 
-/** "1 November", or with options "Sunday 25 October 2026" */
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/**
+ * "1 November", or with options "Sunday 25 October 2026". Formatted by hand
+ * (not Intl) so server and browser output match exactly.
+ */
 export function formatTermDate(date: string, opts: { weekday?: boolean; year?: boolean } = {}) {
-  return parse(date).toLocaleDateString("en-GB", {
-    weekday: opts.weekday ? "long" : undefined,
-    day: "numeric",
-    month: "long",
-    year: opts.year ? "numeric" : undefined,
-    timeZone: "UTC",
-  });
+  const d = parse(date);
+  const parts = [`${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`];
+  if (opts.weekday) parts.unshift(WEEKDAYS[d.getUTCDay()]);
+  if (opts.year) parts.push(String(d.getUTCFullYear()));
+  return parts.join(" ");
 }
 
 /** Every date in the term that a slot on `day` would run. */

@@ -7,6 +7,7 @@ import {
   type Booking,
   type BookingStore,
   type BookingView,
+  type CampInterest,
   type Enquiry,
   type Parent,
   type Player,
@@ -25,10 +26,11 @@ type Data = {
   bookings: Booking[];
   waitlist: WaitlistEntry[];
   trialRequests: TrialRequest[];
+  campInterests: CampInterest[];
   enquiries: Enquiry[];
 };
 
-const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], trialRequests: [], enquiries: [] });
+const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], trialRequests: [], campInterests: [], enquiries: [] });
 
 /**
  * JSON-file store for local development and demos. All mutations run through
@@ -365,6 +367,23 @@ export class FileBookingStore implements BookingStore {
     return this.updateTrial(id, (r) => {
       r.depositStatus = status;
     });
+  }
+
+  createCampInterest(input: Parameters<BookingStore["createCampInterest"]>[0]) {
+    return this.tx((data) => {
+      const c: CampInterest = {
+        ...input,
+        email: input.email.trim().toLowerCase(),
+        id: randomUUID(),
+        createdAt: new Date().toISOString(),
+      };
+      data.campInterests.push(c);
+      return c;
+    });
+  }
+
+  async listCampInterests() {
+    return [...(await this.snapshot()).campInterests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   createEnquiry(enquiry: Parameters<BookingStore["createEnquiry"]>[0]) {

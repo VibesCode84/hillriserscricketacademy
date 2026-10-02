@@ -108,3 +108,27 @@ test("terms follow the John Lyon calendar; fees due one week before sessions sta
   assert.equal(upcomingTerm(new Date("2027-01-20")).id, "summer-2027");
   assert.equal(upcomingTerm(new Date("2027-05-01")).id, "summer-2027");
 });
+
+test("holiday camps start in the Spring half term and interest is stored", async () => {
+  const { camps } = await import("../src/data/camps");
+  assert.equal(camps[0].from, "2027-02-15");
+  assert.equal(camps[0].to, "2027-02-19");
+  const store = new FileBookingStore(path.join(mkdtempSync(path.join(tmpdir(), "hillrisers-")), "store.json"));
+  await store.createCampInterest({
+    camps: [camps[0].id, "future"],
+    parentName: "Parent",
+    email: " P@Example.com",
+    childName: "Kid",
+    childAge: 10,
+    interest: "batting",
+  });
+  const [c] = await store.listCampInterests();
+  assert.equal(c.email, "p@example.com");
+  assert.deepEqual(c.camps, [camps[0].id, "future"]);
+});
+
+test("term dates format the same on server and browser", async () => {
+  const { formatTermDate } = await import("../src/data/term");
+  assert.equal(formatTermDate("2027-02-19", { weekday: true, year: true }), "Friday 19 February 2027");
+  assert.equal(formatTermDate("2026-11-01"), "1 November");
+});

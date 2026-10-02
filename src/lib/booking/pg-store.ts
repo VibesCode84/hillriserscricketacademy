@@ -7,6 +7,7 @@ import type {
   Booking,
   BookingStore,
   BookingView,
+  CampInterest,
   Enquiry,
   Parent,
   Player,
@@ -96,6 +97,19 @@ const toTrialRequest = (r: any): TrialRequest => ({
   stripeCheckoutSessionId: opt(r.stripe_checkout_session_id),
   stripePaymentIntentId: opt(r.stripe_payment_intent_id),
   depositRefundedPence: opt(r.deposit_refunded_pence),
+  createdAt: iso(r.created_at),
+});
+
+const toCampInterest = (r: any): CampInterest => ({
+  id: r.id,
+  camps: r.camps ?? [],
+  parentName: r.parent_name,
+  email: r.email,
+  mobile: opt(r.mobile),
+  childName: r.child_name,
+  childAge: r.child_age,
+  interest: r.interest,
+  notes: opt(r.notes),
   createdAt: iso(r.created_at),
 });
 
@@ -465,6 +479,20 @@ export class PgBookingStore implements BookingStore {
   async setDepositStatus(id: string, status: DepositStatus) {
     const { rows } = await this.q(`update trial_requests set deposit_status = $2 where id = $1 returning *`, [id, status]);
     return rows[0] ? toTrialRequest(rows[0]) : undefined;
+  }
+
+  async createCampInterest(c: Parameters<BookingStore["createCampInterest"]>[0]) {
+    const { rows } = await this.q(
+      `insert into camp_interests (id, camps, parent_name, email, mobile, child_name, child_age, interest, notes)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning *`,
+      [randomUUID(), c.camps, c.parentName, c.email.trim().toLowerCase(), c.mobile ?? null, c.childName, c.childAge, c.interest, c.notes ?? null],
+    );
+    return toCampInterest(rows[0]);
+  }
+
+  async listCampInterests() {
+    const { rows } = await this.q(`select * from camp_interests order by created_at desc`);
+    return rows.map(toCampInterest);
   }
 
   async createEnquiry(e: Parameters<BookingStore["createEnquiry"]>[0]) {

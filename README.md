@@ -37,6 +37,7 @@ All content is held in typed data files in `src/data/`:
 | `coaches.ts` | Coach cards (placeholders; replace with verified details) |
 | `testimonials.ts` | Parent quotes (**samples; replace with real, consented quotes**) |
 | `term.ts` | **Term dates**, following the [John Lyon School calendar](https://www.johnlyon.org/information/term-dates/): Autumn 2026 (from w/c 1 November to 11 December), Spring 2027 (7 January – 25 March, half term 15–19 February) and Summer 2027 (16 April – 9 July, half term 31 May – 4 June). Session dates, sessions per weekday, term fees (sessions × session fee) and fee due dates (one week before each term) are all calculated from this. The site always shows the upcoming term. Add next year's terms here each summer. |
+| `camps.ts` | **Holiday camps.** The first is the Spring Half Term Camp (15–19 February 2027, taken from the term dates). Until a camp has `bookable: true`, `/camps` takes register-interest forms only. Add camp details on `src/app/camps/page.tsx` when confirmed. |
 | `faqs.ts` | FAQ page |
 | `site.ts` | Contact details, venue address, welfare contact, standard price and capacity |
 
@@ -65,6 +66,7 @@ The academy database is the source of truth for players, sessions, capacity, boo
 | `POST /api/trial-request` | Trial request with preferred days; with `withDeposit` it starts Stripe Checkout for the holding deposit |
 | `POST /api/trial-request/deposit` | Retry the deposit payment, or continue without one (from `/book/deposit`) |
 | `POST /api/waitlist/join` | Waiting list / register interest (no payment) |
+| `POST /api/camps/interest` | Holiday camp register-interest form (no payment) |
 | `POST /api/enquiry` | "I'd rather speak to someone" |
 
 **Capacity protection.** Reserving a place locks the session row (`SELECT … FOR UPDATE` in Postgres, or a serialised queue in the file store), so a group can never exceed its capacity. A test fires 25 simultaneous requests at an 18-place group and checks that exactly 18 succeed.
@@ -110,7 +112,8 @@ The dashboard lets you:
 - add a manual booking
 - view the waiting list, with a "send booking link" action
 - read enquiries
-- export bookings and trial requests to CSV
+- view holiday camp registrations
+- export bookings, trial requests and camp interest to CSV
 
 ## Not yet built (phases 2–3)
 

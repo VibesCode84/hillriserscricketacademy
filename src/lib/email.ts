@@ -8,7 +8,8 @@ function termLine() {
   const t = upcomingTerm();
   return `${t.name} starts the ${termStartLabel(t)} and runs until ${formatTermDate(t.endsOn, { weekday: true })}. Fees are paid termly and are due by ${formatTermDate(paymentDueDate(t), { weekday: true })}. Term dates: ${site.url}/sessions#term-dates`;
 }
-import type { Booking, Parent, Player, TrialRequest } from "./booking/types";
+import type { Booking, CampInterest, Parent, Player, TrialRequest } from "./booking/types";
+import { FUTURE_CAMPS, getCamp } from "../data/camps";
 
 type Email = { to: string; subject: string; text: string };
 
@@ -161,6 +162,37 @@ Reference: ${request.id.slice(0, 8).toUpperCase()}
     to: site.email,
     subject: `Deposit paid: ${player.name} — ${academy?.name ?? request.academy}`,
     text: `${amount} holding deposit received for ${player.name}.\nPreferred days: ${days}\nParent: ${parent.name} <${parent.email}> ${parent.mobile}\n\nSee /admin/bookings`,
+  });
+}
+
+export async function sendCampInterestConfirmation(c: CampInterest) {
+  const first = c.childName.split(" ")[0];
+  const campList = c.camps
+    .map((id) => {
+      if (id === FUTURE_CAMPS) return "• Future holiday camps";
+      const camp = getCamp(id);
+      return camp ? `• ${camp.name} (${formatTermDate(camp.from, { weekday: true })} – ${formatTermDate(camp.to, { weekday: true, year: true })})` : `• ${id}`;
+    })
+    .join("\n");
+  await send({
+    to: c.email,
+    subject: `Holiday camps — we'll keep you posted about ${first}`,
+    text: `Hi ${c.parentName.split(" ")[0]},
+
+Thank you for registering ${first}'s interest in Hillrisers specialist holiday camps:
+${campList}
+
+We're finalising the details — times, ages, prices and each camp's focus. You'll hear from us first, before booking opens to everyone.
+
+There's nothing to pay, and registering doesn't commit you to anything.
+
+The Hillrisers coaching team · ${site.phone}
+`,
+  });
+  await send({
+    to: site.email,
+    subject: `Camp interest: ${c.childName} (${c.childAge})`,
+    text: `${c.parentName} <${c.email}> ${c.mobile ?? ""}\nChild: ${c.childName}, age ${c.childAge}, interest: ${c.interest}\nCamps:\n${campList}${c.notes ? `\n\nNotes: ${c.notes}` : ""}`,
   });
 }
 

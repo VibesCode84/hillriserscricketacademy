@@ -1,5 +1,6 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
 import { getAcademy } from "@/data/academies";
+import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,17 @@ function csv(name: string, header: string[], rows: unknown[][]) {
 
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
+  if (params.get("type") === "camps") {
+    const rows = await getStore().listCampInterests();
+    return csv(
+      "hillrisers-camp-interest",
+      ["Camps", "Child", "Age", "Interest", "Parent", "Email", "Mobile", "Notes", "Registered at"],
+      rows.map((c) => [
+        c.camps.map((id) => (id === FUTURE_CAMPS ? "Future camps" : getCamp(id)?.name ?? id)).join(" / "),
+        c.childName, c.childAge, c.interest, c.parentName, c.email, c.mobile, c.notes, c.createdAt,
+      ]),
+    );
+  }
   if (params.get("type") === "trials") {
     const trials = await getStore().listTrialRequests();
     return csv(

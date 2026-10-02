@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/data/sessions";
 import { getAcademy } from "@/data/academies";
+import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
@@ -31,12 +32,13 @@ const statusLabel: Record<BookingStatus, string> = {
 export default async function AdminBookingsPage({ searchParams }: { searchParams: Promise<{ session?: string; show?: string }> }) {
   const { session: sessionFilter, show } = await searchParams;
   const store = getStore();
-  const [counts, bookings, waitlist, enquiries, trialRequests] = await Promise.all([
+  const [counts, bookings, waitlist, enquiries, trialRequests, campInterests] = await Promise.all([
     store.sessionCounts(),
     store.listBookings({ sessionId: sessionFilter }),
     store.listWaitlist({ sessionId: sessionFilter }),
     store.listEnquiries(),
     store.listTrialRequests(),
+    store.listCampInterests(),
   ]);
   const openTrials = trialRequests.filter((t) => t.status === "new" || t.status === "contacted");
   const securedTrials = openTrials.filter((t) => t.depositStatus === "paid");
@@ -221,6 +223,32 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
           </div>
         </section>
       </div>
+
+      <section className="mt-12">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-2xl">Holiday camp interest <span className="text-base text-ink-muted">({campInterests.length})</span></h2>
+          <a href="/api/admin/export?type=camps" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export camp interest</a>
+        </div>
+        <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">
+          {campInterests.length === 0 && <p className="p-5 text-sm text-ink-muted">No registrations yet.</p>}
+          {campInterests.slice(0, 100).map((c) => (
+            <div key={c.id} className="p-5 text-sm">
+              <p className="font-semibold">
+                {c.childName} <span className="font-normal text-ink-muted">· age {c.childAge} · {c.interest}</span>
+              </p>
+              <p className="text-ink-muted">
+                {c.camps.map((id) => (id === FUTURE_CAMPS ? "Future camps" : getCamp(id)?.name ?? id)).join(", ")}
+              </p>
+              <p className="text-ink-muted">
+                {c.parentName} · <a href={`mailto:${c.email}`} className="underline">{c.email}</a>
+                {c.mobile && <> · {c.mobile}</>}
+              </p>
+              {c.notes && <p className="mt-1 text-ink-muted">Notes: {c.notes}</p>}
+              <p className="mt-1 text-xs text-ink-muted">{new Date(c.createdAt).toLocaleString("en-GB")}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="mt-12">
         <h2 className="text-2xl">Enquiries</h2>

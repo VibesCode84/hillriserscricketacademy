@@ -43,6 +43,7 @@ export const nav = [
   { href: "/sessions", label: "Sessions" },
   { href: "/girls", label: "Girls Cricket" },
   { href: "/little-cricketers", label: "Little Cricketers" },
+  { href: "/camps", label: "Camps" },
   { href: "/coaches", label: "Coaches" },
   { href: "/venue", label: "Venue" },
   { href: "/faq", label: "FAQs" },

@@ -68,6 +68,20 @@ export const waitlistSchema = z.object({
   mobile: phone,
 });
 
+export const campInterestSchema = z.object({
+  camps: z.array(z.string().min(1).max(60)).min(1, "Please choose at least one camp").max(10),
+  parentName: z.string().trim().min(2, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  mobile: z.string().trim().max(20).optional(),
+  childName: z.string().trim().min(2, "Please enter your child's name").max(100),
+  childAge: z.coerce.number({ invalid_type_error: "Please enter your child's age" }).int().min(4, "Camps are for ages 4–14").max(14, "Camps are for ages 4–14"),
+  interest: interestSchema,
+  notes: z.string().trim().max(1000).optional(),
+  contactConsent: z.literal(true, { errorMap: () => ({ message: "Please confirm we can email you about camps" }) }),
+  // Honeypot
+  company: z.string().max(0).optional(),
+});
+
 export const enquirySchema = z.object({
   parentName: z.string().trim().min(2, "Please enter your name").max(100),
   email: z.string().trim().email("Please enter a valid email").max(200),

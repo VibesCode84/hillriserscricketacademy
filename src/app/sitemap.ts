@@ -4,7 +4,7 @@ import { site } from "@/data/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
-    "", "/academy", "/sessions", "/girls", "/little-cricketers", "/coaches", "/venue", "/faq", "/find-my-session",
+    "", "/academy", "/sessions", "/girls", "/little-cricketers", "/camps", "/coaches", "/venue", "/faq", "/find-my-session",
     "/book", "/contact", "/refer", "/safeguarding", "/privacy", "/terms", "/refunds", "/accessibility",
   ];
   const academyPages = academies.map((a) => a.href).filter((h) => h.startsWith("/academy/"));

@@ -116,6 +116,21 @@ export type TrialRequest = {
 
 export type TrialRequestView = TrialRequest & { player?: Player; parent?: Parent };
 
+/** Register-interest record for a holiday camp (no payment). */
+export type CampInterest = {
+  id: string;
+  /** Camp ids from src/data/camps.ts, or "future" */
+  camps: string[];
+  parentName: string;
+  email: string;
+  mobile?: string;
+  childName: string;
+  childAge: number;
+  interest: Interest;
+  notes?: string;
+  createdAt: string;
+};
+
 export type Enquiry = {
   id: string;
   parentName: string;
@@ -208,6 +223,9 @@ export interface BookingStore {
   recordDepositRefund(id: string, amountRefundedPence: number): Promise<TrialRequest | undefined>;
   /** Admin: mark a paid deposit as credited to a booked session. */
   setDepositStatus(id: string, status: DepositStatus): Promise<TrialRequest | undefined>;
+
+  createCampInterest(input: Omit<CampInterest, "id" | "createdAt">): Promise<CampInterest>;
+  listCampInterests(): Promise<CampInterest[]>;
 
   createEnquiry(enquiry: Omit<Enquiry, "id" | "createdAt">): Promise<Enquiry>;
   listEnquiries(): Promise<Enquiry[]>;
