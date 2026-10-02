@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { site } from "@/data/site";
 import { LegalPage } from "@/components/LegalPage";
-import { term, termPaymentDueLabel, termStartLabel } from "@/data/term";
+import { PAYMENT_DUE_DAYS_BEFORE, formatTermDate, paymentDueDate, termStartLabel, terms } from "@/data/term";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
@@ -123,9 +123,11 @@ export default function TermsPage() {
           {site.standardSession.pricePence / 100}, and a 60-minute Little Cricketers session is £{site.littleCricketers.pricePence / 100}.
         </li>
         <li>
-          <strong>Fees are paid termly.</strong> The term fee covers the weekly sessions in the term, and is due no later than{" "}
-          {term.paymentDueDaysBefore} days before the term&rsquo;s sessions start. Our first term starts the {termStartLabel}, so fees are
-          due by {termPaymentDueLabel}. We&rsquo;ll confirm the amount and how to pay before the due date.
+          <strong>Fees are paid termly.</strong> The term fee is the number of weekly sessions in the term multiplied by the session fee,
+          and is due no later than {PAYMENT_DUE_DAYS_BEFORE} days before the term&rsquo;s sessions start. Our first term starts the{" "}
+          {termStartLabel(terms[0])}, so fees are due by {formatTermDate(paymentDueDate(terms[0]), { weekday: true })}. Term dates follow
+          the John Lyon School calendar and are published on our <Link href="/sessions#term-dates">timetable page</Link>. There are no
+          sessions during school half terms.
         </li>
         <li>
           If the term fee hasn&rsquo;t been paid by the due date, we may offer your child&rsquo;s place to a family on the waiting list. Please

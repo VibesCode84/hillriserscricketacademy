@@ -38,6 +38,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// Term messaging depends on today's date, so static pages refresh hourly
+export const revalidate = 3600;
+
 export const viewport: Viewport = {
   themeColor: "#07182f",
   width: "device-width",

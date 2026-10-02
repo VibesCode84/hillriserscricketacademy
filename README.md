@@ -36,7 +36,7 @@ All content is held in typed data files in `src/data/`:
 | `academies.ts` | Academy pages: what players learn, who each academy is for, FAQs, SEO copy, and each academy's **session length and fee** (90 min/£25; Little Cricketers 60 min/£15) |
 | `coaches.ts` | Coach cards (placeholders; replace with verified details) |
 | `testimonials.ts` | Parent quotes (**samples; replace with real, consented quotes**) |
-| `term.ts` | **Term dates.** Sessions start the week commencing 1 November 2026; termly fees are due one week before (Sunday 25 October). These dates appear on the homepage, timetable, prices, FAQs, terms and emails. Add `weeks` once the term length is known. |
+| `term.ts` | **Term dates**, following the [John Lyon School calendar](https://www.johnlyon.org/information/term-dates/): Autumn 2026 (from w/c 1 November to 11 December), Spring 2027 (7 January – 25 March, half term 15–19 February) and Summer 2027 (16 April – 9 July, half term 31 May – 4 June). Session dates, sessions per weekday, term fees (sessions × session fee) and fee due dates (one week before each term) are all calculated from this. The site always shows the upcoming term. Add next year's terms here each summer. |
 | `faqs.ts` | FAQ page |
 | `site.ts` | Contact details, venue address, welfare contact, standard price and capacity |
 
@@ -114,6 +114,6 @@ The dashboard lets you:
 
 ## Not yet built (phases 2–3)
 
-Online payment of **term fees** isn't built yet. It needs the number of weekly sessions per term (`weeks` in `src/data/term.ts`); the data model already supports `paymentType: "term"`. Single sessions, trials and holding deposits can already be paid online.
+Online payment of **term fees** isn't built yet. Term fees are already calculated per slot (`termFee()` in `src/data/term.ts`) and the data model supports `paymentType: "term"`, so the remaining work is a term checkout once slots are assigned to academies. Single sessions, trials and holding deposits can already be paid online.
 
 Sibling booking in a single checkout, automatic waiting-list invitations, term rebooking, progress reports, a parent portal, camps and 1-to-1 coaching. The data model and payment layer are structured so these can be added without rebuilding.

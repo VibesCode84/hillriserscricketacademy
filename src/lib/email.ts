@@ -2,9 +2,12 @@ import { site, formatPrice } from "../data/site";
 import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sessions";
 import { depositFor, getAcademy } from "../data/academies";
 import { coachesFor } from "../data/coaches";
-import { termPaymentDueLabel, termStartLabel } from "../data/term";
+import { formatTermDate, paymentDueDate, termStartLabel, upcomingTerm } from "../data/term";
 
-const termLine = `Sessions start the ${termStartLabel}. Fees are paid termly and are due by ${termPaymentDueLabel}.`;
+function termLine() {
+  const t = upcomingTerm();
+  return `${t.name} starts the ${termStartLabel(t)} and runs until ${formatTermDate(t.endsOn, { weekday: true })}. Fees are paid termly and are due by ${formatTermDate(paymentDueDate(t), { weekday: true })}. Term dates: ${site.url}/sessions#term-dates`;
+}
 import type { Booking, Parent, Player, TrialRequest } from "./booking/types";
 
 type Email = { to: string; subject: string; text: string };
@@ -51,7 +54,7 @@ Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
 ${coach ? `Coach: ${coach.name} — ${coach.role}\n` : ""}Paid: ${formatPrice(booking.amountPaidPence ?? session.pricePence)}
 
 TERM DATES
-${termLine}
+${termLine()}
 
 WHAT TO BRING
 • Comfortable sportswear and indoor trainers
@@ -115,7 +118,7 @@ Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
 WHAT HAPPENS NEXT
 We're finalising which academy runs on which day. A coach will be in touch shortly to confirm the best day and time for ${first}, and send you a link to secure the place.
 
-${termLine}
+${termLine()}
 
 Questions? Reply to this email or call ${site.phone}.
 
@@ -145,7 +148,7 @@ Thank you — we've received your ${amount} refundable holding deposit, and ${fi
 WHAT HAPPENS NEXT
 We're finalising which academy runs on which day. A coach will be in touch to confirm the best day and time for ${first} (preferred: ${days}).
 Your deposit pays for ${first}'s first session, and counts towards the term fee if ${first} continues for the term.
-${termLine}
+${termLine()}
 
 IF PLANS CHANGE
 If we can't offer a session that suits you, or you change your mind before the session is confirmed, just reply and we'll refund the deposit in full.

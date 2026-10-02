@@ -1,4 +1,6 @@
-import { termPaymentDueLabel, termStartLabel } from "./term";
+import { formatTermDate, paymentDueDate, termStartLabel, terms } from "./term";
+
+const [firstTerm] = terms;
 
 export type FAQ = { q: string; a: string };
 export type FAQGroup = { title: string; items: FAQ[] };
@@ -43,11 +45,11 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "When do sessions start?",
-        a: `Sessions start the ${termStartLabel}.`,
+        a: `Our first term starts the ${termStartLabel(firstTerm)} and runs until ${formatTermDate(firstTerm.endsOn, { weekday: true })}. After that, terms follow the John Lyon School calendar, with no sessions in half terms — see the term dates on our Timetable page.`,
       },
       {
         q: "How do payments work?",
-        a: `Fees are paid termly, and are due one week before the term's sessions start — for our first term, by ${termPaymentDueLabel}. Start with a single trial session first if you like; there's no term commitment for the trial.`,
+        a: `Fees are paid termly, and are due one week before the term's sessions start — for our first term, by ${formatTermDate(paymentDueDate(firstTerm), { weekday: true })}. The term fee is the number of sessions in the term × the session fee. Start with a single trial session first if you like; there's no term commitment for the trial.`,
       },
       {
         q: "How big are the groups?",

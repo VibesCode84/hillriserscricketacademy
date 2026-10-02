@@ -83,10 +83,28 @@ test("a request sent without a deposit has no deposit status", async () => {
   assert.equal(r.depositStatus, "none");
 });
 
-test("term fees are due one week before sessions start", async () => {
-  const { term, paymentDueDate, termStartLabel, termPaymentDueLabel } = await import("../src/data/term");
-  assert.equal(term.startsWeekCommencing, "2026-11-01");
-  assert.equal(paymentDueDate(), "2026-10-25");
-  assert.equal(termStartLabel, "week commencing 1 November");
-  assert.equal(termPaymentDueLabel, "Sunday 25 October");
+test("terms follow the John Lyon calendar; fees due one week before sessions start", async () => {
+  const { terms, paymentDueDate, sessionDates, termFee, upcomingTerm, termStartLabel } = await import("../src/data/term");
+  const [autumn, spring, summer] = terms;
+  assert.equal(termStartLabel(autumn), "week commencing 1 November");
+  assert.equal(paymentDueDate(autumn), "2026-10-25");
+  assert.equal(paymentDueDate(spring), "2026-12-31");
+  assert.equal(paymentDueDate(summer), "2027-04-09");
+
+  // Autumn: 1 Nov – 11 Dec
+  assert.deepEqual(sessionDates(autumn, "Tuesday"), ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24", "2026-12-01", "2026-12-08"]);
+  assert.equal(sessionDates(autumn, "Saturday").length, 5);
+  assert.equal(sessionDates(autumn, "Sunday")[0], "2026-11-01");
+  assert.equal(termFee(autumn, "Tuesday", 2500), 15000);
+
+  // Half terms are skipped
+  assert.ok(!sessionDates(spring, "Tuesday").includes("2027-02-16"));
+  assert.ok(!sessionDates(summer, "Wednesday").includes("2027-06-02"));
+  assert.equal(sessionDates(spring, "Tuesday").length, 10);
+
+  // Which term families see
+  assert.equal(upcomingTerm(new Date("2026-10-02")).id, "autumn-2026");
+  assert.equal(upcomingTerm(new Date("2026-11-15")).id, "spring-2027");
+  assert.equal(upcomingTerm(new Date("2027-01-20")).id, "summer-2027");
+  assert.equal(upcomingTerm(new Date("2027-05-01")).id, "summer-2027");
 });

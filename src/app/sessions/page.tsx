@@ -10,6 +10,7 @@ import { TestimonialCard } from "@/components/TestimonialCard";
 import { CTASection, NotSureBanner } from "@/components/CTASection";
 import { Reveal } from "@/components/Reveal";
 import { TermDates } from "@/components/TermDates";
+import { TermTable } from "@/components/TermTable";
 
 export const revalidate = 60;
 export const metadata: Metadata = {
@@ -40,6 +41,15 @@ export default async function SessionsPage() {
         <div className="mt-14">
           <NotSureBanner />
         </div>
+      </Section>
+      <Section tone="light" id="term-dates">
+        <SectionHeader
+          eyebrow="Term dates 2026–27"
+          title="Termly, in step with the school year."
+          intro={<p className="text-ink-muted">Sessions follow the John Lyon School calendar, with no sessions in half terms.</p>}
+          className="mb-10"
+        />
+        <TermTable />
       </Section>
       <Section tone="cream">
         <div className="grid items-start gap-10 lg:grid-cols-[1.1fr_0.9fr]">
