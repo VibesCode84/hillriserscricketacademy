@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { sessions, formatTimeRange, getSession, DAYS } from "@/data/sessions";
+import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/data/sessions";
+import { getAcademy } from "@/data/academies";
 import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
-import { BookingRowActions, ManualBookingForm, WaitlistRow } from "@/components/admin/AdminActions";
+import { BookingRowActions, ManualBookingForm, TrialRequestRow, WaitlistRow } from "@/components/admin/AdminActions";
 import { getPaymentProvider } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -30,12 +31,14 @@ const statusLabel: Record<BookingStatus, string> = {
 export default async function AdminBookingsPage({ searchParams }: { searchParams: Promise<{ session?: string; show?: string }> }) {
   const { session: sessionFilter, show } = await searchParams;
   const store = getStore();
-  const [counts, bookings, waitlist, enquiries] = await Promise.all([
+  const [counts, bookings, waitlist, enquiries, trialRequests] = await Promise.all([
     store.sessionCounts(),
     store.listBookings({ sessionId: sessionFilter }),
     store.listWaitlist({ sessionId: sessionFilter }),
     store.listEnquiries(),
+    store.listTrialRequests(),
   ]);
+  const openTrials = trialRequests.filter((t) => t.status === "new" || t.status === "contacted");
   const activeOnly = show !== "all";
   const visible = bookings.filter((b) => !activeOnly || ["confirmed", "pending_payment", "part_refunded"].includes(b.status));
   const selected = sessionFilter ? getSession(sessionFilter) : undefined;
@@ -68,6 +71,25 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
         </div>
       </header>
 
+      {/* Trial requests — taken while the weekly programme is being finalised */}
+      <section className="mt-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-2xl">Trial requests</h2>
+            <p className="text-sm text-ink-muted">
+              {openTrials.length} open · families waiting for a confirmed day and time. Preferred days help decide which academy runs when.
+            </p>
+          </div>
+          <a href="/api/admin/export?type=trials" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export trial requests</a>
+        </div>
+        <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">
+          {trialRequests.length === 0 && <p className="p-5 text-sm text-ink-muted">No trial requests yet.</p>}
+          {trialRequests.map((t) => (
+            <TrialRequestRow key={t.id} request={t} academyName={getAcademy(t.academy)?.name ?? t.academy} />
+          ))}
+        </div>
+      </section>
+
       {/* Capacity overview */}
       <section className="mt-10">
         <h2 className="text-2xl">Sessions</h2>
@@ -86,7 +108,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                   {s.day} {formatTimeRange(s)} {!s.confirmed && <span className="font-normal text-ink-muted">· unconfirmed</span>}
                   {!s.active && <span className="font-normal text-[#8c1d18]"> · inactive</span>}
                 </p>
-                <p className="mt-1 font-serif text-xl">{s.title} — {s.group}</p>
+                <p className="mt-1 font-serif text-xl">{sessionLabel(s)}</p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-navy-950/10">
                   <div className={`h-full ${a.status === "full" ? "bg-[#8c1d18]" : "bg-gold"}`} style={{ width: `${pct}%` }} />
                 </div>
@@ -105,7 +127,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
       <section className="mt-12">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl">{selected ? `${selected.title} — ${selected.day} ${formatTimeRange(selected)}` : "All bookings"}</h2>
+            <h2 className="text-2xl">{selected ? `${sessionLabel(selected)} — ${selected.day} ${formatTimeRange(selected)}` : "All bookings"}</h2>
             {selected && <p className="text-sm text-ink-muted">{(counts[selected.id]?.confirmed ?? 0)} / {selected.capacity} booked</p>}
           </div>
           <div className="flex gap-2 text-sm">
@@ -154,7 +176,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                       </details>
                       {b.isTrial && <span className="mt-1 inline-block rounded bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold-deep">Trial</span>}
                     </td>
-                    <td className="px-4 py-4">{s ? <>{s.title}<br /><span className="text-ink-muted">{s.day} {formatTimeRange(s)}</span></> : b.sessionId}</td>
+                    <td className="px-4 py-4">{s ? <>{sessionLabel(s)}<br /><span className="text-ink-muted">{s.day} {formatTimeRange(s)}</span></> : b.sessionId}</td>
                     <td className="px-4 py-4">
                       {b.parent?.name}
                       <br />
@@ -187,7 +209,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
           <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">
             {waitlist.length === 0 && <p className="p-5 text-sm text-ink-muted">Nobody waiting.</p>}
             {waitlist.map((w) => (
-              <WaitlistRow key={w.id} entry={w} sessionLabel={(() => { const s = getSession(w.sessionId); return s ? `${s.title} · ${s.day} ${formatTimeRange(s)}` : w.sessionId; })()} />
+              <WaitlistRow key={w.id} entry={w} sessionLabel={(() => { const s = getSession(w.sessionId); return s ? `${sessionLabel(s)} · ${s.day} ${formatTimeRange(s)}` : w.sessionId; })()} />
             ))}
           </div>
         </section>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSession, formatTimeRange } from "@/data/sessions";
+import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
 import { coachesFor } from "@/data/coaches";
 import { site } from "@/data/site";
 import { getStore } from "@/lib/booking";
@@ -35,7 +35,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
 
   const first = player.name.split(" ")[0];
   const confirmed = booking.status === "confirmed";
-  const coach = coachesFor(session.discipline)[0];
+  const coach = session.discipline ? coachesFor(session.discipline)[0] : undefined;
 
   if (!confirmed) {
     return (
@@ -65,7 +65,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <p className="eyebrow mt-8 justify-center">Place confirmed</p>
           <h1 className="mt-5 text-5xl leading-[1.02] text-cream md:text-7xl">Welcome to Hillrisers, {first}.</h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-slate">
-            {session.title} · {session.group} · {session.day} {formatTimeRange(session)} · {site.venue.name}
+            {sessionLabel(session)} · {session.day} {formatTimeRange(session)} · {site.venue.name}
           </p>
           <p className="mt-3 text-sm text-slate">
             A confirmation has been sent to {parent.email}. Booking reference {booking.id.slice(0, 8).toUpperCase()}.

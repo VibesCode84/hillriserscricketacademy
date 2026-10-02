@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getAcademy, specialistAcademies } from "@/data/academies";
 import { coachesFor } from "@/data/coaches";
-import { sessions, sessionsFor } from "@/data/sessions";
 import { testimonialsFor } from "@/data/testimonials";
 import { getAvailability } from "@/lib/booking";
 import { PageHero } from "@/components/Hero";
@@ -9,7 +8,8 @@ import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
 import { Reveal } from "@/components/Reveal";
 import { Photo } from "@/components/Photo";
-import { SessionCard } from "@/components/SessionCard";
+import { WhenItRuns } from "@/components/WhenItRuns";
+import { AcademyCard } from "@/components/AcademyCard";
 import { CoachCard } from "@/components/CoachCard";
 import { TestimonialCard } from "@/components/TestimonialCard";
 import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
@@ -56,8 +56,6 @@ const faqs = [
 
 export default async function GirlsPage() {
   const availability = await getAvailability();
-  const girlsSessions = sessionsFor("girls");
-  const mixed = sessions.filter((s) => s.active && specialistAcademies.some((a) => a.key === s.discipline)).slice(0, 4);
   const coaches = coachesFor("girls");
   const quotes = testimonialsFor("girls");
 
@@ -104,17 +102,15 @@ export default async function GirlsPage() {
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
             <SectionHeader eyebrow="Girls Academy sessions" title="Dedicated girls sessions." />
-            <div className="mt-10 grid gap-5">
-              {girlsSessions.map((s) => (
-                <SessionCard key={s.id} session={s} availability={availability?.[s.id]} />
-              ))}
+            <div className="mt-10">
+              <WhenItRuns discipline="girls" availability={availability} />
             </div>
           </div>
           <div>
             <SectionHeader eyebrow="Also open to girls" title="Every specialist academy." />
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              {mixed.map((s) => (
-                <SessionCard key={s.id} session={s} availability={availability?.[s.id]} />
+            <div className="mt-10 grid gap-5 sm:grid-cols-2">
+              {specialistAcademies.slice(0, 4).map((a) => (
+                <AcademyCard key={a.key} academy={a} />
               ))}
             </div>
           </div>

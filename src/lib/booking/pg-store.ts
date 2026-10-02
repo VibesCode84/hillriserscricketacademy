@@ -12,6 +12,9 @@ import type {
   Player,
   ReserveResult,
   SessionCounts,
+  TrialRequest,
+  TrialRequestStatus,
+  TrialRequestView,
   WaitlistEntry,
 } from "./types";
 
@@ -79,6 +82,17 @@ const toWaitlist = (r: any): WaitlistEntry => ({
   createdAt: iso(r.created_at),
 });
 
+const toTrialRequest = (r: any): TrialRequest => ({
+  id: r.id,
+  parentId: r.parent_id,
+  playerId: r.player_id,
+  academy: r.academy,
+  preferredDays: r.preferred_days ?? [],
+  notes: opt(r.notes),
+  status: r.status,
+  createdAt: iso(r.created_at),
+});
+
 const toEnquiry = (r: any): Enquiry => ({
   id: r.id,
   parentName: r.parent_name,
@@ -127,7 +141,7 @@ export class PgBookingStore implements BookingStore {
              stripe_price_id=excluded.stripe_price_id, active=excluded.active, confirmed=excluded.confirmed,
              updated_at=now()`,
           [
-            s.id, s.title, s.discipline, s.day, s.startTime, s.endTime, s.ageMin, s.ageMax,
+            s.id, s.title, s.discipline ?? null, s.day, s.startTime ?? null, s.endTime ?? null, s.ageMin ?? null, s.ageMax ?? null,
             s.capacity, s.pricePence, s.stripePriceId ?? null, s.active, s.confirmed,
           ],
         );
@@ -354,6 +368,33 @@ export class PgBookingStore implements BookingStore {
       [filter?.sessionId ?? null],
     );
     return rows.map(toWaitlist);
+  }
+
+  async createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
+    const { rows } = await this.q(
+      `insert into trial_requests (id, parent_id, player_id, academy, preferred_days, notes)
+       values ($1,$2,$3,$4,$5,$6) returning *`,
+      [randomUUID(), input.parentId, input.playerId, input.academy, input.preferredDays, input.notes ?? null],
+    );
+    return toTrialRequest(rows[0]);
+  }
+
+  async listTrialRequests(): Promise<TrialRequestView[]> {
+    const { rows } = await this.q(
+      `select t.*, row_to_json(pl) as player_row, row_to_json(pa) as parent_row
+       from trial_requests t join players pl on pl.id = t.player_id join parents pa on pa.id = t.parent_id
+       order by t.created_at desc`,
+    );
+    return rows.map((r) => ({
+      ...toTrialRequest(r),
+      player: r.player_row ? toPlayer(r.player_row) : undefined,
+      parent: r.parent_row ? toParent(r.parent_row) : undefined,
+    }));
+  }
+
+  async setTrialRequestStatus(id: string, status: TrialRequestStatus) {
+    const { rows } = await this.q(`update trial_requests set status = $2 where id = $1 returning *`, [id, status]);
+    return rows[0] ? toTrialRequest(rows[0]) : undefined;
   }
 
   async createEnquiry(e: Parameters<BookingStore["createEnquiry"]>[0]) {

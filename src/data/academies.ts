@@ -18,6 +18,8 @@ export type Academy = {
   /** Hero strapline on the academy page */
   strapline: string;
   ageLabel: string;
+  ageMin: number;
+  ageMax: number;
   levelLabel: string;
   /** Description of the placeholder photo — swap for a real image path later */
   image: { src?: string; alt: string };
@@ -56,6 +58,8 @@ export const academies: Academy[] = [
     proposition: "Build technique, scoring options and confidence at the crease.",
     strapline: "Build a better technique — and learn how to use it in a game.",
     ageLabel: "Ages 8–14",
+    ageMin: 8,
+    ageMax: 14,
     levelLabel: "Some experience to regular club players",
     image: { alt: "Junior batter driving through the off side in an indoor net" },
     learn: [
@@ -97,6 +101,8 @@ export const academies: Academy[] = [
     proposition: "Develop control, movement, pace and a repeatable action.",
     strapline: "A repeatable action, more control — and the pace and movement that follow.",
     ageLabel: "Ages 8–14",
+    ageMin: 8,
+    ageMax: 14,
     levelLabel: "Some experience to performance players",
     image: { alt: "Young seam bowler at the point of delivery, front arm high" },
     learn: [
@@ -138,6 +144,8 @@ export const academies: Academy[] = [
     proposition: "Learn to create revolutions, control flight and out-think batters.",
     strapline: "Spin it harder, land it more often, and learn to set a batter up.",
     ageLabel: "Ages 8–14",
+    ageMin: 8,
+    ageMax: 14,
     levelLabel: "All levels with some bowling experience",
     image: { alt: "Close-up of a young leg-spinner's grip on a red ball" },
     learn: [
@@ -174,6 +182,8 @@ export const academies: Academy[] = [
     proposition: "Hit harder, access more areas and understand when to attack.",
     strapline: "More bat speed, more boundary options — and the judgement to use them.",
     ageLabel: "Ages 10–14",
+    ageMin: 10,
+    ageMax: 14,
     levelLabel: "Regular club/school players",
     image: { alt: "Junior batter clearing the front leg on a lofted shot" },
     learn: [
@@ -209,6 +219,8 @@ export const academies: Academy[] = [
     proposition: "Put technique under pressure through scenarios and match-based challenges.",
     strapline: "Where skills become match performances.",
     ageLabel: "Ages 10–14",
+    ageMin: 10,
+    ageMax: 14,
     levelLabel: "Regular club/school and performance players",
     image: { alt: "Junior players in a match-scenario drill with fielders set" },
     learn: [
@@ -245,6 +257,8 @@ export const academies: Academy[] = [
     proposition: "A dedicated environment for girls to develop skills, confidence and love of the game.",
     strapline: "Cricket for girls who want to play, improve and belong.",
     ageLabel: "Ages 7–14",
+    ageMin: 7,
+    ageMax: 14,
     levelLabel: "Beginners to experienced players",
     image: { alt: "Girls Academy players celebrating a wicket together" },
     learn: [
@@ -274,6 +288,8 @@ export const academies: Academy[] = [
     proposition: "Fun, active first steps in cricket — and the start of the academy pathway.",
     strapline: "Their first cricket session should make them want another one.",
     ageLabel: "Ages 4–7",
+    ageMin: 4,
+    ageMax: 7,
     levelLabel: "No experience needed",
     image: { alt: "Young children catching soft balls with a coach" },
     learn: ["Hitting", "Catching", "Throwing", "Running and movement", "Simple team games"],

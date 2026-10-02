@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/data/sessions";
+import { getSession, isBookable } from "@/data/sessions";
 import { getStore, HOLD_MINUTES } from "@/lib/booking";
 import { parseJson } from "@/lib/http";
 import { createBookingSchema } from "@/lib/validation";
@@ -14,9 +14,9 @@ export async function POST(req: Request) {
   if (!session || !session.active) {
     return NextResponse.json({ ok: false, message: "That session is not available." }, { status: 404 });
   }
-  if (!session.confirmed) {
+  if (!isBookable(session)) {
     return NextResponse.json(
-      { ok: false, reason: "unconfirmed", message: "Times for this session are being finalised — register your interest and we'll be in touch." },
+      { ok: false, reason: "unconfirmed", message: "This session's programme is being finalised — send a trial request and we'll confirm a day and time with you." },
       { status: 409 },
     );
   }

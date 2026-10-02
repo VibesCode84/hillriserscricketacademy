@@ -4,12 +4,12 @@
 create table if not exists academy_sessions (
   id text primary key,
   title text not null,
-  discipline text not null,
+  discipline text,            -- null until the academy for this slot is decided
   day text not null,
-  start_time text not null,
-  end_time text not null,
-  age_min int not null,
-  age_max int not null,
+  start_time text,            -- null until the slot's time is agreed
+  end_time text,
+  age_min int,
+  age_max int,
   capacity int not null check (capacity > 0),
   price_pence int not null,
   stripe_price_id text,
@@ -68,8 +68,24 @@ create table if not exists bookings (
 create index if not exists bookings_session_idx on bookings(session_id, status);
 create index if not exists bookings_pi_idx on bookings(stripe_payment_intent_id);
 
--- Upgrades for databases created before a column existed
+-- Upgrades for databases created by earlier versions of this schema
 alter table players add column if not exists heard_about text;
+alter table academy_sessions alter column discipline drop not null;
+alter table academy_sessions alter column start_time drop not null;
+alter table academy_sessions alter column end_time drop not null;
+alter table academy_sessions alter column age_min drop not null;
+alter table academy_sessions alter column age_max drop not null;
+
+create table if not exists trial_requests (
+  id uuid primary key,
+  parent_id uuid not null references parents(id),
+  player_id uuid not null references players(id),
+  academy text not null,
+  preferred_days text[] not null default '{}',
+  notes text,
+  status text not null default 'new' check (status in ('new','contacted','booked','closed')),
+  created_at timestamptz not null default now()
+);
 
 create table if not exists waitlist (
   id uuid primary key,

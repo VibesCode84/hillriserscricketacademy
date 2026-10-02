@@ -6,9 +6,14 @@ export const DAYS: Day[] = ["Tuesday", "Wednesday", "Saturday", "Sunday"];
 /**
  * The weekly timetable. This is the single place to edit the session mix.
  *
- * - `confirmed: false` marks a session whose time or label has not been agreed
- *   yet (the Saturday and Sunday John Lyon blocks). It is shown on the site as
- *   "being finalised" and takes interest registrations instead of payments.
+ * Which academy runs in which slot has NOT been decided yet, so slots carry
+ * only a day and (where agreed) a time. To open a slot for online booking:
+ *   1. set `discipline` (and optionally `group`, `ageMin`, `ageMax`, `title`)
+ *   2. make sure `startTime`/`endTime` are set and `confirmed: true`
+ * Until then the site shows "programme to be confirmed" and parents send a
+ * trial request with their preferred days instead of paying.
+ *
+ * - `confirmed` means the slot's day and time are agreed.
  * - `capacity` and `pricePence` are enforced by the booking engine.
  * - Availability ("Places available", "Limited places", "Waiting list") is never
  *   set here — it is calculated from real bookings.
@@ -16,14 +21,17 @@ export const DAYS: Day[] = ["Tuesday", "Wednesday", "Saturday", "Sunday"];
 export type AcademySession = {
   id: string;
   title: string;
-  discipline: DisciplineKey;
+  /** Which academy runs in this slot — leave unset until decided */
+  discipline?: DisciplineKey;
   /** e.g. "Younger Juniors" */
-  group: string;
+  group?: string;
   day: Day;
-  startTime: string; // "18:00"
-  endTime: string; // "19:30"
-  ageMin: number;
-  ageMax: number;
+  /** Short note about the venue block, e.g. "John Lyon weekday academy block" */
+  block: string;
+  startTime?: string; // "18:00"
+  endTime?: string; // "19:30"
+  ageMin?: number;
+  ageMax?: number;
   capacity: number;
   pricePence: number;
   stripePriceId?: string;
@@ -33,139 +41,37 @@ export type AcademySession = {
   girlsOnly?: boolean;
 };
 
-const standard = { capacity: 18, pricePence: 2500, active: true } as const;
+const standard = { capacity: 18, pricePence: 2500, active: true, title: "Academy session" } as const;
+const weekday = "John Lyon weekday academy block";
 
 export const sessions: AcademySession[] = [
   // ── Tuesday — John Lyon weekday academy block ────────────────────────────
-  {
-    id: "tue-1800-batting",
-    title: "Batting Academy",
-    discipline: "batting",
-    group: "Younger Juniors",
-    day: "Tuesday",
-    startTime: "18:00",
-    endTime: "19:30",
-    ageMin: 8,
-    ageMax: 11,
-    confirmed: true,
-    ...standard,
-  },
-  {
-    id: "tue-1930-batting",
-    title: "Batting Academy",
-    discipline: "batting",
-    group: "Older Juniors",
-    day: "Tuesday",
-    startTime: "19:30",
-    endTime: "21:00",
-    ageMin: 11,
-    ageMax: 14,
-    confirmed: true,
-    ...standard,
-  },
+  { id: "tue-1800", day: "Tuesday", block: weekday, startTime: "18:00", endTime: "19:30", confirmed: true, ...standard },
+  { id: "tue-1930", day: "Tuesday", block: weekday, startTime: "19:30", endTime: "21:00", confirmed: true, ...standard },
   // ── Wednesday — John Lyon weekday academy block ──────────────────────────
-  {
-    id: "wed-1800-seam",
-    title: "Seam Bowling Academy",
-    discipline: "seam-bowling",
-    group: "All juniors",
-    day: "Wednesday",
-    startTime: "18:00",
-    endTime: "19:30",
-    ageMin: 8,
-    ageMax: 14,
-    confirmed: true,
-    ...standard,
-  },
-  {
-    id: "wed-1930-spin",
-    title: "Spin Bowling Academy",
-    discipline: "spin-bowling",
-    group: "All juniors",
-    day: "Wednesday",
-    startTime: "19:30",
-    endTime: "21:00",
-    ageMin: 8,
-    ageMax: 14,
-    confirmed: true,
-    ...standard,
-  },
-  // ── Saturday — agreed John Lyon weekend block (times TBC) ────────────────
-  {
-    id: "sat-a-power",
-    title: "Power & Range Hitting",
-    discipline: "power",
-    group: "Older Juniors",
-    day: "Saturday",
-    startTime: "09:00",
-    endTime: "10:30",
-    ageMin: 10,
-    ageMax: 14,
-    confirmed: false,
-    ...standard,
-  },
-  {
-    id: "sat-b-performance",
-    title: "Game Skills & Performance",
-    discipline: "performance",
-    group: "Older Juniors",
-    day: "Saturday",
-    startTime: "10:30",
-    endTime: "12:00",
-    ageMin: 10,
-    ageMax: 14,
-    confirmed: false,
-    ...standard,
-  },
-  // ── Sunday — agreed John Lyon Sunday block (times TBC) ───────────────────
-  {
-    id: "sun-a-little",
-    title: "Little Cricketers",
-    discipline: "little-cricketers",
-    group: "Foundation",
-    day: "Sunday",
-    startTime: "09:00",
-    endTime: "10:00",
-    ageMin: 4,
-    ageMax: 7,
-    confirmed: false,
-    ...standard,
-  },
-  {
-    id: "sun-b-girls",
-    title: "Girls Academy",
-    discipline: "girls",
-    group: "All girls",
-    day: "Sunday",
-    startTime: "10:00",
-    endTime: "11:30",
-    ageMin: 7,
-    ageMax: 14,
-    girlsOnly: true,
-    confirmed: false,
-    ...standard,
-  },
-  {
-    id: "sun-c-performance",
-    title: "Specialist & Performance",
-    discipline: "performance",
-    group: "Mixed",
-    day: "Sunday",
-    startTime: "11:30",
-    endTime: "13:00",
-    ageMin: 9,
-    ageMax: 14,
-    confirmed: false,
-    ...standard,
-  },
+  { id: "wed-1800", day: "Wednesday", block: weekday, startTime: "18:00", endTime: "19:30", confirmed: true, ...standard },
+  { id: "wed-1930", day: "Wednesday", block: weekday, startTime: "19:30", endTime: "21:00", confirmed: true, ...standard },
+  // ── Weekend — agreed John Lyon blocks, times to be confirmed ─────────────
+  { id: "sat-block", day: "Saturday", block: "John Lyon weekend block", confirmed: false, ...standard },
+  { id: "sun-block", day: "Sunday", block: "John Lyon Sunday block", confirmed: false, ...standard },
 ];
 
 export function getSession(id: string) {
   return sessions.find((s) => s.id === id);
 }
 
+/** A slot can take online bookings once its academy, day and time are all set. */
+export function isBookable(s: AcademySession) {
+  return s.active && s.confirmed && !!s.discipline && !!s.startTime && !!s.endTime;
+}
+
+/** Bookable slots for an academy (empty while the programme is being finalised). */
 export function sessionsFor(discipline: DisciplineKey) {
-  return sessions.filter((s) => s.active && s.discipline === discipline);
+  return sessions.filter((s) => isBookable(s) && s.discipline === discipline);
+}
+
+export function sessionLabel(s: AcademySession) {
+  return s.group ? `${s.title} — ${s.group}` : s.title;
 }
 
 export function formatTime(t: string) {
@@ -176,6 +82,7 @@ export function formatTime(t: string) {
 }
 
 export function formatTimeRange(s: Pick<AcademySession, "startTime" | "endTime">) {
+  if (!s.startTime || !s.endTime) return "Times to be confirmed";
   const start = formatTime(s.startTime);
   const end = formatTime(s.endTime);
   // "6–7:30pm" style when both share a suffix
@@ -184,6 +91,7 @@ export function formatTimeRange(s: Pick<AcademySession, "startTime" | "endTime">
 }
 
 export function durationMinutes(s: Pick<AcademySession, "startTime" | "endTime">) {
+  if (!s.startTime || !s.endTime) return 90;
   const toMin = (t: string) => {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;

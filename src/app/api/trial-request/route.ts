@@ -1,19 +1,22 @@
 import { NextResponse } from "next/server";
 import { getStore } from "@/lib/booking";
+import { sendTrialRequestConfirmation } from "@/lib/email";
 import { parseJson } from "@/lib/http";
 import { ageFromDob, recommend } from "@/lib/recommend";
-import { profileSchema } from "@/lib/validation";
+import { trialRequestSchema } from "@/lib/validation";
 
-/** Step 1 — store the player profile. No payment yet. */
+/**
+ * Trial request — used while the weekly programme (which academy runs on which
+ * day) is being finalised. Saves the full player profile; no payment is taken.
+ */
 export async function POST(req: Request) {
-  const parsed = await parseJson(req, profileSchema);
+  const parsed = await parseJson(req, trialRequestSchema);
   if ("error" in parsed) return parsed.error;
   const d = parsed.data;
 
-  const age = ageFromDob(d.dateOfBirth);
-  const rec = recommend({ age, gender: d.gender, experience: d.experience, interest: d.interest });
-
-  const { parent, player } = await getStore().createProfile({
+  const rec = recommend({ age: ageFromDob(d.dateOfBirth), gender: d.gender, experience: d.experience, interest: d.interest });
+  const store = getStore();
+  const { parent, player } = await store.createProfile({
     parent: { name: d.parentName, email: d.email, mobile: d.mobile },
     player: {
       name: d.playerName,
@@ -31,15 +34,17 @@ export async function POST(req: Request) {
       photoConsent: d.photoConsent,
     },
   });
-
-  return NextResponse.json({
-    ok: true,
+  const request = await store.createTrialRequest({
     parentId: parent.id,
     playerId: player.id,
-    age,
-    pathway: rec.pathway,
-    summary: rec.summary,
-    recommendedAcademies: rec.academies.map((r) => r.academy.key),
-    recommendedSessionIds: rec.sessions.map((r) => r.session.id),
+    academy: d.academy,
+    preferredDays: d.preferredDays,
   });
+
+  try {
+    await sendTrialRequestConfirmation({ parent, player, academyKey: d.academy, preferredDays: d.preferredDays });
+  } catch (err) {
+    console.error("[hillrisers] trial request email failed", err);
+  }
+  return NextResponse.json({ ok: true, id: request.id });
 }

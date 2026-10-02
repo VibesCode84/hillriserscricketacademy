@@ -12,6 +12,9 @@ import {
   type Player,
   type ReserveResult,
   type SessionCounts,
+  type TrialRequest,
+  type TrialRequestStatus,
+  type TrialRequestView,
   type WaitlistEntry,
 } from "./types";
 
@@ -20,10 +23,11 @@ type Data = {
   players: Player[];
   bookings: Booking[];
   waitlist: WaitlistEntry[];
+  trialRequests: TrialRequest[];
   enquiries: Enquiry[];
 };
 
-const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], enquiries: [] });
+const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], trialRequests: [], enquiries: [] });
 
 /**
  * JSON-file store for local development and demos. All mutations run through
@@ -265,6 +269,33 @@ export class FileBookingStore implements BookingStore {
 
   async listWaitlist(filter?: { sessionId?: string }) {
     return (await this.snapshot()).waitlist.filter((w) => !filter?.sessionId || w.sessionId === filter.sessionId);
+  }
+
+  createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
+    return this.tx((data) => {
+      const r: TrialRequest = { ...input, id: randomUUID(), status: "new", createdAt: new Date().toISOString() };
+      data.trialRequests.push(r);
+      return r;
+    });
+  }
+
+  async listTrialRequests(): Promise<TrialRequestView[]> {
+    const data = await this.snapshot();
+    return [...data.trialRequests]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((r) => ({
+        ...r,
+        player: data.players.find((p) => p.id === r.playerId),
+        parent: data.parents.find((p) => p.id === r.parentId),
+      }));
+  }
+
+  setTrialRequestStatus(id: string, status: TrialRequestStatus) {
+    return this.tx((data) => {
+      const r = data.trialRequests.find((x) => x.id === id);
+      if (r) r.status = status;
+      return r;
+    });
   }
 
   createEnquiry(enquiry: Parameters<BookingStore["createEnquiry"]>[0]) {

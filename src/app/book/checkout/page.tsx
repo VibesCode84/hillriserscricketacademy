@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession, formatTimeRange } from "@/data/sessions";
+import { getAcademy } from "@/data/academies";
 import { formatPrice, site } from "@/data/site";
 import { getStore } from "@/lib/booking";
 import { ConfirmPlaceButton } from "@/components/booking/ConfirmPlaceButton";
@@ -61,8 +62,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
   const rows: [string, string][] = [
     ["Player", player.name],
-    ["Academy", session.title],
-    ["Group", session.group],
+    ["Academy", (session.discipline && getAcademy(session.discipline)?.name) || session.title],
+    ...(session.group ? ([["Group", session.group]] as [string, string][]) : []),
     ["Day", session.day],
     ["Time", formatTimeRange(session)],
     ["Venue", site.venue.name],

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { sessions, formatTimeRange, durationMinutes, type AcademySession } from "@/data/sessions";
+import { sessions, formatTimeRange, durationMinutes, isBookable, DAYS, sessionLabel, type AcademySession, type Day } from "@/data/sessions";
 import { formatPrice, site } from "@/data/site";
-import type { DisciplineKey } from "@/data/academies";
+import { academies, getAcademy, type DisciplineKey } from "@/data/academies";
 import type { SessionAvailability } from "@/lib/booking";
 import type { Experience, Gender, Interest } from "@/lib/booking/types";
 import { ageFromDob, recommend } from "@/lib/recommend";
@@ -22,6 +22,7 @@ export type BookingPrefill = {
   experience?: Experience;
   interest?: Interest;
   referredBy?: string;
+  day?: Day;
 };
 
 const experienceOptions: { value: Experience; label: string; hint: string }[] = [
@@ -47,7 +48,7 @@ const disciplineToInterest: Partial<Record<DisciplineKey, Interest>> = {
   performance: "all-round",
 };
 
-const steps = ["Your player", "Recommended session", "Your details", "Secure place"];
+const steps = ["Your player", "Recommended academy", "Your details", "Secure place"];
 
 export function BookingFlow({
   availability,
@@ -62,7 +63,7 @@ export function BookingFlow({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<null | { kind: "waitlist" | "interest"; session: AcademySession }>(null);
+  const [done, setDone] = useState<null | { kind: "waitlist"; session: AcademySession } | { kind: "trial"; academyName: string; days: Day[] }>(null);
 
   // Player
   const [playerName, setPlayerName] = useState("");
@@ -75,8 +76,12 @@ export function BookingFlow({
   const [clubOrSchool, setClubOrSchool] = useState("");
   const [playingProfile, setPlayingProfile] = useState("");
 
-  // Session
-  const [sessionId, setSessionId] = useState<string | undefined>(prefill.sessionId);
+  // Academy and session. While the weekly programme is being finalised most
+  // academies have no bookable slots, so families choose preferred days instead.
+  const preselected = prefill.sessionId ? sessions.find((s) => s.id === prefill.sessionId) : undefined;
+  const [academyKey, setAcademyKey] = useState<DisciplineKey | undefined>(preselected?.discipline ?? prefill.discipline);
+  const [sessionId, setSessionId] = useState<string | undefined>(preselected && isBookable(preselected) ? preselected.id : undefined);
+  const [preferredDays, setPreferredDays] = useState<Day[]>(prefill.day ? [prefill.day] : preselected ? [preselected.day] : []);
   const [showAll, setShowAll] = useState(false);
 
   // Parent & welfare
@@ -92,15 +97,17 @@ export function BookingFlow({
   const [terms, setTerms] = useState(false);
 
   const age = dob ? ageFromDob(dob) : prefill.age;
-  const selected = sessions.find((s) => s.id === sessionId);
+  const selectedAcademy = academyKey ? getAcademy(academyKey) : undefined;
+  const slots = sessions.filter(
+    (s) =>
+      isBookable(s) &&
+      s.discipline === academyKey &&
+      (!s.girlsOnly || gender === "girl") &&
+      (age === undefined || ((s.ageMin ?? 0) <= age && age <= (s.ageMax ?? 99))),
+  );
+  const selected = slots.find((s) => s.id === sessionId);
   const selectedAvailability = selected ? availability?.[selected.id] : undefined;
-  const mode: "book" | "waitlist" | "interest" = !selected
-    ? "book"
-    : !selected.confirmed
-      ? "interest"
-      : selectedAvailability?.status === "full"
-        ? "waitlist"
-        : "book";
+  const mode: "book" | "waitlist" | "trial" = !selected ? "trial" : selectedAvailability?.status === "full" ? "waitlist" : "book";
 
   const rec = useMemo(() => {
     if (age === undefined || !gender || !experience || !interest) return null;
@@ -130,13 +137,17 @@ export function BookingFlow({
   const toStep2 = (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!validateStep1()) return;
-    // Keep a preselected session if it suits; otherwise default to the top recommendation.
-    if (!sessionId && rec?.recommendations[0]) setSessionId(rec.recommendations[0].session.id);
+    // Keep a preselected academy if there is one; otherwise default to the top recommendation.
+    if (!academyKey && rec?.academies[0]) setAcademyKey(rec.academies[0].academy.key);
     go(2);
   };
 
   const toStep3 = () => {
-    if (!selected) {
+    if (!selectedAcademy) {
+      setFormError("Please choose an academy.");
+      return;
+    }
+    if (slots.length > 0 && !selected) {
       setFormError("Please choose a session.");
       return;
     }
@@ -149,14 +160,47 @@ export function BookingFlow({
     return { res, json };
   };
 
+  const profileBody = () => ({
+    parentName,
+    email,
+    mobile,
+    playerName,
+    dateOfBirth: dob,
+    gender,
+    experience,
+    interest,
+    clubOrSchool: clubOrSchool || undefined,
+    playingProfile: playingProfile || undefined,
+    heardAbout: heardAbout || undefined,
+    emergencyContactName: emergencyName,
+    emergencyContactPhone: emergencyPhone,
+    medicalNotes: medical || undefined,
+    photoConsent,
+    safeguardingConsent: safeguarding,
+    termsConsent: terms,
+  });
+
   const submitDetails = async (ev: React.FormEvent) => {
     ev.preventDefault();
-    if (!selected) return;
+    if (!selectedAcademy) return;
     setBusy(true);
     setErrors({});
     setFormError("");
     try {
-      if (mode !== "book") {
+      if (mode === "trial") {
+        const { res, json } = await post("/api/trial-request", { ...profileBody(), academy: selectedAcademy.key, preferredDays });
+        if (!res.ok || !json.ok) {
+          setErrors(json.errors ?? {});
+          setFormError(json.message ?? "Please check the highlighted fields.");
+          return;
+        }
+        setDone({ kind: "trial", academyName: selectedAcademy.name, days: preferredDays });
+        setTimeout(scrollTop, 30);
+        return;
+      }
+      if (!selected) return;
+
+      if (mode === "waitlist") {
         const { res, json } = await post("/api/waitlist/join", {
           sessionId: selected.id,
           parentName,
@@ -170,30 +214,12 @@ export function BookingFlow({
           setFormError(json.message ?? "Something went wrong. Please try again.");
           return;
         }
-        setDone({ kind: mode, session: selected });
+        setDone({ kind: "waitlist", session: selected });
         setTimeout(scrollTop, 30);
         return;
       }
 
-      const profile = await post("/api/player/create", {
-        parentName,
-        email,
-        mobile,
-        playerName,
-        dateOfBirth: dob,
-        gender,
-        experience,
-        interest,
-        clubOrSchool: clubOrSchool || undefined,
-        playingProfile: playingProfile || undefined,
-        heardAbout: heardAbout || undefined,
-        emergencyContactName: emergencyName,
-        emergencyContactPhone: emergencyPhone,
-        medicalNotes: medical || undefined,
-        photoConsent,
-        safeguardingConsent: safeguarding,
-        termsConsent: terms,
-      });
+      const profile = await post("/api/player/create", profileBody());
       if (!profile.res.ok || !profile.json.ok) {
         setErrors(profile.json.errors ?? {});
         setFormError(profile.json.message ?? "Please check the highlighted fields.");
@@ -230,32 +256,37 @@ export function BookingFlow({
   if (done) {
     return (
       <div ref={topRef} className="scroll-mt-28 rounded-3xl bg-white p-8 text-navy-950 md:p-12">
-        <p className="eyebrow">{done.kind === "waitlist" ? "Waiting list" : "Interest registered"}</p>
-        <h2 className="mt-4 text-4xl">Thank you — {first} is on our list.</h2>
+        <p className="eyebrow">{done.kind === "waitlist" ? "Waiting list" : "Trial request received"}</p>
+        <h2 className="mt-4 text-4xl">
+          {done.kind === "waitlist" ? `Thank you — ${first} is on our list.` : `Thank you — we'll be in touch about ${first}'s trial.`}
+        </h2>
         <p className="mt-4 max-w-xl text-lg text-ink-muted">
           {done.kind === "waitlist"
-            ? `We'll email ${email} as soon as a place opens in ${done.session.title}, ${done.session.day} ${formatTimeRange(done.session)}. There's nothing to pay until then.`
-            : `We'll email ${email} as soon as the times for ${done.session.title} are confirmed, so you can book before anyone else.`}
+            ? `We'll email ${email} as soon as a place opens in ${sessionLabel(done.session)}, ${done.session.day} ${formatTimeRange(done.session)}. There's nothing to pay until then.`
+            : `We're finalising which academy runs on which day. A coach will contact you at ${email} to confirm the best ${done.academyName} session${
+                done.days.length ? ` (${done.days.join(" or ")})` : ""
+              } and send a link to secure the place. There's nothing to pay yet.`}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/sessions" className={buttonClass("dark")}>See other sessions</Link>
+          <Link href="/sessions" className={buttonClass("dark")}>See the timetable</Link>
           <Link href="/" className="rounded-full px-6 py-3.5 font-semibold text-navy-950 underline underline-offset-4">Back to home</Link>
         </div>
       </div>
     );
   }
 
-  const sessionList = (() => {
-    const recommendedIds = rec?.recommendations.map((r) => r.session.id) ?? [];
-    const base = sessions.filter((s) => s.active && (!s.girlsOnly || gender === "girl"));
-    const recommended = recommendedIds.map((id) => base.find((s) => s.id === id)).filter(Boolean) as AcademySession[];
-    if (sessionId && !recommended.some((s) => s.id === sessionId)) {
-      const pre = base.find((s) => s.id === sessionId);
-      if (pre) recommended.unshift(pre);
-    }
-    const others = base.filter((s) => !recommended.includes(s));
-    return { recommended, others };
-  })();
+  const recommendedKeys = rec?.academies.map((r) => r.academy.key) ?? [];
+  const eligibleAcademies = academies.filter((a) => a.key !== "girls" || gender === "girl");
+  const academyList = {
+    recommended: [
+      ...(academyKey && !recommendedKeys.includes(academyKey) ? [academyKey] : []),
+      ...recommendedKeys,
+    ]
+      .map((k) => eligibleAcademies.find((a) => a.key === k))
+      .filter((a): a is NonNullable<typeof a> => !!a),
+    others: eligibleAcademies.filter((a) => a.key !== academyKey && !recommendedKeys.includes(a.key)),
+  };
+  const toggleDay = (d: Day) => setPreferredDays((days) => (days.includes(d) ? days.filter((x) => x !== d) : [...days, d]));
 
   return (
     <div ref={topRef} className="scroll-mt-28">
@@ -365,29 +396,42 @@ export function BookingFlow({
             {formError && <p className="rounded-xl bg-[#fbeae8] p-4 text-sm text-[#8c1d18]" role="alert">{formError}</p>}
 
             <fieldset>
-              <legend className="sr-only">Choose a session</legend>
+              <legend className="sr-only">Choose an academy</legend>
               <div className="space-y-3">
-                {sessionList.recommended.map((s) => (
-                  <SessionOption
-                    key={s.id}
-                    session={s}
-                    availability={availability?.[s.id]}
-                    checked={sessionId === s.id}
-                    onChange={() => setSessionId(s.id)}
-                    reason={rec?.recommendations.find((r) => r.session.id === s.id)?.reason}
-                    recommended={rec?.recommendations[0]?.session.id === s.id}
+                {academyList.recommended.map((a) => (
+                  <AcademyOption
+                    key={a.key}
+                    name={a.name}
+                    ageLabel={a.ageLabel}
+                    proposition={rec?.academies.find((r) => r.academy.key === a.key)?.reason ?? a.proposition}
+                    checked={academyKey === a.key}
+                    recommended={rec?.academies[0]?.academy.key === a.key}
+                    onChange={() => {
+                      setAcademyKey(a.key);
+                      setSessionId(undefined);
+                    }}
                   />
                 ))}
               </div>
-              {sessionList.others.length > 0 && (
+              {academyList.others.length > 0 && (
                 <div className="mt-5">
                   <button type="button" onClick={() => setShowAll((v) => !v)} className="text-sm font-semibold underline underline-offset-4" aria-expanded={showAll}>
-                    {showAll ? "Hide other sessions" : `Show all ${sessionList.others.length} other sessions`}
+                    {showAll ? "Hide other academies" : `Show all ${academyList.others.length} other academies`}
                   </button>
                   {showAll && (
                     <div className="mt-4 space-y-3">
-                      {sessionList.others.map((s) => (
-                        <SessionOption key={s.id} session={s} availability={availability?.[s.id]} checked={sessionId === s.id} onChange={() => setSessionId(s.id)} />
+                      {academyList.others.map((a) => (
+                        <AcademyOption
+                          key={a.key}
+                          name={a.name}
+                          ageLabel={a.ageLabel}
+                          proposition={a.proposition}
+                          checked={academyKey === a.key}
+                          onChange={() => {
+                            setAcademyKey(a.key);
+                            setSessionId(undefined);
+                          }}
+                        />
                       ))}
                     </div>
                   )}
@@ -395,34 +439,82 @@ export function BookingFlow({
               )}
             </fieldset>
 
+            {selectedAcademy && slots.length > 0 && (
+              <fieldset className="border-t border-navy-950/10 pt-7">
+                <legend className="label !mb-3 text-lg">Choose a {selectedAcademy.name} session</legend>
+                <div className="space-y-3">
+                  {slots.map((s) => (
+                    <SessionOption key={s.id} session={s} availability={availability?.[s.id]} checked={sessionId === s.id} onChange={() => setSessionId(s.id)} />
+                  ))}
+                </div>
+              </fieldset>
+            )}
+
+            {selectedAcademy && slots.length === 0 && (
+              <fieldset className="rounded-2xl bg-cream p-5 md:p-6">
+                <legend className="sr-only">Preferred days</legend>
+                <p className="font-serif text-xl">Which days could {first} come?</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  We&rsquo;re finalising which academy runs on which day. Tell us what suits you and we&rsquo;ll confirm the best session before
+                  you pay anything.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {DAYS.map((d) => (
+                    <label
+                      key={d}
+                      className={`cursor-pointer rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+                        preferredDays.includes(d) ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 bg-white hover:border-navy-950/40"
+                      }`}
+                    >
+                      <input type="checkbox" className="sr-only" checked={preferredDays.includes(d)} onChange={() => toggleDay(d)} />
+                      {d}
+                    </label>
+                  ))}
+                </div>
+                <p className="hint">Tuesday and Wednesday sessions run 6–7:30pm and 7:30–9pm. Weekend times are being confirmed. Leave blank if any day works.</p>
+              </fieldset>
+            )}
+
             <p className="text-sm text-ink-muted">
               Not quite right after the first session? We&rsquo;ll happily move {first} to a better-suited group.
             </p>
 
             <div className="flex flex-col-reverse gap-4 border-t border-navy-950/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => go(1)} className="text-sm font-semibold underline underline-offset-4">Back</button>
-              <button type="button" onClick={toStep3} className={buttonClass("dark")} disabled={!selected}>
-                {mode === "book" ? "Continue" : mode === "waitlist" ? "Continue to waiting list" : "Continue to register interest"}
+              <button type="button" onClick={toStep3} className={buttonClass("dark")} disabled={!selectedAcademy || (slots.length > 0 && !selected)}>
+                {mode === "waitlist" ? "Continue to waiting list" : "Continue"}
               </button>
             </div>
           </div>
         )}
 
-        {step === 3 && selected && (
+        {step === 3 && selectedAcademy && (
           <form onSubmit={submitDetails} noValidate className="space-y-7">
             <div>
               <p className="eyebrow">Step 3</p>
               <h2 className="mt-3 text-[2.25rem] leading-tight">
-                {mode === "book" ? "Your details." : mode === "waitlist" ? "Join the waiting list." : "Register your interest."}
+                {mode === "waitlist" ? "Join the waiting list." : "Your details."}
               </h2>
               <p className="mt-2 text-ink-muted">
                 {mode === "book"
                   ? "So we can welcome you properly and keep everyone safe."
-                  : "No payment needed — we'll contact you as soon as a place is available."}
+                  : mode === "trial"
+                    ? "So we can confirm the right session and welcome you properly. There's nothing to pay yet."
+                    : "No payment needed — we'll contact you as soon as a place is available."}
               </p>
             </div>
 
-            <SelectedSummary session={selected} onChange={() => go(2)} />
+            <SelectedSummary
+              title={selected ? sessionLabel(selected) : selectedAcademy.name}
+              detail={
+                selected
+                  ? `${selected.day} ${formatTimeRange(selected)}`
+                  : preferredDays.length
+                    ? `Preferred days: ${preferredDays.join(", ")}`
+                    : "Any day — we'll confirm the best session"
+              }
+              onChange={() => go(2)}
+            />
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field id="b-parent" label="Parent/guardian name" value={parentName} onChange={setParentName} autoComplete="name" error={errors.parentName} />
@@ -430,7 +522,7 @@ export function BookingFlow({
               <Field id="b-mobile" label="Mobile" type="tel" value={mobile} onChange={setMobile} autoComplete="tel" error={errors.mobile} />
             </div>
 
-            {mode === "book" && (
+            {mode !== "waitlist" && (
               <>
                 <div className="grid gap-5 border-t border-navy-950/10 pt-7 sm:grid-cols-2">
                   <Field id="b-em-name" label="Emergency contact name" value={emergencyName} onChange={setEmergencyName} error={errors.emergencyContactName} hint="Someone we can reach during the session if we can't reach you" />
@@ -452,7 +544,7 @@ export function BookingFlow({
                     the details above are correct.
                   </Check>
                   <Check checked={terms} onChange={setTerms} error={errors.termsConsent}>
-                    I accept the <Link href="/terms" target="_blank" className="underline underline-offset-2">booking terms</Link> and{" "}
+                    I accept the <Link href="/terms" target="_blank" className="underline underline-offset-2">terms and conditions</Link> and{" "}
                     <Link href="/refunds" target="_blank" className="underline underline-offset-2">refund policy</Link>.
                   </Check>
                   <Check checked={photoConsent} onChange={setPhotoConsent}>
@@ -467,7 +559,7 @@ export function BookingFlow({
             <div className="flex flex-col-reverse gap-4 border-t border-navy-950/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => go(2)} className="text-sm font-semibold underline underline-offset-4">Back</button>
               <button type="submit" disabled={busy} className={buttonClass("dark")}>
-                {busy ? "Just a moment…" : mode === "book" ? "Review your academy place" : mode === "waitlist" ? "Join Waiting List" : "Register interest"}
+                {busy ? "Just a moment…" : mode === "book" ? "Review your academy place" : mode === "waitlist" ? "Join Waiting List" : "Send trial request"}
               </button>
             </div>
           </form>
@@ -540,15 +632,11 @@ function SessionOption({
   availability,
   checked,
   onChange,
-  reason,
-  recommended,
 }: {
   session: AcademySession;
   availability?: SessionAvailability;
   checked: boolean;
   onChange: () => void;
-  reason?: string;
-  recommended?: boolean;
 }) {
   return (
     <label
@@ -559,33 +647,60 @@ function SessionOption({
       <input type="radio" name="session" className="sr-only" checked={checked} onChange={onChange} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className={`text-sm font-semibold ${checked ? "text-gold" : "text-gold-deep"}`}>
-          {recommended && "Best starting point · "}
           {s.day} {formatTimeRange(s)}
-          {!s.confirmed && " (provisional)"}
         </span>
         <span className={checked ? "" : "[&>span]:!bg-navy-950/5 [&>span]:!text-navy-950"}>
           <AvailabilityBadge session={s} availability={availability} />
         </span>
       </div>
-      <span className="mt-2 block font-serif text-2xl">
-        {s.title} <span className={`text-base ${checked ? "text-slate" : "text-ink-muted"}`}>· {s.group} · Ages {s.ageMin}–{s.ageMax}</span>
-      </span>
-      {reason && <span className={`mt-2 block text-[0.95rem] leading-relaxed ${checked ? "text-cream/80" : "text-ink-muted"}`}>{reason}</span>}
-      <span className={`mt-3 block text-sm ${checked ? "text-slate" : "text-ink-muted"}`}>
-        {durationMinutes(s)} minutes · {s.confirmed ? formatPrice(s.pricePence) : "price confirmed with times"} · max {s.capacity} players
+      <span className="mt-2 block font-serif text-xl">{sessionLabel(s)}</span>
+      <span className={`mt-2 block text-sm ${checked ? "text-slate" : "text-ink-muted"}`}>
+        {durationMinutes(s)} minutes · {formatPrice(s.pricePence)} · max {s.capacity} players
       </span>
     </label>
   );
 }
 
-function SelectedSummary({ session: s, onChange }: { session: AcademySession; onChange: () => void }) {
+function SelectedSummary({ title, detail, onChange }: { title: string; detail: string; onChange: () => void }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-cream p-5">
       <div>
-        <p className="text-sm font-semibold text-gold-deep">{s.day} {formatTimeRange(s)}{!s.confirmed && " (provisional)"}</p>
-        <p className="mt-1 font-serif text-xl">{s.title} · {s.group}</p>
+        <p className="text-sm font-semibold text-gold-deep">{detail}</p>
+        <p className="mt-1 font-serif text-xl">{title}</p>
       </div>
       <button type="button" onClick={onChange} className="text-sm font-semibold underline underline-offset-4">Change</button>
     </div>
+  );
+}
+
+function AcademyOption({
+  name,
+  ageLabel,
+  proposition,
+  checked,
+  recommended,
+  onChange,
+}: {
+  name: string;
+  ageLabel: string;
+  proposition: string;
+  checked: boolean;
+  recommended?: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label
+      className={`block cursor-pointer rounded-2xl border p-5 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+        checked ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 hover:border-navy-950/40"
+      }`}
+    >
+      <input type="radio" name="academy" className="sr-only" checked={checked} onChange={onChange} />
+      <span className={`text-sm font-semibold ${checked ? "text-gold" : "text-gold-deep"}`}>
+        {recommended && "Best starting point · "}
+        {ageLabel}
+      </span>
+      <span className="mt-1 block font-serif text-2xl">{name}</span>
+      <span className={`mt-2 block text-[0.95rem] leading-relaxed ${checked ? "text-cream/80" : "text-ink-muted"}`}>{proposition}</span>
+    </label>
   );
 }

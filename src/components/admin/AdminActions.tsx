@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { sessions, formatTimeRange, getSession } from "@/data/sessions";
-import type { BookingStatus, WaitlistEntry } from "@/lib/booking/types";
+import { sessions, formatTimeRange, getSession, sessionLabel } from "@/data/sessions";
+import type { BookingStatus, TrialRequestStatus, TrialRequestView, WaitlistEntry } from "@/lib/booking/types";
 
 async function adminPost(body: unknown) {
   const res = await fetch("/api/admin/bookings", {
@@ -58,7 +58,7 @@ export function BookingRowActions({ booking }: { booking: { id: string; status: 
           {sessions
             .filter((s) => s.id !== booking.sessionId && s.active)
             .map((s) => (
-              <option key={s.id} value={s.id}>{s.day} {formatTimeRange(s)} · {s.title}</option>
+              <option key={s.id} value={s.id}>{s.day} {formatTimeRange(s)} · {sessionLabel(s)}</option>
             ))}
         </select>
       )}
@@ -95,6 +95,74 @@ export function WaitlistRow({ entry, sessionLabel }: { entry: WaitlistEntry; ses
       <a href={`mailto:${entry.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`} className="rounded-full bg-navy-950 px-4 py-2 text-xs font-semibold text-cream">
         Send booking link
       </a>
+    </div>
+  );
+}
+
+const trialStatusLabel: Record<TrialRequestStatus, string> = {
+  new: "New",
+  contacted: "Contacted",
+  booked: "Booked",
+  closed: "Closed",
+};
+
+export function TrialRequestRow({ request: t, academyName }: { request: TrialRequestView; academyName: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+  const first = t.player?.name.split(" ")[0] ?? "your child";
+  const link = `${origin}/book?discipline=${t.academy}`;
+  const body = `Hi ${t.parent?.name.split(" ")[0] ?? ""},\n\nThank you for your trial request for ${first}. We'd love to see ${first} at ${academyName} on [DAY] at [TIME].\n\nYou can secure the place here: ${link}\n\nThe Hillrisers coaching team`;
+
+  const setStatus = async (status: TrialRequestStatus) => {
+    setBusy(true);
+    await adminPost({ action: "trialStatus", requestId: t.id, status });
+    setBusy(false);
+    router.refresh();
+  };
+
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4 p-5 text-sm">
+      <details className="min-w-0 flex-1">
+        <summary className="cursor-pointer">
+          <span className="font-semibold">{t.player?.name ?? "—"}</span>
+          <span className="text-ink-muted"> · {academyName} · {t.preferredDays.length ? t.preferredDays.join(", ") : "Any day"}</span>
+        </summary>
+        <dl className="mt-2 space-y-1 text-xs text-ink-muted">
+          <div>DOB: {t.player?.dateOfBirth} · {t.player?.gender} · {t.player?.experience} · interest: {t.player?.interest}</div>
+          {t.player?.recommendedPathway && <div>Pathway: {t.player.recommendedPathway}</div>}
+          {t.player?.clubOrSchool && <div>Club/school: {t.player.clubOrSchool}</div>}
+          {t.player?.playingProfile && <div>Profile: {t.player.playingProfile}</div>}
+          <div>Parent: {t.parent?.name} · {t.parent?.email} · {t.parent?.mobile}</div>
+          <div>Emergency: {t.player?.emergencyContactName} · {t.player?.emergencyContactPhone}</div>
+          {t.player?.medicalNotes && <div className="font-semibold text-[#8c1d18]">Medical: {t.player.medicalNotes}</div>}
+          <div>Photo consent: {t.player?.photoConsent ? "Yes" : "No"}</div>
+          {t.player?.heardAbout && <div>Heard via: {t.player.heardAbout}</div>}
+          <div>Requested {new Date(t.createdAt).toLocaleString("en-GB")}</div>
+        </dl>
+      </details>
+      <div className="flex items-center gap-2">
+        <select
+          aria-label="Trial request status"
+          disabled={busy}
+          value={t.status}
+          onChange={(e) => setStatus(e.target.value as TrialRequestStatus)}
+          className="rounded-lg border border-navy-950/15 bg-white px-2 py-1.5 text-xs"
+        >
+          {(Object.keys(trialStatusLabel) as TrialRequestStatus[]).map((k) => (
+            <option key={k} value={k}>{trialStatusLabel[k]}</option>
+          ))}
+        </select>
+        {t.parent && (
+          <a
+            href={`mailto:${t.parent.email}?subject=${encodeURIComponent(`${first}'s Hillrisers trial`)}&body=${encodeURIComponent(body)}`}
+            className="rounded-full bg-navy-950 px-4 py-2 text-xs font-semibold text-cream"
+          >
+            Email family
+          </a>
+        )}
+      </div>
     </div>
   );
 }
@@ -144,7 +212,7 @@ export function ManualBookingForm({ defaultSessionId }: { defaultSessionId?: str
     <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-2">
       <select name="sessionId" defaultValue={defaultSessionId} required className={`${input} sm:col-span-2`}>
         {sessions.filter((s) => s.active).map((s) => (
-          <option key={s.id} value={s.id}>{s.day} {formatTimeRange(s)} · {s.title} — {s.group}</option>
+          <option key={s.id} value={s.id}>{s.day} {formatTimeRange(s)} · {sessionLabel(s)}</option>
         ))}
       </select>
       <input name="playerName" placeholder="Player name" required className={input} />

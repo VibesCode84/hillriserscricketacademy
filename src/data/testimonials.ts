@@ -31,7 +31,7 @@ export const testimonials: Testimonial[] = [
   {
     id: "t2",
     quote:
-      "She was nervous about being the only beginner. By the second week she was asking if she could go on Wednesdays too.",
+      "She was nervous about being the only beginner. By the second week she was asking if she could come twice a week.",
     parent: "Claire",
     childLabel: "Parent of a Girls Academy player, U10",
     disciplines: ["girls"],

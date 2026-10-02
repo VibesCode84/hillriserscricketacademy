@@ -30,7 +30,7 @@ const groups = [
     links: [
       { href: "/safeguarding", label: "Safeguarding" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms" },
+      { href: "/terms", label: "Terms & Conditions" },
       { href: "/refunds", label: "Refund Policy" },
       { href: "/accessibility", label: "Accessibility" },
       { href: "/contact", label: "Contact" },

@@ -1,13 +1,12 @@
 import type { Academy } from "@/data/academies";
 import { coachesFor } from "@/data/coaches";
-import { sessionsFor } from "@/data/sessions";
 import { testimonialsFor } from "@/data/testimonials";
 import { faqGroups } from "@/data/faqs";
 import type { SessionAvailability } from "@/lib/booking";
 import { Section, SectionHeader } from "./Section";
 import { Reveal } from "./Reveal";
 import { CoachCard } from "./CoachCard";
-import { SessionCard } from "./SessionCard";
+import { WhenItRuns } from "./WhenItRuns";
 import { PriceCard } from "./PriceCard";
 import { FAQAccordion, faqJsonLd } from "./FAQAccordion";
 import { TestimonialCard } from "./TestimonialCard";
@@ -50,7 +49,6 @@ export function AcademyDetail({
   availability: Record<string, SessionAvailability> | null;
 }) {
   const coaches = coachesFor(academy.key);
-  const times = sessionsFor(academy.key);
   const [testimonial] = testimonialsFor(academy.key);
   const generalFaqs = faqGroups[0].items.slice(0, 2).concat(faqGroups[2].items.slice(0, 1));
   const faqs = [...academy.faqs, ...generalFaqs];
@@ -120,12 +118,8 @@ export function AcademyDetail({
         <div className="grid gap-12 lg:grid-cols-[1fr_1fr]">
           <div>
             <SectionHeader eyebrow="Session times" title="When it runs." />
-            <div className="mt-10 grid gap-5">
-              {times.length ? (
-                times.map((s) => <SessionCard key={s.id} session={s} availability={availability?.[s.id]} />)
-              ) : (
-                <p className="text-slate">New times are being added — register your interest and we&rsquo;ll let you know first.</p>
-              )}
+            <div className="mt-10">
+              <WhenItRuns discipline={academy.key} availability={availability} />
             </div>
           </div>
           <div>

@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { getAcademy } from "@/data/academies";
 import { coachesFor } from "@/data/coaches";
-import { sessionsFor } from "@/data/sessions";
 import { testimonialsFor } from "@/data/testimonials";
 import { getAvailability } from "@/lib/booking";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
 import { Reveal } from "@/components/Reveal";
-import { SessionCard } from "@/components/SessionCard";
+import { WhenItRuns } from "@/components/WhenItRuns";
 import { CoachCard } from "@/components/CoachCard";
 import { TestimonialCard } from "@/components/TestimonialCard";
 import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
@@ -42,7 +41,6 @@ const faqs = [
 
 export default async function LittleCricketersPage() {
   const availability = await getAvailability();
-  const times = sessionsFor("little-cricketers");
   const coach = coachesFor("little-cricketers");
   const [quote] = testimonialsFor("little-cricketers");
 
@@ -109,11 +107,9 @@ export default async function LittleCricketersPage() {
       <Section tone="darker" id="times">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
-            <SectionHeader eyebrow="When" title="Sunday mornings." />
-            <div className="mt-10 grid gap-5">
-              {times.map((s) => (
-                <SessionCard key={s.id} session={s} availability={availability?.[s.id]} />
-              ))}
+            <SectionHeader eyebrow="When" title="When it runs." />
+            <div className="mt-10">
+              <WhenItRuns discipline="little-cricketers" availability={availability} />
             </div>
           </div>
           {coach[0] && (

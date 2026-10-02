@@ -82,6 +82,28 @@ export type WaitlistEntry = {
   createdAt: string;
 };
 
+/**
+ * A request for a trial while the weekly programme (which academy runs on
+ * which day) is still being finalised. No payment is taken; the academy
+ * confirms a day and time and sends a booking link.
+ */
+export type TrialRequestStatus = "new" | "contacted" | "booked" | "closed";
+
+export type TrialRequest = {
+  id: string;
+  parentId: string;
+  playerId: string;
+  /** The academy the family chose (a DisciplineKey) */
+  academy: string;
+  /** Days the family can attend, e.g. ["Tuesday", "Sunday"] — empty means any */
+  preferredDays: string[];
+  notes?: string;
+  status: TrialRequestStatus;
+  createdAt: string;
+};
+
+export type TrialRequestView = TrialRequest & { player?: Player; parent?: Parent };
+
 export type Enquiry = {
   id: string;
   parentName: string;
@@ -154,6 +176,10 @@ export interface BookingStore {
 
   joinWaitlist(entry: Omit<WaitlistEntry, "id" | "status" | "createdAt">): Promise<WaitlistEntry>;
   listWaitlist(filter?: { sessionId?: string }): Promise<WaitlistEntry[]>;
+
+  createTrialRequest(input: Omit<TrialRequest, "id" | "status" | "createdAt">): Promise<TrialRequest>;
+  listTrialRequests(): Promise<TrialRequestView[]>;
+  setTrialRequestStatus(id: string, status: TrialRequestStatus): Promise<TrialRequest | undefined>;
 
   createEnquiry(enquiry: Omit<Enquiry, "id" | "createdAt">): Promise<Enquiry>;
   listEnquiries(): Promise<Enquiry[]>;

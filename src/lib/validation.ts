@@ -40,10 +40,15 @@ export const profileSchema = z.object({
     errorMap: () => ({ message: "Please confirm you have read the safeguarding and welfare information" }),
   }),
   termsConsent: z.literal(true, {
-    errorMap: () => ({ message: "Please accept the booking terms" }),
+    errorMap: () => ({ message: "Please accept the terms and conditions" }),
   }),
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
+
+export const trialRequestSchema = profileSchema.extend({
+  academy: z.enum(["batting", "seam-bowling", "spin-bowling", "power", "performance", "girls", "little-cricketers"]),
+  preferredDays: z.array(z.enum(["Tuesday", "Wednesday", "Saturday", "Sunday"])).max(4).default([]),
+});
 
 export const createBookingSchema = z.object({
   playerId: z.string().uuid(),

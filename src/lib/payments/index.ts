@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { site } from "../../data/site";
-import type { AcademySession } from "../../data/sessions";
+import { sessionLabel, type AcademySession } from "../../data/sessions";
 import type { Booking, Parent, Player } from "../booking/types";
 import { STRIPE_CHECKOUT_MINUTES } from "../booking";
 
@@ -39,7 +39,7 @@ class StripeProvider implements PaymentProvider {
   async createCheckout({ booking, session, player, parent, baseUrl }: CheckoutInput) {
     const priceId = session.stripePriceId ?? process.env.STRIPE_ACADEMY_PRICE_ID;
     const expiresAt = Math.floor(Date.now() / 1000) + STRIPE_CHECKOUT_MINUTES * 60;
-    const description = `${session.title} · ${session.group} · ${session.day} ${session.startTime}–${session.endTime} · ${site.venue.name}`;
+    const description = `${sessionLabel(session)} · ${session.day} ${session.startTime}–${session.endTime} · ${site.venue.name}`;
     const checkout = await this.stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: parent.email,

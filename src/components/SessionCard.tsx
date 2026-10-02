@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { formatPrice } from "@/data/site";
-import { durationMinutes, formatTimeRange, type AcademySession } from "@/data/sessions";
+import { getAcademy } from "@/data/academies";
+import { durationMinutes, formatTimeRange, isBookable, type AcademySession } from "@/data/sessions";
 import type { SessionAvailability } from "@/lib/booking";
 import { buttonClass } from "./Button";
 
 export function AvailabilityBadge({ session, availability }: { session: AcademySession; availability?: SessionAvailability }) {
-  if (!session.confirmed) {
-    return <Badge className="bg-cream/10 text-slate">Times being finalised</Badge>;
-  }
+  if (!session.confirmed) return <Badge className="bg-cream/10 text-slate">Times being finalised</Badge>;
+  if (!isBookable(session)) return <Badge className="bg-cream/10 text-slate">Programme being finalised</Badge>;
   if (!availability) return null;
   if (availability.status === "full") return <Badge className="bg-[#5b1f1f]/60 text-[#f4c7c3]">Full · Waiting list</Badge>;
   if (availability.status === "limited")
@@ -29,9 +29,23 @@ function Badge({ children, className }: { children: React.ReactNode; className: 
 }
 
 export function sessionCta(session: AcademySession, availability?: SessionAvailability) {
-  if (!session.confirmed) return { href: `/book?session=${session.id}`, label: "Register interest" };
+  if (!isBookable(session)) return { href: `/book?day=${session.day}`, label: "Request a trial" };
   if (availability?.status === "full") return { href: `/book?session=${session.id}`, label: "Join Waiting List" };
   return { href: `/book?session=${session.id}`, label: "Book a Trial" };
+}
+
+/** Display name for a slot: the academy once assigned, otherwise the generic title. */
+export function slotTitle(s: AcademySession) {
+  return (s.discipline && getAcademy(s.discipline)?.name) || s.title;
+}
+
+export function slotMeta(s: AcademySession) {
+  const parts = [
+    s.group,
+    s.ageMin !== undefined && s.ageMax !== undefined ? `Ages ${s.ageMin}–${s.ageMax}` : undefined,
+    s.girlsOnly ? "Girls only" : undefined,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : s.discipline ? "" : "Academy programme to be confirmed";
 }
 
 export function SessionCard({
@@ -52,15 +66,11 @@ export function SessionCard({
         <p className="text-sm font-semibold text-gold">
           {showDay && `${session.day} · `}
           {formatTimeRange(session)}
-          {!session.confirmed && <span className="font-normal text-slate"> (provisional)</span>}
         </p>
         <AvailabilityBadge session={session} availability={availability} />
       </div>
-      <h3 className="mt-4 text-2xl leading-tight text-cream">{session.title}</h3>
-      <p className="mt-1 text-sm text-slate">
-        {session.group} · Ages {session.ageMin}–{session.ageMax}
-        {session.girlsOnly && " · Girls only"}
-      </p>
+      <h3 className="mt-4 text-2xl leading-tight text-cream">{slotTitle(session)}</h3>
+      {slotMeta(session) && <p className="mt-1 text-sm text-slate">{slotMeta(session)}</p>}
       {reason && <p className="mt-4 text-[0.95rem] leading-relaxed text-cream/80">{reason}</p>}
       <div className="mt-auto flex items-end justify-between gap-4 pt-6">
         <p className="text-sm text-slate">

@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { SessionAvailability } from "@/lib/booking";
 import type { Experience, Gender, Interest } from "@/lib/booking/types";
 import { recommend, type RecommendResult } from "@/lib/recommend";
-import { durationMinutes, formatTimeRange } from "@/data/sessions";
+import { formatTimeRange } from "@/data/sessions";
 import { formatPrice } from "@/data/site";
 import { AvailabilityBadge } from "./SessionCard";
 import { buttonClass } from "./Button";
@@ -130,36 +130,51 @@ export function FindMySession({ availability }: { availability: Record<string, S
         <div id="fms-results" className="mt-10 scroll-mt-28 rounded-2xl bg-navy-950 p-6 text-cream md:p-8" aria-live="polite">
           <p className="eyebrow">Recommended pathway · {result.pathway}</p>
           <p className="mt-4 text-lg leading-relaxed text-slate">{result.summary}</p>
-          {result.recommendations.length === 0 ? (
+          {result.academies.length === 0 ? (
             <p className="mt-6 text-cream">
               We&rsquo;d love to find the right fit personally.{" "}
               <button type="button" onClick={() => setSpeak(true)} className="text-gold-soft underline underline-offset-4">Speak to a coach</button>.
             </p>
           ) : (
             <ul className="mt-7 space-y-4">
-              {result.recommendations.map((r) => {
-                const s = r.session;
-                const a = availability?.[s.id];
-                const full = s.confirmed && a?.status === "full";
-                const label = !s.confirmed ? "Register interest" : full ? "Join Waiting List" : "Book a Trial";
+              {result.academies.map((r) => {
+                const slots = result.sessions.filter((x) => x.academy.key === r.academy.key);
                 return (
-                  <li key={s.id} className="rounded-xl border border-cream/10 bg-navy-900 p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-gold">
-                        {r.primary ? "Best starting point · " : ""}
-                        {s.day} {formatTimeRange(s)}
-                        {!s.confirmed && <span className="font-normal text-slate"> (provisional)</span>}
-                      </p>
-                      <AvailabilityBadge session={s} availability={a} />
-                    </div>
-                    <h4 className="mt-2 font-serif text-2xl">{s.title} <span className="text-base text-slate">· {s.group}</span></h4>
+                  <li key={r.academy.key} className="rounded-xl border border-cream/10 bg-navy-900 p-5">
+                    <p className="text-sm font-semibold text-gold">
+                      {r.primary ? "Best starting point · " : ""}
+                      {r.academy.ageLabel}
+                    </p>
+                    <h4 className="mt-2 font-serif text-2xl">
+                      <Link href={r.academy.href} className="link-underline">{r.academy.name}</Link>
+                    </h4>
                     <p className="mt-2 text-[0.95rem] leading-relaxed text-cream/80">{r.reason}</p>
-                    <div className="mt-4 flex items-center justify-between gap-4">
-                      <span className="text-sm text-slate">{durationMinutes(s)} minutes · {formatPrice(s.pricePence)}</span>
-                      <Link href={`/book?session=${s.id}${query}`} className={buttonClass(label === "Book a Trial" ? "primary" : "secondary", "!px-5 !py-2.5 text-sm")}>
-                        {label}
-                      </Link>
-                    </div>
+                    {slots.length > 0 ? (
+                      <ul className="mt-4 space-y-2">
+                        {slots.map(({ session: s }) => {
+                          const a = availability?.[s.id];
+                          const label = a?.status === "full" ? "Join Waiting List" : "Book a Trial";
+                          return (
+                            <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-cream/10 pt-3">
+                              <span className="text-sm">
+                                {s.day} {formatTimeRange(s)} · {formatPrice(s.pricePence)}{" "}
+                                <AvailabilityBadge session={s} availability={a} />
+                              </span>
+                              <Link href={`/book?session=${s.id}${query}`} className={buttonClass(label === "Book a Trial" ? "primary" : "secondary", "!px-5 !py-2.5 text-sm")}>
+                                {label}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-cream/10 pt-4">
+                        <span className="text-sm text-slate">Days being finalised · tell us which days suit you</span>
+                        <Link href={`/book?discipline=${r.academy.key}${query}`} className={buttonClass(r.primary ? "primary" : "secondary", "!px-5 !py-2.5 text-sm")}>
+                          Request a trial
+                        </Link>
+                      </div>
+                    )}
                   </li>
                 );
               })}

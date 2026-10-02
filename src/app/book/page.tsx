@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getAvailability } from "@/lib/booking";
 import { academies, type DisciplineKey } from "@/data/academies";
-import { getSession } from "@/data/sessions";
+import { DAYS, getSession, type Day } from "@/data/sessions";
 import { testimonials } from "@/data/testimonials";
 import { BookingFlow, type BookingPrefill } from "@/components/booking/BookingFlow";
 import { TestimonialCard } from "@/components/TestimonialCard";
@@ -32,6 +32,7 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
     experience: pick<Experience>(one(sp.experience), ["new", "some", "regular", "performance"]),
     interest: pick<Interest>(one(sp.interest), ["batting", "seam", "spin", "all-round", "not-sure"]),
     referredBy: one(sp.ref)?.slice(0, 60),
+    day: pick<Day>(one(sp.day), DAYS),
   };
 
   return (
