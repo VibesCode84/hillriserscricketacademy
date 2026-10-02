@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const academy = getAcademy((await params).slug);
   if (!academy) return {};
   return {
-    title: { absolute: `${academy.seo.title} | Hillrisers` },
+    title: { absolute: `${academy.seo.title} | HillRisers` },
     description: academy.seo.description,
     alternates: { canonical: academy.href },
     openGraph: { title: academy.seo.title, description: academy.seo.description },

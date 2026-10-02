@@ -11,7 +11,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Find My Session — Which Cricket Group Is Right for My Child?",
   description:
-    "Answer four quick questions about your child and we'll recommend the right Hillrisers cricket session — or speak to a coach.",
+    "Answer four quick questions about your child and we'll recommend the right HillRisers cricket session — or speak to a coach.",
   alternates: { canonical: "/find-my-session" },
 };
 

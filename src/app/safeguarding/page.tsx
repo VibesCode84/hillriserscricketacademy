@@ -9,7 +9,7 @@ export default function Page() {
     <LegalPage eyebrow="Trust" title="Safeguarding" intro={<p>Every child should feel safe, respected and able to enjoy their cricket.</p>}>
       <h2>Our commitment</h2>
       <p>
-        Hillrisers Cricket Academy is committed to safeguarding and promoting the welfare of every child who attends our sessions.
+        HillRisers Cricket Academy is committed to safeguarding and promoting the welfare of every child who attends our sessions.
         {/* TODO: reference the specific safeguarding framework the academy follows, once confirmed. */}
       </p>
       <h2>Our coaching environment</h2>

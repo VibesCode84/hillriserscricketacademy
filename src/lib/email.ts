@@ -45,7 +45,7 @@ export async function sendBookingConfirmation(args: {
   const first = player.name.split(" ")[0];
   const text = `Hi ${parent.name.split(" ")[0]},
 
-${first}'s place is confirmed. Welcome to Hillrisers.
+${first}'s place is confirmed. Welcome to HillRisers.
 
 YOUR ACADEMY PLACE
 Player: ${player.name}
@@ -72,12 +72,12 @@ Within a day or two we'll get in touch to ask how ${first} found it.
 Questions? Reply to this email or call ${site.phone}.
 
 See you soon,
-The Hillrisers coaching team
+The HillRisers coaching team
 
 Booking reference: ${booking.id.slice(0, 8).toUpperCase()}
 Cancellations more than 48 hours before the session are refunded in full: ${site.url}/refunds
 `;
-  await send({ to: parent.email, subject: `${first}'s Hillrisers place is confirmed — ${session.day} ${formatTimeRange(session)}`, text });
+  await send({ to: parent.email, subject: `${first}'s HillRisers place is confirmed — ${session.day} ${formatTimeRange(session)}`, text });
 }
 
 export async function sendWaitlistConfirmation(args: { to: string; playerName: string; session: AcademySession }) {
@@ -91,7 +91,7 @@ There's nothing to pay. As soon as a place opens we'll email you a link to book 
 
 In the meantime, if another day would work, reply and we'll suggest an alternative.
 
-The Hillrisers coaching team · ${site.phone}`,
+The HillRisers coaching team · ${site.phone}`,
   });
 }
 
@@ -123,9 +123,9 @@ ${termLine()}
 
 Questions? Reply to this email or call ${site.phone}.
 
-The Hillrisers coaching team
+The HillRisers coaching team
 `;
-  await send({ to: parent.email, subject: `We've received ${first}'s trial request — Hillrisers`, text });
+  await send({ to: parent.email, subject: `We've received ${first}'s trial request — HillRisers`, text });
   await send({
     to: site.email,
     subject: `New trial request: ${player.name} — ${academy?.name ?? academyKey}`,
@@ -141,7 +141,7 @@ export async function sendDepositConfirmation(args: { request: TrialRequest; pla
   const amount = formatPrice(request.depositPence ?? depositFor(request.academy));
   await send({
     to: parent.email,
-    subject: `${first}'s place is secured — Hillrisers`,
+    subject: `${first}'s place is secured — HillRisers`,
     text: `Hi ${parent.name.split(" ")[0]},
 
 Thank you — we've received your ${amount} refundable holding deposit, and ${first}'s place in ${academy?.name ?? request.academy} is secured.
@@ -154,7 +154,7 @@ ${termLine()}
 IF PLANS CHANGE
 If we can't offer a session that suits you, or you change your mind before the session is confirmed, just reply and we'll refund the deposit in full.
 
-The Hillrisers coaching team · ${site.phone}
+The HillRisers coaching team · ${site.phone}
 Reference: ${request.id.slice(0, 8).toUpperCase()}
 `,
   });
@@ -179,14 +179,14 @@ export async function sendCampInterestConfirmation(c: CampInterest) {
     subject: `Holiday camps — we'll keep you posted about ${first}`,
     text: `Hi ${c.parentName.split(" ")[0]},
 
-Thank you for registering ${first}'s interest in Hillrisers specialist holiday camps:
+Thank you for registering ${first}'s interest in HillRisers specialist holiday camps:
 ${campList}
 
 Details are to be confirmed. You'll hear from us first, before booking opens to everyone.
 
 There's nothing to pay, and registering doesn't commit you to anything.
 
-The Hillrisers coaching team · ${site.phone}
+The HillRisers coaching team · ${site.phone}
 `,
   });
   await send({

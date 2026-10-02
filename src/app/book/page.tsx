@@ -12,7 +12,7 @@ import type { Experience, Gender, Interest } from "@/lib/booking/types";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Book a Trial",
-  description: "Book a trial session at Hillrisers Cricket Academy, John Lyon School, Harrow. Tell us about your player and we'll recommend the right group.",
+  description: "Book a trial session at HillRisers Cricket Academy, John Lyon School, Harrow. Tell us about your player and we'll recommend the right group.",
   alternates: { canonical: "/book" },
 };
 

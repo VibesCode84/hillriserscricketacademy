@@ -1,4 +1,4 @@
--- Hillrisers Cricket Academy — booking database (PostgreSQL / Supabase)
+-- HillRisers Cricket Academy — booking database (PostgreSQL / Supabase)
 -- The app also creates these tables automatically on first connection.
 
 create table if not exists academy_sessions (

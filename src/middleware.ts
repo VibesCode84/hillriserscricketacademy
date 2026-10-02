@@ -18,7 +18,7 @@ export function middleware(req: NextRequest) {
   }
   return new NextResponse("Authentication required", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Hillrisers admin", charset="UTF-8"' },
+    headers: { "WWW-Authenticate": 'Basic realm="HillRisers admin", charset="UTF-8"' },
   });
 }
 

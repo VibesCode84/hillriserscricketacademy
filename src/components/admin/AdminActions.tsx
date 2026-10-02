@@ -83,8 +83,8 @@ export function WaitlistRow({ entry, sessionLabel }: { entry: WaitlistEntry; ses
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   const link = `${origin}/book?session=${entry.sessionId}`;
-  const subject = `A place is available — ${s?.title ?? "Hillrisers"}`;
-  const body = `Hi ${entry.parentName.split(" ")[0]},\n\nGood news — a place has opened for ${entry.playerName} in ${sessionLabel}.\n\nYou can book it here: ${link}\n\nThe Hillrisers coaching team`;
+  const subject = `A place is available — ${s?.title ?? "HillRisers"}`;
+  const body = `Hi ${entry.parentName.split(" ")[0]},\n\nGood news — a place has opened for ${entry.playerName} in ${sessionLabel}.\n\nYou can book it here: ${link}\n\nThe HillRisers coaching team`;
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 p-5 text-sm">
       <div>
@@ -122,7 +122,7 @@ export function TrialRequestRow({ request: t, academyName }: { request: TrialReq
   useEffect(() => setOrigin(window.location.origin), []);
   const first = t.player?.name.split(" ")[0] ?? "your child";
   const link = `${origin}/book?discipline=${t.academy}`;
-  const body = `Hi ${t.parent?.name.split(" ")[0] ?? ""},\n\nThank you for your trial request for ${first}. We'd love to see ${first} at ${academyName} on [DAY] at [TIME].\n\nYou can secure the place here: ${link}\n\nThe Hillrisers coaching team`;
+  const body = `Hi ${t.parent?.name.split(" ")[0] ?? ""},\n\nThank you for your trial request for ${first}. We'd love to see ${first} at ${academyName} on [DAY] at [TIME].\n\nYou can secure the place here: ${link}\n\nThe HillRisers coaching team`;
 
   const setStatus = async (status: TrialRequestStatus) => {
     setBusy(true);
@@ -184,7 +184,7 @@ export function TrialRequestRow({ request: t, academyName }: { request: TrialReq
         )}
         {t.parent && (
           <a
-            href={`mailto:${t.parent.email}?subject=${encodeURIComponent(`${first}'s Hillrisers trial`)}&body=${encodeURIComponent(body)}`}
+            href={`mailto:${t.parent.email}?subject=${encodeURIComponent(`${first}'s HillRisers trial`)}&body=${encodeURIComponent(body)}`}
             className="rounded-full bg-navy-950 px-4 py-2 text-xs font-semibold text-cream"
           >
             Email family

@@ -5,8 +5,8 @@ import { Section } from "@/components/Section";
 import { EnquiryForm } from "@/components/EnquiryForm";
 
 export const metadata: Metadata = {
-  title: "Contact Hillrisers Cricket Academy",
-  description: "Get in touch with Hillrisers Cricket Academy, Harrow. Ask about sessions, the Girls Academy or Little Cricketers.",
+  title: "Contact HillRisers Cricket Academy",
+  description: "Get in touch with HillRisers Cricket Academy, Harrow. Ask about sessions, the Girls Academy or Little Cricketers.",
   alternates: { canonical: "/contact" },
 };
 

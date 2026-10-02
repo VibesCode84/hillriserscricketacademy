@@ -10,7 +10,7 @@ import { Crest } from "@/components/Logo";
 import { TermDates } from "@/components/TermDates";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Welcome to Hillrisers", robots: { index: false } };
+export const metadata: Metadata = { title: "Welcome to HillRisers", robots: { index: false } };
 
 export default async function SuccessPage({ searchParams }: { searchParams: Promise<{ session_id?: string }> }) {
   const { session_id: checkoutId } = await searchParams;
@@ -64,7 +64,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
         <div className="container-x max-w-4xl text-center">
           <Crest className="mx-auto h-14 w-auto" />
           <p className="eyebrow mt-8 justify-center">Place confirmed</p>
-          <h1 className="mt-5 text-5xl leading-[1.02] text-cream md:text-7xl">Welcome to Hillrisers, {first}.</h1>
+          <h1 className="mt-5 text-5xl leading-[1.02] text-cream md:text-7xl">Welcome to HillRisers, {first}.</h1>
           <p className="mx-auto mt-6 max-w-xl text-lg text-slate">
             {sessionLabel(session)} · {session.day} {formatTimeRange(session)} · {site.venue.name}
           </p>

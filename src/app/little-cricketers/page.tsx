@@ -19,7 +19,7 @@ const academy = getAcademy("little-cricketers")!;
 
 export const revalidate = 60;
 export const metadata: Metadata = {
-  title: { absolute: `${academy.seo.title} | Hillrisers` },
+  title: { absolute: `${academy.seo.title} | HillRisers` },
   description: academy.seo.description,
   alternates: { canonical: "/little-cricketers" },
 };
@@ -37,7 +37,7 @@ const faqs = [
   { q: "My child has never played cricket. Is that okay?", a: "Completely. Little Cricketers is designed for children who are brand new to the game." },
   { q: "Do they need any kit?", a: "No. Just comfortable clothes, trainers and a water bottle. We provide soft balls and child-sized bats." },
   { q: "Do parents stay?", a: "Parents are welcome to stay and watch. For the youngest children we ask that a parent stays at the venue." },
-  { q: "What happens when they’re older?", a: "Little Cricketers is the first step into the Hillrisers academy. When they’re ready, usually around age 7–8, we’ll recommend the right academy group." },
+  { q: "What happens when they’re older?", a: "Little Cricketers is the first step into the HillRisers academy. When they’re ready, usually around age 7–8, we’ll recommend the right academy group." },
 ];
 
 export default async function LittleCricketersPage() {
@@ -96,7 +96,7 @@ export default async function LittleCricketersPage() {
           <div>
             <SectionHeader
               eyebrow="The first step"
-              title="Where the Hillrisers pathway begins."
+              title="Where the HillRisers pathway begins."
               intro={
                 <p className="text-ink-muted">
                   Little Cricketers builds the movement, coordination and confidence young players need. When they&rsquo;re ready, we&rsquo;ll

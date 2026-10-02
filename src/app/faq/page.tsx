@@ -8,7 +8,7 @@ import { CTASection, NotSureBanner } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "FAQs — Junior Cricket Coaching Questions Answered",
   description:
-    "Is my child good enough? What do they need to bring? Are beginners and girls welcome? Answers to parents' questions about Hillrisers Cricket Academy in Harrow.",
+    "Is my child good enough? What do they need to bring? Are beginners and girls welcome? Answers to parents' questions about HillRisers Cricket Academy in Harrow.",
   alternates: { canonical: "/faq" },
 };
 

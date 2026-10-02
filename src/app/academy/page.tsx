@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 const journey = [
   { t: "Find the right session", b: "Use Find My Session or ask us. We’ll recommend where to start." },
   { t: "Book a trial", b: "Book one session — no term commitment and no account needed." },
-  { t: "Welcome to Hillrisers", b: "You’ll get everything you need: what to bring, where to go and who your coach is." },
+  { t: "Welcome to HillRisers", b: "You’ll get everything you need: what to bring, where to go and who your coach is." },
   { t: "The first session", b: "Your coach knows your child is new, and makes sure they settle in quickly." },
   { t: "How did they find it?", b: "Within 24–48 hours we’ll check in and recommend their academy pathway." },
 ];
@@ -32,7 +32,7 @@ export default function AcademyPage() {
         title="Better coaching. More touches. Clearer development."
         intro={
           <p>
-            Hillrisers is a development academy that complements school and club cricket — specialist coaching for young cricketers who
+            HillRisers is a development academy that complements school and club cricket — specialist coaching for young cricketers who
             want to enjoy the game and get better.
           </p>
         }

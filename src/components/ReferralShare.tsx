@@ -11,7 +11,7 @@ export function ReferralShare() {
   const [origin, setOrigin] = useState<string>(site.url);
   useEffect(() => setOrigin(window.location.origin), []);
   const link = `${origin}/book${name.trim() ? `?ref=${encodeURIComponent(name.trim())}` : ""}`;
-  const message = `We've been going to Hillrisers Cricket Academy at John Lyon School and thought you'd love it too. Cricket's better with a mate! You can book a trial here: ${link}`;
+  const message = `We've been going to HillRisers Cricket Academy at John Lyon School and thought you'd love it too. Cricket's better with a mate! You can book a trial here: ${link}`;
 
   const copy = async () => {
     try {
@@ -32,7 +32,7 @@ export function ReferralShare() {
           Share on WhatsApp
         </a>
         <a
-          href={`mailto:?subject=${encodeURIComponent("Come and try Hillrisers Cricket Academy")}&body=${encodeURIComponent(message)}`}
+          href={`mailto:?subject=${encodeURIComponent("Come and try HillRisers Cricket Academy")}&body=${encodeURIComponent(message)}`}
           className={buttonClass("dark")}
         >
           Send by email

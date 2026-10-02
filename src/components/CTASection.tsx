@@ -3,7 +3,7 @@ import { ButtonLink } from "./Button";
 import { Reveal } from "./Reveal";
 
 export function CTASection({
-  title = "The best way to understand Hillrisers is to experience it.",
+  title = "The best way to understand HillRisers is to experience it.",
   body = "Tell us a little about your child and we’ll help you find the right first session.",
   primary = { href: "/book", label: "Book a Trial" },
   secondary = { href: "/find-my-session", label: "Find My Session" },

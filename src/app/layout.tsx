@@ -23,15 +23,15 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Hillrisers Cricket Academy — Junior Cricket Coaching in Harrow",
-    template: "%s | Hillrisers Cricket Academy",
+    default: "HillRisers Cricket Academy — Junior Cricket Coaching in Harrow",
+    template: "%s | HillRisers Cricket Academy",
   },
   description: site.description,
   openGraph: {
     type: "website",
     siteName: site.name,
     locale: "en_GB",
-    title: "Hillrisers Cricket Academy — Junior Cricket Coaching in Harrow",
+    title: "HillRisers Cricket Academy — Junior Cricket Coaching in Harrow",
     description: site.description,
   },
   twitter: { card: "summary_large_image" },

@@ -5,7 +5,7 @@ import { ReferralShare } from "@/components/ReferralShare";
 
 export const metadata: Metadata = {
   title: "Invite a Friend — Cricket Is Better With a Mate",
-  description: "Invite a friend to try a session at Hillrisers Cricket Academy.",
+  description: "Invite a friend to try a session at HillRisers Cricket Academy.",
   alternates: { canonical: "/refer" },
 };
 

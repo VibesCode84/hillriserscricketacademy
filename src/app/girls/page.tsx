@@ -21,7 +21,7 @@ const academy = getAcademy("girls")!;
 
 export const revalidate = 60;
 export const metadata: Metadata = {
-  title: { absolute: `${academy.seo.title} | Hillrisers` },
+  title: { absolute: `${academy.seo.title} | HillRisers` },
   description: academy.seo.description,
   alternates: { canonical: "/girls" },
 };

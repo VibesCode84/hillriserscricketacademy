@@ -19,7 +19,7 @@ export default async function DevCheckoutPage({ searchParams }: { searchParams: 
   if (depositId) {
     const request = await store.getTrialRequest(depositId);
     if (!request) notFound();
-    product = "Hillrisers refundable holding deposit";
+    product = "HillRisers refundable holding deposit";
     amount = request.depositPence ?? depositFor(request.academy);
     detail = getAcademy(request.academy)?.name ?? request.academy;
     target = { trialRequestId: request.id };
@@ -27,7 +27,7 @@ export default async function DevCheckoutPage({ searchParams }: { searchParams: 
     const booking = bookingId ? await store.getBooking(bookingId) : undefined;
     const session = booking && getSession(booking.sessionId);
     if (!booking || !session) notFound();
-    product = "Hillrisers Cricket Academy Session";
+    product = "HillRisers Cricket Academy Session";
     amount = session.pricePence;
     detail = `${sessionLabel(session)} · ${session.day} ${formatTimeRange(session)}`;
     target = { bookingId: booking.id };

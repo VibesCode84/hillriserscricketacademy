@@ -9,7 +9,7 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Our Coaches — Specialist Junior Cricket Coaches in Harrow",
   description:
-    "Meet the Hillrisers coaching team: specialist batting, seam, spin, girls and foundation coaches. DBS checked, with a lead coach, assistant and two helpers in every session.",
+    "Meet the HillRisers coaching team: specialist batting, seam, spin, girls and foundation coaches. DBS checked, with a lead coach, assistant and two helpers in every session.",
   alternates: { canonical: "/coaches" },
 };
 

@@ -10,7 +10,7 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Venue — Train at John Lyon School, Harrow",
   description:
-    "Hillrisers Cricket Academy trains at John Lyon School, Middle Road, Harrow on the Hill. Indoor cricket facilities, parking, arrival instructions and accessibility.",
+    "HillRisers Cricket Academy trains at John Lyon School, Middle Road, Harrow on the Hill. Indoor cricket facilities, parking, arrival instructions and accessibility.",
   alternates: { canonical: "/venue" },
 };
 

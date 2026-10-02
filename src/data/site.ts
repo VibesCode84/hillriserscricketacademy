@@ -3,8 +3,8 @@
  * replace before launch.
  */
 export const site = {
-  name: "Hillrisers Cricket Academy",
-  shortName: "Hillrisers",
+  name: "HillRisers Cricket Academy",
+  shortName: "HillRisers",
   tagline: "Better coaching. More touches. Clearer development. More confident cricketers.",
   description:
     "Specialist junior cricket coaching in Harrow for players aged 4–14. Batting, seam, spin, power hitting, performance and a dedicated Girls Academy at John Lyon School.",

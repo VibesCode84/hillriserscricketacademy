@@ -150,7 +150,7 @@ export function CampInterestForm() {
       <div>
         <label className="flex cursor-pointer items-start gap-3 text-[0.95rem] leading-relaxed">
           <input type="checkbox" name="contactConsent" className="mt-1 h-5 w-5 shrink-0 accent-[#0b2345]" />
-          <span>Please email me about Hillrisers holiday camps. I can unsubscribe at any time.</span>
+          <span>Please email me about HillRisers holiday camps. I can unsubscribe at any time.</span>
         </label>
         {errors.contactConsent && <p className="error-text ml-8">{errors.contactConsent}</p>}
       </div>

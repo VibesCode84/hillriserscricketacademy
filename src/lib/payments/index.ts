@@ -63,7 +63,7 @@ class StripeProvider implements PaymentProvider {
               price_data: {
                 currency: "gbp",
                 unit_amount: session.pricePence,
-                product_data: { name: "Hillrisers Cricket Academy Session", description },
+                product_data: { name: "HillRisers Cricket Academy Session", description },
               },
             },
       ],
@@ -115,7 +115,7 @@ class StripeProvider implements PaymentProvider {
             currency: "gbp",
             unit_amount: amountPence,
             product_data: {
-              name: "Hillrisers refundable holding deposit",
+              name: "HillRisers refundable holding deposit",
               description: `Secures a place for ${player.name} in ${academyName} at ${site.venue.name}. Credited to the trial session; refundable in full until the session is confirmed.`,
             },
           },

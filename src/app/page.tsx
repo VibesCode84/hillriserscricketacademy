@@ -55,16 +55,16 @@ export default async function HomePage() {
       <HomeHero trust={<TrustStrip />} />
       <TrustBand />
 
-      {/* Why Hillrisers */}
+      {/* Why HillRisers */}
       <Section tone="light">
         <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeader
-              eyebrow="Why Hillrisers"
+              eyebrow="Why HillRisers"
               title="More than another cricket session."
               intro={
                 <p className="text-ink-muted">
-                  Young players improve when they get enough attention, enough repetition and coaching they can understand. Hillrisers
+                  Young players improve when they get enough attention, enough repetition and coaching they can understand. HillRisers
                   combines specialist coaches, structured sessions and positive small-group learning to help every player develop their
                   own game.
                 </p>
@@ -164,7 +164,7 @@ export default async function HomePage() {
             title="Coaches who know every player by name."
             intro={
               <p className="text-ink-muted">
-                Every academy session has a lead coach, an assistant coach and two junior helpers. They are the heart of Hillrisers.
+                Every academy session has a lead coach, an assistant coach and two junior helpers. They are the heart of HillRisers.
               </p>
             }
           />

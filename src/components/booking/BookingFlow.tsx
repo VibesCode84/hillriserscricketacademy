@@ -568,7 +568,7 @@ export function BookingFlow({
                     <Link href="/refunds" target="_blank" className="underline underline-offset-2">refund policy</Link>.
                   </Check>
                   <Check checked={photoConsent} onChange={setPhotoConsent}>
-                    Hillrisers may use photographs of {first} on the academy website and social media. <span className="text-ink-muted">(Optional)</span>
+                    HillRisers may use photographs of {first} on the academy website and social media. <span className="text-ink-muted">(Optional)</span>
                   </Check>
                 </div>
               </>

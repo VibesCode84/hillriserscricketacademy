@@ -6,7 +6,7 @@ import { PAYMENT_DUE_DAYS_BEFORE, formatTermDate, paymentDueDate, termStartLabel
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
-  description: "The terms and conditions for booking sessions, trials and waiting-list places at Hillrisers Cricket Academy.",
+  description: "The terms and conditions for booking sessions, trials and waiting-list places at HillRisers Cricket Academy.",
   alternates: { canonical: "/terms" },
 };
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
     <LegalPage
       eyebrow="Trust"
       title="Terms and Conditions"
-      intro={<p>The agreement between your family and Hillrisers Cricket Academy when you book a session, request a trial or join a waiting list.</p>}
+      intro={<p>The agreement between your family and HillRisers Cricket Academy when you book a session, request a trial or join a waiting list.</p>}
     >
       <nav aria-label="Contents" className="mb-12 rounded-2xl bg-cream-200 p-6">
         <p className="!mb-3 font-semibold text-navy-950">Contents</p>
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
       <h2 id="about">1. About these terms</h2>
       <p>
-        These terms apply to every booking, trial request and waiting-list place with Hillrisers Cricket Academy (&ldquo;Hillrisers&rdquo;,
+        These terms apply to every booking, trial request and waiting-list place with HillRisers Cricket Academy (&ldquo;HillRisers&rdquo;,
         &ldquo;we&rdquo;, &ldquo;us&rdquo;). You can contact us at <a href={`mailto:${site.email}`}>{site.email}</a> or on {site.phone}.
       </p>
       <p>

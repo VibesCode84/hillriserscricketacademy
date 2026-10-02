@@ -18,10 +18,10 @@ export function Crest({ className = "h-10 w-auto" }: { className?: string }) {
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="group inline-flex items-center gap-3" aria-label="Hillrisers Cricket Academy — home">
+    <Link href="/" className="group inline-flex items-center gap-3" aria-label="HillRisers Cricket Academy — home">
       <Crest className="h-10 w-auto shrink-0 transition-transform duration-500 group-hover:-translate-y-0.5" />
       <span className="flex flex-col leading-none">
-        <span className="font-serif text-[1.55rem] font-semibold tracking-tight text-cream">Hillrisers</span>
+        <span className="font-serif text-[1.55rem] font-semibold tracking-tight text-cream">HillRisers</span>
         {!compact && (
           <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-gold">Cricket Academy</span>
         )}

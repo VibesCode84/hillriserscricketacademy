@@ -1,6 +1,6 @@
-# Hillrisers Cricket Academy
+# HillRisers Cricket Academy
 
-The website and booking system for Hillrisers Cricket Academy: specialist junior cricket coaching for ages 4–14 at John Lyon School, Harrow.
+The website and booking system for HillRisers Cricket Academy: specialist junior cricket coaching for ages 4–14 at John Lyon School, Harrow.
 
 Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4. It is ready to deploy on Vercel.
 
@@ -84,7 +84,7 @@ The data model already includes `paymentType` (`single | term | subscription | m
 1. **Database.** Create a Postgres database (Supabase works) and set `DATABASE_URL`. Tables are created automatically on first use (see `db/schema.sql`), and session config from `sessions.ts` is synced into `academy_sessions`.
 2. **Stripe.**
    - Set `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
-   - Optionally create one product, "Hillrisers Cricket Academy Session", with a £25 price, and set `STRIPE_ACADEMY_PRICE_ID`.
+   - Optionally create one product, "HillRisers Cricket Academy Session", with a £25 price, and set `STRIPE_ACADEMY_PRICE_ID`.
    - Add a webhook endpoint at `https://<domain>/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` and `charge.refunded`, then set `STRIPE_WEBHOOK_SECRET`.
    - Set your logo, navy brand colour and support email under Stripe → Settings → Branding.
 3. **Email.** Set `RESEND_API_KEY` and `EMAIL_FROM` (on a verified domain).

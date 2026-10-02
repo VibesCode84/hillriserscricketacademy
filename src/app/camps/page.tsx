@@ -13,12 +13,12 @@ const [firstCamp] = camps;
 export const metadata: Metadata = {
   title: "Specialist Holiday Cricket Camps in Harrow",
   description:
-    "Hillrisers specialist junior cricket holiday camps, starting in the Spring half term. Details to be confirmed — register your interest to hear first.",
+    "HillRisers specialist junior cricket holiday camps, starting in the Spring half term. Details to be confirmed — register your interest to hear first.",
   alternates: { canonical: "/camps" },
 };
 
 const principles = [
-  { t: "Specialist coaching", b: "From the Hillrisers coaching team, with the same focus on technique, decision-making and game understanding as our academy." },
+  { t: "Specialist coaching", b: "From the HillRisers coaching team, with the same focus on technique, decision-making and game understanding as our academy." },
   { t: "Small working groups", b: "Plenty of turns, plenty of feedback, and coaches who get to know every player." },
   { t: "Serious fun", b: "Ambitious coaching without losing the enjoyment that makes children want to come back." },
 ];
@@ -42,7 +42,7 @@ export default function CampsPage() {
         title="Specialist holiday camps."
         intro={
           <p>
-            Specialist cricket coaching in the school holidays from the Hillrisers coaching team. Academy sessions pause for half term —
+            Specialist cricket coaching in the school holidays from the HillRisers coaching team. Academy sessions pause for half term —
             that&rsquo;s when we run camps, starting in the Spring half term.
           </p>
         }

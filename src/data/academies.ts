@@ -317,7 +317,7 @@ export const academies: Academy[] = [
     seo: {
       title: "Little Cricketers — Cricket for Children Aged 4–7 in Harrow",
       description:
-        "Fun, active cricket sessions for children aged 4–7 in Harrow. Hitting, catching, throwing and games — the first step into the Hillrisers academy pathway.",
+        "Fun, active cricket sessions for children aged 4–7 in Harrow. Hitting, catching, throwing and games — the first step into the HillRisers academy pathway.",
     },
   },
 ];
