@@ -83,36 +83,48 @@ test("a request sent without a deposit has no deposit status", async () => {
   assert.equal(r.depositStatus, "none");
 });
 
-test("terms follow the John Lyon calendar; fees due one week before sessions start", async () => {
-  const { terms, paymentDueDate, sessionDates, termFee, upcomingTerm, termStartLabel } = await import("../src/data/term");
+test("terms follow the John Lyon calendar; fees due at least 10 days before sessions start", async () => {
+  const { terms, paymentDueDate, sessionDates, termFee, upcomingTerm, termStartLabel, PAYMENT_DUE_DAYS_BEFORE } = await import(
+    "../src/data/term"
+  );
   const [autumn, spring, summer] = terms;
-  assert.equal(termStartLabel(autumn), "week commencing 1 November");
-  assert.equal(paymentDueDate(autumn), "2026-10-25");
-  assert.equal(paymentDueDate(spring), "2026-12-31");
-  assert.equal(paymentDueDate(summer), "2027-04-09");
+  const DAY = 86_400_000;
+  assert.equal(PAYMENT_DUE_DAYS_BEFORE, 10);
+  for (const t of terms) {
+    const notice = (Date.parse(t.startsOn) - Date.parse(paymentDueDate(t))) / DAY;
+    assert.ok(notice >= 10, `${t.id} fees due only ${notice} days before`);
+  }
+  assert.equal(paymentDueDate(autumn), "2026-10-22");
+  assert.equal(paymentDueDate(spring), "2026-12-11"); // before Christmas
+  assert.equal(paymentDueDate(summer), "2027-04-06");
 
-  // Autumn: 1 Nov – 11 Dec
+  // Autumn: first session Sunday 1 November, to 11 December
+  assert.equal(termStartLabel(autumn), "Sunday 1 November");
+  assert.equal(sessionDates(autumn, "Sunday")[0], "2026-11-01");
   assert.deepEqual(sessionDates(autumn, "Tuesday"), ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24", "2026-12-01", "2026-12-08"]);
   assert.equal(sessionDates(autumn, "Saturday").length, 5);
-  assert.equal(sessionDates(autumn, "Sunday")[0], "2026-11-01");
   assert.equal(termFee(autumn, "Tuesday", 2500), 15000);
 
-  // Half terms are skipped
-  assert.ok(!sessionDates(spring, "Tuesday").includes("2027-02-16"));
-  assert.ok(!sessionDates(summer, "Wednesday").includes("2027-06-02"));
-  assert.equal(sessionDates(spring, "Tuesday").length, 10);
+  // No sessions in the half-term week, including the weekends either side
+  for (const d of ["2027-02-13", "2027-02-14", "2027-02-16", "2027-02-17", "2027-02-20", "2027-02-21"]) {
+    assert.ok(!(["Tuesday", "Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(spring, day).includes(d)), d);
+  }
+  for (const d of ["2027-05-29", "2027-05-30", "2027-06-01", "2027-06-02", "2027-06-05", "2027-06-06"]) {
+    assert.ok(!(["Tuesday", "Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(summer, day).includes(d)), d);
+  }
+  assert.ok(sessionDates(spring, "Saturday").includes("2027-02-06"));
+  assert.ok(sessionDates(spring, "Saturday").includes("2027-02-27"));
 
   // Which term families see
   assert.equal(upcomingTerm(new Date("2026-10-02")).id, "autumn-2026");
   assert.equal(upcomingTerm(new Date("2026-11-15")).id, "spring-2027");
-  assert.equal(upcomingTerm(new Date("2027-01-20")).id, "summer-2027");
-  assert.equal(upcomingTerm(new Date("2027-05-01")).id, "summer-2027");
+  assert.equal(upcomingTerm(new Date("2026-12-20")).id, "summer-2027");
 });
 
-test("holiday camps start in the Spring half term and interest is stored", async () => {
+test("holiday camp interest is stored (camp details TBC)", async () => {
   const { camps } = await import("../src/data/camps");
-  assert.equal(camps[0].from, "2027-02-15");
-  assert.equal(camps[0].to, "2027-02-19");
+  assert.equal(camps[0].name, "Spring Half Term Camp");
+  assert.equal(camps[0].bookable, false);
   const store = new FileBookingStore(path.join(mkdtempSync(path.join(tmpdir(), "hillrisers-")), "store.json"));
   await store.createCampInterest({
     camps: [camps[0].id, "future"],

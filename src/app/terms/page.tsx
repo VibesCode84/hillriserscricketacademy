@@ -124,10 +124,11 @@ export default function TermsPage() {
         </li>
         <li>
           <strong>Fees are paid termly.</strong> The term fee is the number of weekly sessions in the term multiplied by the session fee,
-          and is due no later than {PAYMENT_DUE_DAYS_BEFORE} days before the term&rsquo;s sessions start. Our first term starts the{" "}
-          {termStartLabel(terms[0])}, so fees are due by {formatTermDate(paymentDueDate(terms[0]), { weekday: true })}. Term dates follow
-          the John Lyon School calendar and are published on our <Link href="/sessions#term-dates">timetable page</Link>. There are no
-          sessions during school half terms.
+          and is due at least {PAYMENT_DUE_DAYS_BEFORE} days before the term&rsquo;s sessions start. Each term&rsquo;s due date is
+          published with the term dates on our <Link href="/sessions#term-dates">timetable page</Link> — for example, our first term
+          starts on {termStartLabel(terms[0])}, so fees are due by {formatTermDate(paymentDueDate(terms[0]), { weekday: true })}. Term
+          dates follow the John Lyon School calendar. There are no academy sessions during half terms, including the weekends either
+          side; we run holiday camps instead, which are booked separately.
         </li>
         <li>
           If the term fee hasn&rsquo;t been paid by the due date, we may offer your child&rsquo;s place to a family on the waiting list. Please

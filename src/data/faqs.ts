@@ -45,11 +45,11 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "When do sessions start?",
-        a: `Our first term starts the ${termStartLabel(firstTerm)} and runs until ${formatTermDate(firstTerm.endsOn, { weekday: true })}. After that, terms follow the John Lyon School calendar, with no sessions in half terms — see the term dates on our Timetable page.`,
+        a: `Our first session is on ${termStartLabel(firstTerm)}, and the first term runs until ${formatTermDate(firstTerm.endsOn, { weekday: true })}. After that, terms follow the John Lyon School calendar. There are no academy sessions in half terms — that's when we run specialist holiday camps. See the term dates on our Timetable page.`,
       },
       {
         q: "How do payments work?",
-        a: `Fees are paid termly, and are due one week before the term's sessions start — for our first term, by ${formatTermDate(paymentDueDate(firstTerm), { weekday: true })}. The term fee is the number of sessions in the term × the session fee. Start with a single trial session first if you like; there's no term commitment for the trial.`,
+        a: `Fees are paid termly, and are due at least 10 days before the term's sessions start — for our first term, by ${formatTermDate(paymentDueDate(firstTerm), { weekday: true })}. Spring term fees are due before the Christmas break. The term fee is the number of sessions in the term × the session fee. Start with a single trial session first if you like; there's no term commitment for the trial.`,
       },
       {
         q: "How big are the groups?",

@@ -5,10 +5,12 @@ import type { Day } from "./sessions";
  * (https://www.johnlyon.org/information/term-dates/). Edit here each year.
  *
  * - Sessions run from `startsOn` to `endsOn` inclusive, on each slot's weekday.
- * - `noSessions` ranges (half terms, closures) are skipped. Half terms are the
- *   school's Monday–Friday dates; extend a range to cover the weekends either
- *   side if weekend sessions should also stop.
- * - Fees are paid termly and due `paymentDueDaysBefore` days before `startsOn`.
+ * - `noSessions` ranges (half terms, closures) are skipped. Half terms cover the
+ *   whole week including the weekends either side — no academy sessions run;
+ *   half terms are for holiday camps (src/data/camps.ts).
+ * - Fees are paid termly and are due at least PAYMENT_DUE_DAYS_BEFORE days
+ *   before `startsOn`, or on `paymentDueOn` where a more convenient earlier
+ *   date is set (e.g. before Christmas).
  * - The term fee is the number of sessions in the term × the session fee
  *   (£25, or £15 for Little Cricketers).
  */
@@ -20,36 +22,40 @@ export type AcademyTerm = {
   /** Last date sessions can run (YYYY-MM-DD) */
   endsOn: string;
   noSessions: { from: string; to: string; label: string }[];
-  /** How the start is described to families */
-  startLabel?: string;
+  /** Explicit fee deadline (YYYY-MM-DD); must be at least PAYMENT_DUE_DAYS_BEFORE days before startsOn */
+  paymentDueOn?: string;
 };
 
-export const PAYMENT_DUE_DAYS_BEFORE = 7;
+/** Minimum notice: term fees are due at least this many days before sessions start */
+export const PAYMENT_DUE_DAYS_BEFORE = 10;
 
 export const terms: AcademyTerm[] = [
   {
     id: "autumn-2026",
     name: "Autumn term 2026",
-    // Academy launch: sessions start w/c 1 November (school term: Thu 3 Sep – Fri 11 Dec,
+    // Academy launch: first session Sunday 1 November (school term: Thu 3 Sep – Fri 11 Dec,
     // half term Mon 19 – Fri 30 Oct)
     startsOn: "2026-11-01",
     endsOn: "2026-12-11",
     noSessions: [],
-    startLabel: "week commencing 1 November",
   },
   {
     id: "spring-2027",
     name: "Spring term 2027",
     startsOn: "2027-01-07",
     endsOn: "2027-03-25",
-    noSessions: [{ from: "2027-02-15", to: "2027-02-19", label: "Half term" }],
+    // School half term Mon 15 – Fri 19 Feb, plus the weekends either side
+    noSessions: [{ from: "2027-02-13", to: "2027-02-21", label: "Half term" }],
+    // Due before the Christmas break (the last day of the autumn term)
+    paymentDueOn: "2026-12-11",
   },
   {
     id: "summer-2027",
     name: "Summer term 2027",
     startsOn: "2027-04-16",
     endsOn: "2027-07-09",
-    noSessions: [{ from: "2027-05-31", to: "2027-06-04", label: "Half term" }],
+    // School half term Mon 31 May – Fri 4 Jun, plus the weekends either side
+    noSessions: [{ from: "2027-05-29", to: "2027-06-06", label: "Half term" }],
   },
 ];
 
@@ -61,7 +67,9 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 /** YYYY-MM-DD of the termly payment deadline */
 export function paymentDueDate(t: AcademyTerm) {
-  return iso(new Date(parse(t.startsOn).getTime() - PAYMENT_DUE_DAYS_BEFORE * DAY_MS));
+  const latest = iso(new Date(parse(t.startsOn).getTime() - PAYMENT_DUE_DAYS_BEFORE * DAY_MS));
+  // Never later than the minimum notice, even if paymentDueOn is mistyped
+  return t.paymentDueOn && t.paymentDueOn < latest ? t.paymentDueOn : latest;
 }
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -97,8 +105,9 @@ export function termFee(t: AcademyTerm, day: Day, pricePence: number) {
   return sessionDates(t, day).length * pricePence;
 }
 
+/** e.g. "Sunday 1 November" */
 export function termStartLabel(t: AcademyTerm) {
-  return t.startLabel ?? formatTermDate(t.startsOn, { weekday: true });
+  return formatTermDate(t.startsOn, { weekday: true });
 }
 
 /**

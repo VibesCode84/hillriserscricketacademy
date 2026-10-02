@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { camps } from "@/data/camps";
-import { site } from "@/data/site";
-import { formatTermDate } from "@/data/term";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -11,23 +9,19 @@ import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
 import { CampInterestForm } from "@/components/CampInterestForm";
 
 const [firstCamp] = camps;
-const firstCampDates = `${formatTermDate(firstCamp.from, { weekday: true })} – ${formatTermDate(firstCamp.to, { weekday: true, year: true })}`;
 
 export const metadata: Metadata = {
   title: "Specialist Holiday Cricket Camps in Harrow",
-  description: `Hillrisers specialist junior cricket holiday camps at ${site.venue.name}, Harrow — starting Spring half term (${firstCampDates}). Register your interest.`,
+  description:
+    "Hillrisers specialist junior cricket holiday camps, starting in the Spring half term. Details to be confirmed — register your interest to hear first.",
   alternates: { canonical: "/camps" },
 };
 
 const principles = [
-  { t: "Specialist coaching", b: "Led by the Hillrisers coaching team, with the same focus on technique, decision-making and game understanding as our academy." },
+  { t: "Specialist coaching", b: "From the Hillrisers coaching team, with the same focus on technique, decision-making and game understanding as our academy." },
   { t: "Small working groups", b: "Plenty of turns, plenty of feedback, and coaches who get to know every player." },
-  { t: "A week of real progress", b: "Several days together gives time to build a skill properly — and then use it in games." },
   { t: "Serious fun", b: "Ambitious coaching without losing the enjoyment that makes children want to come back." },
 ];
-
-// TODO: replace with confirmed details when available
-const toConfirm = ["Daily times", "Ages and groups", "Specialist focus for each day", "Price and booking"];
 
 const faqs = [
   {
@@ -36,11 +30,7 @@ const faqs = [
   },
   {
     q: "When will the details be confirmed?",
-    a: "We're finalising times, ages, focus and prices now. Families who register interest will be the first to know.",
-  },
-  {
-    q: "Where are the camps held?",
-    a: `At ${site.venue.name}, ${site.venue.addressLines.join(", ")} — the same venue as our academy sessions.`,
+    a: "Camp details are to be confirmed. Families who register interest will be the first to know.",
   },
 ];
 
@@ -48,36 +38,27 @@ export default function CampsPage() {
   return (
     <>
       <PageHero
-        eyebrow={`Holiday camps · Starting Spring half term`}
+        eyebrow="Holiday camps · Starting Spring half term"
         title="Specialist holiday camps."
         intro={
           <p>
-            A week of specialist cricket coaching in the school holidays, from the Hillrisers coaching team at {site.venue.name}. Our first
-            camp runs in the Spring half term.
+            Specialist cricket coaching in the school holidays from the Hillrisers coaching team. Academy sessions pause for half term —
+            that&rsquo;s when we run camps, starting in the Spring half term.
           </p>
         }
         actions={
           <>
             <ButtonLink href="#register" arrow className="group">Register interest</ButtonLink>
-            <ButtonLink href="#details" variant="secondary">What we know so far</ButtonLink>
           </>
         }
-        afterActions={
-          <p className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cream">
-            <svg viewBox="0 0 20 20" className="h-4 w-4 text-gold" fill="none" aria-hidden="true">
-              <rect x="3" y="4.5" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
-              <path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-            {firstCamp.name}: {firstCampDates}
-          </p>
-        }
-        image={{ alt: "Junior cricketers in a holiday camp match at John Lyon School" }}
+        afterActions={<p className="mt-6 text-sm font-semibold text-cream">{firstCamp.name} · Details TBC</p>}
+        image={{ alt: "Junior cricketers in a holiday camp game" }}
       />
 
-      <Section tone="light" id="details">
+      <Section tone="light">
         <div className="grid gap-14 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <SectionHeader eyebrow="The camps" title="Everything good about the academy, for a whole week." className="mb-10" />
+            <SectionHeader eyebrow="The camps" title="Everything good about the academy, in the holidays." className="mb-10" />
             <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {principles.map((p, i) => (
                 <Reveal key={p.t} delay={(i % 2) * 80} className="border-t border-navy-950/10 pt-5">
@@ -87,22 +68,15 @@ export default function CampsPage() {
               ))}
             </div>
           </div>
-          <Reveal delay={120} className="rounded-3xl bg-navy-950 p-7 text-cream md:p-9">
+          <Reveal delay={120} className="self-start rounded-3xl bg-navy-950 p-7 text-cream md:p-9">
             <p className="eyebrow">First camp</p>
             <h3 className="mt-4 text-3xl">{firstCamp.name}</h3>
-            <p className="mt-2 text-lg text-gold-soft">{firstCampDates}</p>
-            <p className="mt-1 text-slate">{site.venue.name}, Harrow</p>
-            <div className="mt-7 border-t border-cream/10 pt-6">
-              <p className="font-semibold">Details to follow</p>
-              <ul className="mt-3 space-y-2 text-slate">
-                {toConfirm.map((x) => (
-                  <li key={x} className="flex items-center gap-3">
-                    <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
-                    {x}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 text-sm text-slate">Register interest and you&rsquo;ll hear first — before booking opens to everyone.</p>
+            <p className="mt-2 text-lg text-gold-soft">Details TBC</p>
+            <p className="mt-6 border-t border-cream/10 pt-6 text-sm text-slate">
+              Register interest and you&rsquo;ll hear first — before booking opens to everyone.
+            </p>
+            <div className="mt-6">
+              <ButtonLink href="#register">Register interest</ButtonLink>
             </div>
           </Reveal>
         </div>

@@ -18,12 +18,9 @@ import { CTASection, NotSureBanner } from "@/components/CTASection";
 import { FindMySession } from "@/components/FindMySession";
 import { Pathway } from "@/components/Pathway";
 import { VenueFeature } from "@/components/VenueFeature";
-import { camps } from "@/data/camps";
-import { formatTermDate } from "@/data/term";
 
 export const revalidate = 60;
 
-const campDates = `${formatTermDate(camps[0].from)} – ${formatTermDate(camps[0].to, { year: true })}`;
 
 const pillars = [
   {
@@ -244,7 +241,7 @@ export default async function HomePage() {
           <div>
             <p className="eyebrow">New · Holiday camps</p>
             <p className="mt-3 font-serif text-3xl text-cream">Specialist holiday camps, starting Spring half term.</p>
-            <p className="mt-1 text-slate">{campDates} at John Lyon School. Details to follow.</p>
+            <p className="mt-1 text-slate">Details TBC — register interest to hear first.</p>
           </div>
           <ButtonLink href="/camps#register" variant="secondary" className="shrink-0">Register interest</ButtonLink>
         </div>

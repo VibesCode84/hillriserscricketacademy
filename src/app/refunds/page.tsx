@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { site } from "@/data/site";
 import { LegalPage } from "@/components/LegalPage";
@@ -16,7 +17,8 @@ export default function Page() {
       </p>
       <h2>Term fees</h2>
       <p>
-        Fees are paid termly and are due one week before the term&rsquo;s sessions start. If you withdraw before the due date, we&rsquo;ll
+        Fees are paid termly and are due at least 10 days before the term&rsquo;s sessions start (see the{" "}
+        <Link href="/sessions#term-dates">term dates</Link>). If you withdraw before the due date, we&rsquo;ll
         refund any term fee you&rsquo;ve paid in full. After that, term fees are non-refundable except where we cancel sessions, or at our
         discretion in exceptional circumstances such as long-term injury or illness.
       </p>

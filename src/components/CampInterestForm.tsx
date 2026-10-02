@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { camps, FUTURE_CAMPS } from "@/data/camps";
-import { formatTermDate } from "@/data/term";
 import { buttonClass } from "./Button";
 
 const interests = [
@@ -77,7 +76,7 @@ export function CampInterestForm() {
       <fieldset>
         <legend className="label">Which camps are you interested in?</legend>
         <div className="mt-1 space-y-2">
-          {[...camps.map((c) => ({ id: c.id, title: c.name, detail: `${formatTermDate(c.from, { weekday: true })} – ${formatTermDate(c.to, { weekday: true, year: true })}` })), { id: FUTURE_CAMPS, title: "Future holiday camps", detail: "Easter, summer and beyond" }].map((o) => (
+          {[...camps.map((c) => ({ id: c.id, title: c.name, detail: "Details TBC" })), { id: FUTURE_CAMPS, title: "Future holiday camps", detail: "Easter, summer and beyond" }].map((o) => (
             <label
               key={o.id}
               className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${

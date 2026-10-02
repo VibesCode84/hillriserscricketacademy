@@ -1,6 +1,6 @@
 import { DAYS } from "@/data/sessions";
 import { site, formatPrice } from "@/data/site";
-import { formatTermDate, paymentDueDate, sessionDates, termStartLabel, terms } from "@/data/term";
+import { PAYMENT_DUE_DAYS_BEFORE, formatTermDate, paymentDueDate, sessionDates, termStartLabel, terms } from "@/data/term";
 
 /** 2026–27 term dates, session counts and fees, from src/data/term.ts. */
 export function TermTable() {
@@ -24,7 +24,7 @@ export function TermTable() {
               <tr key={t.id}>
                 <th scope="row" className="px-5 py-5 font-serif text-xl font-medium">{t.name}</th>
                 <td className="px-5 py-5">
-                  {t.startLabel ? `From ${t.startLabel}` : formatTermDate(t.startsOn, { weekday: true })}
+                  {formatTermDate(t.startsOn, { weekday: true })}
                   <br />
                   <span className="text-ink-muted">to {formatTermDate(t.endsOn, { weekday: true })}</span>
                 </td>
@@ -33,6 +33,9 @@ export function TermTable() {
                     ? t.noSessions.map((n) => (
                         <span key={n.from} className="block">
                           {n.label}: {formatTermDate(n.from)} – {formatTermDate(n.to)}
+                          <span className="block text-sm">
+                            <a href="/camps" className="text-gold-deep underline underline-offset-2">Holiday camps</a> instead
+                          </span>
                         </span>
                       ))
                     : "—"}
@@ -56,10 +59,12 @@ export function TermTable() {
         </table>
       </div>
       <p className="mt-5 max-w-3xl text-sm leading-relaxed text-ink-muted">
-        Fees are paid termly, one week before each term&rsquo;s sessions start. The term fee is the number of sessions in the term × the
+        Fees are paid termly and are due at least {PAYMENT_DUE_DAYS_BEFORE} days before each term&rsquo;s sessions start. The term fee is
+        the number of sessions in the term × the
         session fee: {formatPrice(price)} for a 90-minute academy session, or {formatPrice(site.littleCricketers.pricePence)} for Little
-        Cricketers. Term dates follow the John Lyon School calendar, with no sessions in half terms. Weekend session counts are provisional
-        until weekend times are confirmed. {terms[0].name} starts the {termStartLabel(terms[0])}.
+        Cricketers. Term dates follow the John Lyon School calendar. There are no academy sessions in half terms (including the weekends
+        either side) — we run specialist holiday camps instead. Weekend session counts are provisional until weekend times are confirmed.{" "}
+        {terms[0].name} starts on {termStartLabel(terms[0])}.
       </p>
     </div>
   );

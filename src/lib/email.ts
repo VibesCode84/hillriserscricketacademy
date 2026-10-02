@@ -6,7 +6,7 @@ import { formatTermDate, paymentDueDate, termStartLabel, upcomingTerm } from "..
 
 function termLine() {
   const t = upcomingTerm();
-  return `${t.name} starts the ${termStartLabel(t)} and runs until ${formatTermDate(t.endsOn, { weekday: true })}. Fees are paid termly and are due by ${formatTermDate(paymentDueDate(t), { weekday: true })}. Term dates: ${site.url}/sessions#term-dates`;
+  return `${t.name} starts on ${termStartLabel(t)} and runs until ${formatTermDate(t.endsOn, { weekday: true })}. Fees are paid termly and are due by ${formatTermDate(paymentDueDate(t), { weekday: true })}. Term dates: ${site.url}/sessions#term-dates`;
 }
 import type { Booking, CampInterest, Parent, Player, TrialRequest } from "./booking/types";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
@@ -171,7 +171,7 @@ export async function sendCampInterestConfirmation(c: CampInterest) {
     .map((id) => {
       if (id === FUTURE_CAMPS) return "• Future holiday camps";
       const camp = getCamp(id);
-      return camp ? `• ${camp.name} (${formatTermDate(camp.from, { weekday: true })} – ${formatTermDate(camp.to, { weekday: true, year: true })})` : `• ${id}`;
+      return `• ${camp?.name ?? id}`;
     })
     .join("\n");
   await send({
@@ -182,7 +182,7 @@ export async function sendCampInterestConfirmation(c: CampInterest) {
 Thank you for registering ${first}'s interest in Hillrisers specialist holiday camps:
 ${campList}
 
-We're finalising the details — times, ages, prices and each camp's focus. You'll hear from us first, before booking opens to everyone.
+Details are to be confirmed. You'll hear from us first, before booking opens to everyone.
 
 There's nothing to pay, and registering doesn't commit you to anything.
 
