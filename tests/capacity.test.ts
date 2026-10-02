@@ -7,7 +7,7 @@ import { FileBookingStore } from "../src/lib/booking/file-store";
 import { availabilityFor } from "../src/lib/booking";
 import { getSession } from "../src/data/sessions";
 
-const SESSION = "tue-1800"; // capacity 18
+const SESSION = "wed-1800"; // capacity 18
 
 async function freshStore() {
   const dir = mkdtempSync(path.join(tmpdir(), "hillrisers-"));

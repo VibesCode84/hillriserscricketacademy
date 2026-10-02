@@ -16,7 +16,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Timetable & Price — Junior Cricket Sessions in Harrow",
   description:
-    "Weekly junior cricket academy timetable at John Lyon School, Harrow: Tuesday and Wednesday evenings plus weekend sessions. 90-minute specialist sessions, maximum 18 players, £25.",
+    "Weekly junior cricket academy timetable at John Lyon School, Harrow: Wednesday evenings plus weekend sessions. 90-minute specialist sessions, maximum 18 players, £25.",
   alternates: { canonical: "/sessions" },
 };
 
@@ -27,7 +27,7 @@ export default async function SessionsPage() {
       <PageHero
         eyebrow="Timetable & price"
         title="Every session, every week."
-        intro={<p>Tuesday and Wednesday evenings plus weekend sessions at John Lyon School. Maximum 18 players in every academy group.</p>}
+        intro={<p>Wednesday evenings plus weekend sessions at John Lyon School. Maximum 18 players in every academy group.</p>}
         afterActions={<TermDates className="mt-6" />}
         actions={
           <>

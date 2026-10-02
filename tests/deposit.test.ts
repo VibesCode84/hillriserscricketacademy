@@ -101,16 +101,16 @@ test("terms follow the John Lyon calendar; fees due at least 10 days before sess
   // Autumn: first session Sunday 1 November, to 11 December
   assert.equal(termStartLabel(autumn), "Sunday 1 November");
   assert.equal(sessionDates(autumn, "Sunday")[0], "2026-11-01");
-  assert.deepEqual(sessionDates(autumn, "Tuesday"), ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24", "2026-12-01", "2026-12-08"]);
+  assert.deepEqual(sessionDates(autumn, "Wednesday"), ["2026-11-04", "2026-11-11", "2026-11-18", "2026-11-25", "2026-12-02", "2026-12-09"]);
   assert.equal(sessionDates(autumn, "Saturday").length, 5);
-  assert.equal(termFee(autumn, "Tuesday", 2500), 15000);
+  assert.equal(termFee(autumn, "Wednesday", 2500), 15000);
 
   // No sessions in the half-term week, including the weekends either side
   for (const d of ["2027-02-13", "2027-02-14", "2027-02-16", "2027-02-17", "2027-02-20", "2027-02-21"]) {
-    assert.ok(!(["Tuesday", "Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(spring, day).includes(d)), d);
+    assert.ok(!(["Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(spring, day).includes(d)), d);
   }
   for (const d of ["2027-05-29", "2027-05-30", "2027-06-01", "2027-06-02", "2027-06-05", "2027-06-06"]) {
-    assert.ok(!(["Tuesday", "Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(summer, day).includes(d)), d);
+    assert.ok(!(["Wednesday", "Saturday", "Sunday"] as const).some((day) => sessionDates(summer, day).includes(d)), d);
   }
   assert.ok(sessionDates(spring, "Saturday").includes("2027-02-06"));
   assert.ok(sessionDates(spring, "Saturday").includes("2027-02-27"));

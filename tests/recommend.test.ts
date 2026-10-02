@@ -63,7 +63,7 @@ test("once a slot is assigned to an academy it is recommended", () => {
     id: "test-batting",
     title: "Batting Academy",
     discipline: "batting",
-    day: "Tuesday",
+    day: "Wednesday",
     block: "test",
     startTime: "18:00",
     endTime: "19:30",

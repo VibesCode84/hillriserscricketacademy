@@ -18,7 +18,7 @@ export function ScheduleGrid({ availability }: { availability: Record<string, Se
 
   return (
     <div>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 md:grid-cols-3">
         {days.map(({ day, items }) => (
           <div key={day} className="rounded-2xl border border-cream/10 bg-navy-900/70 p-5">
             <div className="border-b border-cream/10 pb-4">

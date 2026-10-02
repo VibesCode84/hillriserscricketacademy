@@ -187,7 +187,7 @@ export default async function HomePage() {
           <SectionHeader
             eyebrow="Weekly timetable"
             title="Sessions through the week."
-            intro={<p className="text-slate">Tuesday and Wednesday evenings, plus weekend sessions at John Lyon School.</p>}
+            intro={<p className="text-slate">Wednesday evenings, plus weekend sessions at John Lyon School.</p>}
           />
           <Reveal>
             <Link href="/sessions" className="link-underline shrink-0 text-sm font-semibold text-gold">Full timetable &amp; pricing →</Link>

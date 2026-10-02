@@ -1,7 +1,7 @@
 import type { DisciplineKey } from "./academies";
 
-export type Day = "Tuesday" | "Wednesday" | "Saturday" | "Sunday";
-export const DAYS: Day[] = ["Tuesday", "Wednesday", "Saturday", "Sunday"];
+export type Day = "Wednesday" | "Saturday" | "Sunday";
+export const DAYS: Day[] = ["Wednesday", "Saturday", "Sunday"];
 
 /**
  * The weekly timetable. This is the single place to edit the session mix.
@@ -47,9 +47,6 @@ const standard = { capacity: 18, pricePence: 2500, active: true, title: "Academy
 const weekday = "John Lyon weekday academy block";
 
 export const sessions: AcademySession[] = [
-  // ── Tuesday — John Lyon weekday academy block ────────────────────────────
-  { id: "tue-1800", day: "Tuesday", block: weekday, startTime: "18:00", endTime: "19:30", confirmed: true, ...standard },
-  { id: "tue-1930", day: "Tuesday", block: weekday, startTime: "19:30", endTime: "21:00", confirmed: true, ...standard },
   // ── Wednesday — John Lyon weekday academy block ──────────────────────────
   { id: "wed-1800", day: "Wednesday", block: weekday, startTime: "18:00", endTime: "19:30", confirmed: true, ...standard },
   { id: "wed-1930", day: "Wednesday", block: weekday, startTime: "19:30", endTime: "21:00", confirmed: true, ...standard },

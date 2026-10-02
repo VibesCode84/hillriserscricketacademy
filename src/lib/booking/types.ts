@@ -102,7 +102,7 @@ export type TrialRequest = {
   playerId: string;
   /** The academy the family chose (a DisciplineKey) */
   academy: string;
-  /** Days the family can attend, e.g. ["Tuesday", "Sunday"] — empty means any */
+  /** Days the family can attend, e.g. ["Wednesday", "Sunday"] — empty means any */
   preferredDays: string[];
   notes?: string;
   status: TrialRequestStatus;

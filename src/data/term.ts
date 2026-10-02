@@ -60,7 +60,7 @@ export const terms: AcademyTerm[] = [
 ];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const WEEKDAY: Record<Day, number> = { Sunday: 0, Tuesday: 2, Wednesday: 3, Saturday: 6 };
+const WEEKDAY: Record<Day, number> = { Sunday: 0, Wednesday: 3, Saturday: 6 };
 
 const parse = (date: string) => new Date(`${date}T12:00:00Z`);
 const iso = (d: Date) => d.toISOString().slice(0, 10);

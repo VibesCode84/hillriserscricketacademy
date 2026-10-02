@@ -491,7 +491,7 @@ export function BookingFlow({
                     </label>
                   ))}
                 </div>
-                <p className="hint">Tuesday and Wednesday sessions run 6–7:30pm and 7:30–9pm. Weekend times are being confirmed. Leave blank if any day works.</p>
+                <p className="hint">Wednesday sessions run 6–7:30pm and 7:30–9pm. Weekend times are being confirmed. Leave blank if any day works.</p>
               </fieldset>
             )}
 

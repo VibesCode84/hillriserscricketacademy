@@ -47,7 +47,7 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 
 export const trialRequestSchema = profileSchema.extend({
   academy: z.enum(["batting", "seam-bowling", "spin-bowling", "power", "performance", "girls", "little-cricketers"]),
-  preferredDays: z.array(z.enum(["Tuesday", "Wednesday", "Saturday", "Sunday"])).max(4).default([]),
+  preferredDays: z.array(z.enum(["Wednesday", "Saturday", "Sunday"])).max(3).default([]),
   /** Pay a refundable holding deposit to secure the place */
   withDeposit: z.boolean().default(false),
 });
