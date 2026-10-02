@@ -6,6 +6,7 @@ import { testimonials } from "@/data/testimonials";
 import { BookingFlow, type BookingPrefill } from "@/components/booking/BookingFlow";
 import { TestimonialCard } from "@/components/TestimonialCard";
 import { Crest } from "@/components/Logo";
+import { TermDates } from "@/components/TermDates";
 import type { Experience, Gender, Interest } from "@/lib/booking/types";
 
 export const dynamic = "force-dynamic";
@@ -52,11 +53,11 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
             <h2 className="mt-5 text-2xl">Every trial includes</h2>
             <ul className="mt-4 space-y-3 text-[0.95rem] text-cream/85">
               {[
-                "90 minutes of specialist coaching",
+                "Specialist coaching (90 minutes, or 60 for Little Cricketers)",
                 "A coaching team of four, max 18 players",
                 "A coach who knows your child is new",
                 "A follow-up call to recommend their pathway",
-                "No term commitment",
+                "No term commitment for the trial",
               ].map((x) => (
                 <li key={x} className="flex gap-3">
                   <span className="text-gold" aria-hidden="true">✓</span>
@@ -64,6 +65,9 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
                 </li>
               ))}
             </ul>
+          </div>
+          <div className="rounded-3xl bg-white p-6">
+            <TermDates tone="light" />
           </div>
           <TestimonialCard t={testimonials[0]} />
         </aside>

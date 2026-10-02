@@ -1,3 +1,5 @@
+import { termPaymentDueLabel, termStartLabel } from "./term";
+
 export type FAQ = { q: string; a: string };
 export type FAQGroup = { title: string; items: FAQ[] };
 
@@ -33,11 +35,19 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "How much does it cost?",
-        a: "Specialist academy sessions are £25 for 90 minutes, with a lead coach, an assistant coach and two junior helpers, and a maximum of 18 players.",
+        a: "Specialist academy sessions are £25 for 90 minutes, with a lead coach, an assistant coach and two junior helpers, and a maximum of 18 players. Little Cricketers sessions (ages 4–7) are £15 for 60 minutes.",
       },
       {
-        q: "Do we have to sign up for a whole term?",
-        a: "No. Start with a single trial session. If your child loves it, you can keep booking sessions.",
+        q: "Can I secure a place before the timetable is confirmed?",
+        a: "Yes. When you request a trial you can pay a refundable holding deposit equal to the first session fee — £25, or £15 for Little Cricketers. It holds your child's place, covers their trial session once we confirm the day and time, and is refunded in full if we can't offer a session that suits you or you change your mind before it's confirmed.",
+      },
+      {
+        q: "When do sessions start?",
+        a: `Sessions start the ${termStartLabel}.`,
+      },
+      {
+        q: "How do payments work?",
+        a: `Fees are paid termly, and are due one week before the term's sessions start — for our first term, by ${termPaymentDueLabel}. Start with a single trial session first if you like; there's no term commitment for the trial.`,
       },
       {
         q: "How big are the groups?",

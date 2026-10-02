@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sessions, formatTimeRange, getSession, sessionLabel } from "@/data/sessions";
-import type { BookingStatus, TrialRequestStatus, TrialRequestView, WaitlistEntry } from "@/lib/booking/types";
+import type { BookingStatus, DepositStatus, TrialRequestStatus, TrialRequestView, WaitlistEntry } from "@/lib/booking/types";
+import { formatPrice } from "@/data/site";
 
 async function adminPost(body: unknown) {
   const res = await fetch("/api/admin/bookings", {
@@ -106,6 +107,14 @@ const trialStatusLabel: Record<TrialRequestStatus, string> = {
   closed: "Closed",
 };
 
+const depositBadge: Record<DepositStatus, { label: string; cls: string }> = {
+  none: { label: "No deposit", cls: "bg-[#eef0f3] text-[#4d5664]" },
+  pending: { label: "Deposit not completed", cls: "bg-[#fdf3dc] text-[#7a5600]" },
+  paid: { label: "Deposit paid", cls: "bg-[#e3f3ea] text-[#1d5b3a]" },
+  applied: { label: "Deposit credited", cls: "bg-[#e7eefb] text-[#1c3f6e]" },
+  refunded: { label: "Deposit refunded", cls: "bg-[#fbeae8] text-[#8c1d18]" },
+};
+
 export function TrialRequestRow({ request: t, academyName }: { request: TrialRequestView; academyName: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -122,12 +131,25 @@ export function TrialRequestRow({ request: t, academyName }: { request: TrialReq
     router.refresh();
   };
 
+  const markCredited = async () => {
+    if (!window.confirm("Mark this deposit as credited to a booked session? Add the session with 'Add manual booking'.")) return;
+    setBusy(true);
+    await adminPost({ action: "depositStatus", requestId: t.id, status: "applied" });
+    setBusy(false);
+    router.refresh();
+  };
+  const badge = depositBadge[t.depositStatus ?? "none"];
+
   return (
     <div className="flex flex-wrap items-start justify-between gap-4 p-5 text-sm">
       <details className="min-w-0 flex-1">
         <summary className="cursor-pointer">
           <span className="font-semibold">{t.player?.name ?? "—"}</span>
           <span className="text-ink-muted"> · {academyName} · {t.preferredDays.length ? t.preferredDays.join(", ") : "Any day"}</span>
+          <span className={`ml-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.cls}`}>
+            {badge.label}
+            {(t.depositStatus === "paid" || t.depositStatus === "applied") && t.depositPence ? ` · ${formatPrice(t.depositPence)}` : ""}
+          </span>
         </summary>
         <dl className="mt-2 space-y-1 text-xs text-ink-muted">
           <div>DOB: {t.player?.dateOfBirth} · {t.player?.gender} · {t.player?.experience} · interest: {t.player?.interest}</div>
@@ -140,6 +162,7 @@ export function TrialRequestRow({ request: t, academyName }: { request: TrialReq
           <div>Photo consent: {t.player?.photoConsent ? "Yes" : "No"}</div>
           {t.player?.heardAbout && <div>Heard via: {t.player.heardAbout}</div>}
           <div>Requested {new Date(t.createdAt).toLocaleString("en-GB")}</div>
+          {t.depositStatus === "paid" && <div>Refunds are issued in Stripe; the status updates automatically.</div>}
         </dl>
       </details>
       <div className="flex items-center gap-2">
@@ -154,6 +177,11 @@ export function TrialRequestRow({ request: t, academyName }: { request: TrialReq
             <option key={k} value={k}>{trialStatusLabel[k]}</option>
           ))}
         </select>
+        {t.depositStatus === "paid" && (
+          <button type="button" disabled={busy} onClick={markCredited} className="rounded-full border border-navy-950/20 px-3 py-2 text-xs font-semibold">
+            Mark deposit credited
+          </button>
+        )}
         {t.parent && (
           <a
             href={`mailto:${t.parent.email}?subject=${encodeURIComponent(`${first}'s Hillrisers trial`)}&body=${encodeURIComponent(body)}`}

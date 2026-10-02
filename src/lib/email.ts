@@ -1,8 +1,11 @@
 import { site, formatPrice } from "../data/site";
 import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sessions";
-import { getAcademy } from "../data/academies";
+import { depositFor, getAcademy } from "../data/academies";
 import { coachesFor } from "../data/coaches";
-import type { Booking, Parent, Player } from "./booking/types";
+import { termPaymentDueLabel, termStartLabel } from "../data/term";
+
+const termLine = `Sessions start the ${termStartLabel}. Fees are paid termly and are due by ${termPaymentDueLabel}.`;
+import type { Booking, Parent, Player, TrialRequest } from "./booking/types";
 
 type Email = { to: string; subject: string; text: string };
 
@@ -46,6 +49,9 @@ Session: ${sessionLabel(session)}
 When: ${session.day}, ${formatTimeRange(session)}${session.confirmed ? "" : " — we'll confirm the exact time with you"}
 Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
 ${coach ? `Coach: ${coach.name} — ${coach.role}\n` : ""}Paid: ${formatPrice(booking.amountPaidPence ?? session.pricePence)}
+
+TERM DATES
+${termLine}
 
 WHAT TO BRING
 • Comfortable sportswear and indoor trainers
@@ -109,6 +115,8 @@ Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
 WHAT HAPPENS NEXT
 We're finalising which academy runs on which day. A coach will be in touch shortly to confirm the best day and time for ${first}, and send you a link to secure the place.
 
+${termLine}
+
 Questions? Reply to this email or call ${site.phone}.
 
 The Hillrisers coaching team
@@ -118,6 +126,38 @@ The Hillrisers coaching team
     to: site.email,
     subject: `New trial request: ${player.name} — ${academy?.name ?? academyKey}`,
     text: `${player.name} (DOB ${player.dateOfBirth}, ${player.experience}, interest: ${player.interest})\nAcademy: ${academy?.name ?? academyKey}\nPreferred days: ${days}\nParent: ${parent.name} <${parent.email}> ${parent.mobile}\n\nSee /admin/bookings`,
+  });
+}
+
+export async function sendDepositConfirmation(args: { request: TrialRequest; player: Player; parent: Parent }) {
+  const { request, player, parent } = args;
+  const academy = getAcademy(request.academy);
+  const first = player.name.split(" ")[0];
+  const days = request.preferredDays.length ? request.preferredDays.join(", ") : "Any day";
+  const amount = formatPrice(request.depositPence ?? depositFor(request.academy));
+  await send({
+    to: parent.email,
+    subject: `${first}'s place is secured — Hillrisers`,
+    text: `Hi ${parent.name.split(" ")[0]},
+
+Thank you — we've received your ${amount} refundable holding deposit, and ${first}'s place in ${academy?.name ?? request.academy} is secured.
+
+WHAT HAPPENS NEXT
+We're finalising which academy runs on which day. A coach will be in touch to confirm the best day and time for ${first} (preferred: ${days}).
+Your deposit pays for ${first}'s first session, and counts towards the term fee if ${first} continues for the term.
+${termLine}
+
+IF PLANS CHANGE
+If we can't offer a session that suits you, or you change your mind before the session is confirmed, just reply and we'll refund the deposit in full.
+
+The Hillrisers coaching team · ${site.phone}
+Reference: ${request.id.slice(0, 8).toUpperCase()}
+`,
+  });
+  await send({
+    to: site.email,
+    subject: `Deposit paid: ${player.name} — ${academy?.name ?? request.academy}`,
+    text: `${amount} holding deposit received for ${player.name}.\nPreferred days: ${days}\nParent: ${parent.name} <${parent.email}> ${parent.mobile}\n\nSee /admin/bookings`,
   });
 }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStore } from "@/lib/booking";
-import { confirmPaidBooking } from "@/lib/booking/confirm";
+import { confirmPaidBooking, confirmPaidDeposit } from "@/lib/booking/confirm";
 import { getStripe } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +35,16 @@ export async function POST(req: Request) {
     case "checkout.session.async_payment_succeeded": {
       const cs = event.data.object as Stripe.Checkout.Session;
       if (cs.payment_status !== "paid") break; // async methods confirm later
+      const paymentIntentId = typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id;
+      if (cs.metadata?.kind === "deposit") {
+        const id = cs.metadata.trialRequestId ?? cs.client_reference_id;
+        if (id) await confirmPaidDeposit(id, { paymentIntentId, amountPaidPence: cs.amount_total ?? undefined });
+        break;
+      }
       const bookingId = cs.metadata?.bookingId ?? cs.client_reference_id;
       if (!bookingId) break;
       const booking = await confirmPaidBooking(bookingId, {
-        paymentIntentId: typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id,
+        paymentIntentId,
         amountPaidPence: cs.amount_total ?? undefined,
       });
       if (!booking) console.error("[hillrisers] paid checkout for unknown booking", bookingId, cs.id);
@@ -48,6 +54,11 @@ export async function POST(req: Request) {
     case "checkout.session.expired":
     case "checkout.session.async_payment_failed": {
       const cs = event.data.object as Stripe.Checkout.Session;
+      if (cs.metadata?.kind === "deposit") {
+        const request = await store.findTrialRequestByCheckoutId(cs.id);
+        if (request) await store.markDepositUnpaid(request.id);
+        break;
+      }
       const bookingId = cs.metadata?.bookingId ?? cs.client_reference_id;
       if (!bookingId) break;
       const booking = await store.getBooking(bookingId);
@@ -65,7 +76,14 @@ export async function POST(req: Request) {
       const booking =
         (await store.findBookingByPaymentIntent(pi)) ??
         (charge.metadata?.bookingId ? await store.getBooking(charge.metadata.bookingId) : undefined);
-      if (booking) await store.recordRefund(booking.id, charge.amount_refunded);
+      if (booking) {
+        await store.recordRefund(booking.id, charge.amount_refunded);
+        break;
+      }
+      const request =
+        (await store.findTrialRequestByPaymentIntent(pi)) ??
+        (charge.metadata?.trialRequestId ? await store.getTrialRequest(charge.metadata.trialRequestId) : undefined);
+      if (request) await store.recordDepositRefund(request.id, charge.amount_refunded);
       break;
     }
 

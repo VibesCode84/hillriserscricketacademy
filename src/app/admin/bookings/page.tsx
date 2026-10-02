@@ -39,6 +39,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
     store.listTrialRequests(),
   ]);
   const openTrials = trialRequests.filter((t) => t.status === "new" || t.status === "contacted");
+  const securedTrials = openTrials.filter((t) => t.depositStatus === "paid");
   const activeOnly = show !== "all";
   const visible = bookings.filter((b) => !activeOnly || ["confirmed", "pending_payment", "part_refunded"].includes(b.status));
   const selected = sessionFilter ? getSession(sessionFilter) : undefined;
@@ -77,7 +78,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
           <div>
             <h2 className="text-2xl">Trial requests</h2>
             <p className="text-sm text-ink-muted">
-              {openTrials.length} open · families waiting for a confirmed day and time. Preferred days help decide which academy runs when.
+              {openTrials.length} open ({securedTrials.length} with a deposit paid) · families waiting for a confirmed day and time. Preferred days help decide which academy runs when.
             </p>
           </div>
           <a href="/api/admin/export?type=trials" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export trial requests</a>

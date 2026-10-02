@@ -89,6 +89,13 @@ export type WaitlistEntry = {
  */
 export type TrialRequestStatus = "new" | "contacted" | "booked" | "closed";
 
+/**
+ * none: request sent without a deposit · pending: sent to checkout ·
+ * paid: deposit received (place secured) · applied: credited to a booked
+ * session · refunded: returned to the family
+ */
+export type DepositStatus = "none" | "pending" | "paid" | "applied" | "refunded";
+
 export type TrialRequest = {
   id: string;
   parentId: string;
@@ -99,6 +106,11 @@ export type TrialRequest = {
   preferredDays: string[];
   notes?: string;
   status: TrialRequestStatus;
+  depositStatus: DepositStatus;
+  depositPence?: number;
+  stripeCheckoutSessionId?: string;
+  stripePaymentIntentId?: string;
+  depositRefundedPence?: number;
   createdAt: string;
 };
 
@@ -177,9 +189,25 @@ export interface BookingStore {
   joinWaitlist(entry: Omit<WaitlistEntry, "id" | "status" | "createdAt">): Promise<WaitlistEntry>;
   listWaitlist(filter?: { sessionId?: string }): Promise<WaitlistEntry[]>;
 
-  createTrialRequest(input: Omit<TrialRequest, "id" | "status" | "createdAt">): Promise<TrialRequest>;
+  createTrialRequest(
+    input: Pick<TrialRequest, "parentId" | "playerId" | "academy" | "preferredDays" | "notes"> & { depositPence?: number },
+  ): Promise<TrialRequest>;
+  getTrialRequest(id: string): Promise<TrialRequest | undefined>;
+  findTrialRequestByCheckoutId(checkoutSessionId: string): Promise<TrialRequest | undefined>;
+  findTrialRequestByPaymentIntent(paymentIntentId: string): Promise<TrialRequest | undefined>;
   listTrialRequests(): Promise<TrialRequestView[]>;
   setTrialRequestStatus(id: string, status: TrialRequestStatus): Promise<TrialRequest | undefined>;
+  attachDepositCheckout(id: string, checkoutSessionId: string): Promise<void>;
+  /** Idempotent. Returns the request and whether this call changed it. */
+  markDepositPaid(
+    id: string,
+    payment: { paymentIntentId?: string; amountPaidPence?: number },
+  ): Promise<{ request: TrialRequest | undefined; changed: boolean }>;
+  /** Checkout abandoned/expired: back to a request without a deposit. */
+  markDepositUnpaid(id: string): Promise<TrialRequest | undefined>;
+  recordDepositRefund(id: string, amountRefundedPence: number): Promise<TrialRequest | undefined>;
+  /** Admin: mark a paid deposit as credited to a booked session. */
+  setDepositStatus(id: string, status: DepositStatus): Promise<TrialRequest | undefined>;
 
   createEnquiry(enquiry: Omit<Enquiry, "id" | "createdAt">): Promise<Enquiry>;
   listEnquiries(): Promise<Enquiry[]>;

@@ -63,7 +63,9 @@ export function BookingFlow({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string>("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<null | { kind: "waitlist"; session: AcademySession } | { kind: "trial"; academyName: string; days: Day[] }>(null);
+  const [done, setDone] = useState<
+    null | { kind: "waitlist"; session: AcademySession } | { kind: "trial"; academyName: string; days: Day[]; depositUnavailable?: boolean }
+  >(null);
 
   // Player
   const [playerName, setPlayerName] = useState("");
@@ -95,9 +97,12 @@ export function BookingFlow({
   const [photoConsent, setPhotoConsent] = useState(false);
   const [safeguarding, setSafeguarding] = useState(false);
   const [terms, setTerms] = useState(false);
+  const [withDeposit, setWithDeposit] = useState(true);
+  // The holding deposit is the academy's first-session fee (e.g. £25 for 90 minutes, £15 for Little Cricketers)
 
   const age = dob ? ageFromDob(dob) : prefill.age;
   const selectedAcademy = academyKey ? getAcademy(academyKey) : undefined;
+  const depositLabel = formatPrice(selectedAcademy?.pricePence ?? 2500);
   const slots = sessions.filter(
     (s) =>
       isBookable(s) &&
@@ -188,13 +193,22 @@ export function BookingFlow({
     setFormError("");
     try {
       if (mode === "trial") {
-        const { res, json } = await post("/api/trial-request", { ...profileBody(), academy: selectedAcademy.key, preferredDays });
+        const { res, json } = await post("/api/trial-request", {
+          ...profileBody(),
+          academy: selectedAcademy.key,
+          preferredDays,
+          withDeposit,
+        });
         if (!res.ok || !json.ok) {
           setErrors(json.errors ?? {});
           setFormError(json.message ?? "Please check the highlighted fields.");
           return;
         }
-        setDone({ kind: "trial", academyName: selectedAcademy.name, days: preferredDays });
+        if (json.checkoutUrl) {
+          window.location.assign(json.checkoutUrl);
+          return;
+        }
+        setDone({ kind: "trial", academyName: selectedAcademy.name, days: preferredDays, depositUnavailable: !!json.depositUnavailable });
         setTimeout(scrollTop, 30);
         return;
       }
@@ -267,6 +281,12 @@ export function BookingFlow({
                 done.days.length ? ` (${done.days.join(" or ")})` : ""
               } and send a link to secure the place. There's nothing to pay yet.`}
         </p>
+        {done.kind === "trial" && done.depositUnavailable && (
+          <p className="mt-4 max-w-xl rounded-xl bg-cream p-4 text-sm text-ink-muted">
+            Online deposit payment isn&rsquo;t available right now, so we&rsquo;ve saved your request without one. We&rsquo;ll contact you
+            to secure the place.
+          </p>
+        )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link href="/sessions" className={buttonClass("dark")}>See the timetable</Link>
           <Link href="/" className="rounded-full px-6 py-3.5 font-semibold text-navy-950 underline underline-offset-4">Back to home</Link>
@@ -554,12 +574,39 @@ export function BookingFlow({
               </>
             )}
 
+            {mode === "trial" && (
+              <fieldset className="space-y-3 border-t border-navy-950/10 pt-7">
+                <legend className="label !mb-3 text-lg">Secure {first}&rsquo;s place?</legend>
+                <DepositOption
+                  checked={withDeposit}
+                  onChange={() => setWithDeposit(true)}
+                  title={`Secure the place — ${depositLabel} refundable holding deposit`}
+                  body={`The fee for ${first}'s first ${selectedAcademy.sessionMinutes}-minute session, paid now to hold the place while we finalise the programme. It covers the trial session, and is refunded in full if we can't offer a session that suits you or you change your mind before it's confirmed.`}
+                  badge="Recommended"
+                />
+                <DepositOption
+                  checked={!withDeposit}
+                  onChange={() => setWithDeposit(false)}
+                  title="Send the request without a deposit"
+                  body="We'll be in touch to confirm a day and time, but the place isn't held for you in the meantime."
+                />
+              </fieldset>
+            )}
+
             {formError && <p className="rounded-xl bg-[#fbeae8] p-4 text-sm text-[#8c1d18]" role="alert">{formError}</p>}
 
             <div className="flex flex-col-reverse gap-4 border-t border-navy-950/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => go(2)} className="text-sm font-semibold underline underline-offset-4">Back</button>
               <button type="submit" disabled={busy} className={buttonClass("dark")}>
-                {busy ? "Just a moment…" : mode === "book" ? "Review your academy place" : mode === "waitlist" ? "Join Waiting List" : "Send trial request"}
+                {busy
+                  ? "Just a moment…"
+                  : mode === "book"
+                    ? "Review your academy place"
+                    : mode === "waitlist"
+                      ? "Join Waiting List"
+                      : withDeposit
+                        ? `Continue to secure payment — ${depositLabel}`
+                        : "Send trial request"}
               </button>
             </div>
           </form>
@@ -701,6 +748,33 @@ function AcademyOption({
       </span>
       <span className="mt-1 block font-serif text-2xl">{name}</span>
       <span className={`mt-2 block text-[0.95rem] leading-relaxed ${checked ? "text-cream/80" : "text-ink-muted"}`}>{proposition}</span>
+    </label>
+  );
+}
+
+function DepositOption({
+  checked,
+  onChange,
+  title,
+  body,
+  badge,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  title: string;
+  body: string;
+  badge?: string;
+}) {
+  return (
+    <label
+      className={`block cursor-pointer rounded-2xl border p-5 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+        checked ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 hover:border-navy-950/40"
+      }`}
+    >
+      <input type="radio" name="deposit" className="sr-only" checked={checked} onChange={onChange} />
+      {badge && <span className={`text-xs font-semibold uppercase tracking-[0.14em] ${checked ? "text-gold" : "text-gold-deep"}`}>{badge}</span>}
+      <span className="mt-1 block font-semibold">{title}</span>
+      <span className={`mt-1 block text-sm leading-relaxed ${checked ? "text-cream/80" : "text-ink-muted"}`}>{body}</span>
     </label>
   );
 }

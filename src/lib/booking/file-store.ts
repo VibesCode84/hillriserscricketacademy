@@ -14,6 +14,7 @@ import {
   type SessionCounts,
   type TrialRequest,
   type TrialRequestStatus,
+  type DepositStatus,
   type TrialRequestView,
   type WaitlistEntry,
 } from "./types";
@@ -41,7 +42,9 @@ export class FileBookingStore implements BookingStore {
 
   private async read(): Promise<Data> {
     try {
-      return { ...empty(), ...JSON.parse(await fs.readFile(this.file, "utf8")) };
+      const data: Data = { ...empty(), ...JSON.parse(await fs.readFile(this.file, "utf8")) };
+      for (const r of data.trialRequests) r.depositStatus ??= "none";
+      return data;
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return empty();
       throw err;
@@ -273,7 +276,15 @@ export class FileBookingStore implements BookingStore {
 
   createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
     return this.tx((data) => {
-      const r: TrialRequest = { ...input, id: randomUUID(), status: "new", createdAt: new Date().toISOString() };
+      const { depositPence, ...rest } = input;
+      const r: TrialRequest = {
+        ...rest,
+        id: randomUUID(),
+        status: "new",
+        depositStatus: depositPence ? "pending" : "none",
+        depositPence,
+        createdAt: new Date().toISOString(),
+      };
       data.trialRequests.push(r);
       return r;
     });
@@ -291,10 +302,68 @@ export class FileBookingStore implements BookingStore {
   }
 
   setTrialRequestStatus(id: string, status: TrialRequestStatus) {
+    return this.updateTrial(id, (r) => {
+      r.status = status;
+    });
+  }
+
+  private updateTrial(id: string, fn: (r: TrialRequest) => void) {
     return this.tx((data) => {
       const r = data.trialRequests.find((x) => x.id === id);
-      if (r) r.status = status;
+      if (r) fn(r);
       return r;
+    });
+  }
+
+  async getTrialRequest(id: string) {
+    return (await this.snapshot()).trialRequests.find((r) => r.id === id);
+  }
+
+  async findTrialRequestByCheckoutId(checkoutSessionId: string) {
+    return (await this.snapshot()).trialRequests.find((r) => r.stripeCheckoutSessionId === checkoutSessionId);
+  }
+
+  async findTrialRequestByPaymentIntent(paymentIntentId: string) {
+    return (await this.snapshot()).trialRequests.find((r) => r.stripePaymentIntentId === paymentIntentId);
+  }
+
+  async attachDepositCheckout(id: string, checkoutSessionId: string) {
+    await this.updateTrial(id, (r) => {
+      r.stripeCheckoutSessionId = checkoutSessionId;
+      if (r.depositStatus === "none") r.depositStatus = "pending";
+    });
+  }
+
+  markDepositPaid(id: string, payment: { paymentIntentId?: string; amountPaidPence?: number }) {
+    return this.tx((data) => {
+      const r = data.trialRequests.find((x) => x.id === id);
+      if (!r) return { request: undefined, changed: false };
+      if (r.depositStatus === "paid" || r.depositStatus === "applied" || r.depositStatus === "refunded") {
+        return { request: r, changed: false };
+      }
+      r.depositStatus = "paid";
+      r.stripePaymentIntentId = payment.paymentIntentId ?? r.stripePaymentIntentId;
+      r.depositPence = payment.amountPaidPence ?? r.depositPence;
+      return { request: r, changed: true };
+    });
+  }
+
+  markDepositUnpaid(id: string) {
+    return this.updateTrial(id, (r) => {
+      if (r.depositStatus === "pending") r.depositStatus = "none";
+    });
+  }
+
+  recordDepositRefund(id: string, amountRefundedPence: number) {
+    return this.updateTrial(id, (r) => {
+      r.depositRefundedPence = amountRefundedPence;
+      if (amountRefundedPence >= (r.depositPence ?? 0)) r.depositStatus = "refunded";
+    });
+  }
+
+  setDepositStatus(id: string, status: DepositStatus) {
+    return this.updateTrial(id, (r) => {
+      r.depositStatus = status;
     });
   }
 

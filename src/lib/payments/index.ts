@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { site } from "../../data/site";
 import { sessionLabel, type AcademySession } from "../../data/sessions";
-import type { Booking, Parent, Player } from "../booking/types";
+import type { Booking, Parent, Player, TrialRequest } from "../booking/types";
 import { STRIPE_CHECKOUT_MINUTES } from "../booking";
 
 /**
@@ -18,9 +18,20 @@ export type CheckoutInput = {
 
 export type CheckoutResult = { id: string; url: string; expiresAt?: string };
 
+export type DepositCheckoutInput = {
+  request: TrialRequest;
+  academyName: string;
+  player: Player;
+  parent: Parent;
+  amountPence: number;
+  baseUrl: string;
+};
+
 export interface PaymentProvider {
   name: "stripe" | "dev";
   createCheckout(input: CheckoutInput): Promise<CheckoutResult>;
+  /** Refundable holding deposit for a trial request. */
+  createDepositCheckout(input: DepositCheckoutInput): Promise<CheckoutResult>;
   /** Close a superseded checkout so it can't also be paid. */
   expireCheckout(id: string): Promise<void>;
 }
@@ -85,6 +96,45 @@ class StripeProvider implements PaymentProvider {
     return { id: checkout.id, url: checkout.url, expiresAt: new Date(expiresAt * 1000).toISOString() };
   }
 
+  async createDepositCheckout({ request, academyName, player, parent, amountPence, baseUrl }: DepositCheckoutInput) {
+    const metadata = {
+      kind: "deposit",
+      trialRequestId: request.id,
+      playerId: player.id,
+      parentId: parent.id,
+      academy: request.academy,
+    };
+    const checkout = await this.stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: parent.email,
+      client_reference_id: request.id,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "gbp",
+            unit_amount: amountPence,
+            product_data: {
+              name: "Hillrisers refundable holding deposit",
+              description: `Secures a place for ${player.name} in ${academyName} at ${site.venue.name}. Credited to the trial session; refundable in full until the session is confirmed.`,
+            },
+          },
+        },
+      ],
+      payment_intent_data: { description: `Holding deposit — ${player.name} — ${academyName}`, metadata },
+      metadata,
+      custom_text: {
+        submit: {
+          message: `Fully refundable until ${player.name.split(" ")[0]}'s session is confirmed, then credited to the trial session.`,
+        },
+      },
+      success_url: `${baseUrl}/book/deposit/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/book/deposit?request=${request.id}`,
+    });
+    if (!checkout.url) throw new Error("Stripe did not return a checkout URL");
+    return { id: checkout.id, url: checkout.url };
+  }
+
   async expireCheckout(id: string) {
     try {
       await this.stripe.checkout.sessions.expire(id);
@@ -101,6 +151,10 @@ class DevProvider implements PaymentProvider {
   async createCheckout({ booking, baseUrl }: CheckoutInput) {
     const id = `dev_cs_${booking.id}`;
     return { id, url: `${baseUrl}/book/dev-checkout?booking=${booking.id}` };
+  }
+
+  async createDepositCheckout({ request, baseUrl }: DepositCheckoutInput) {
+    return { id: `dev_cs_dep_${request.id}`, url: `${baseUrl}/book/dev-checkout?deposit=${request.id}` };
   }
 
   async expireCheckout() {}

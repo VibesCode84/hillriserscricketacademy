@@ -21,6 +21,10 @@ export type Academy = {
   ageMin: number;
   ageMax: number;
   levelLabel: string;
+  /** Length of one session in minutes */
+  sessionMinutes: number;
+  /** Fee for one session — also the refundable holding deposit for a trial request */
+  pricePence: number;
   /** Description of the placeholder photo — swap for a real image path later */
   image: { src?: string; alt: string };
   learn: string[];
@@ -61,6 +65,8 @@ export const academies: Academy[] = [
     ageMin: 8,
     ageMax: 14,
     levelLabel: "Some experience to regular club players",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Junior batter driving through the off side in an indoor net" },
     learn: [
       "Stronger setup and movement",
@@ -104,6 +110,8 @@ export const academies: Academy[] = [
     ageMin: 8,
     ageMax: 14,
     levelLabel: "Some experience to performance players",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Young seam bowler at the point of delivery, front arm high" },
     learn: [
       "A rhythmical, repeatable run-up",
@@ -147,6 +155,8 @@ export const academies: Academy[] = [
     ageMin: 8,
     ageMax: 14,
     levelLabel: "All levels with some bowling experience",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Close-up of a young leg-spinner's grip on a red ball" },
     learn: [
       "Grip and wrist or finger position",
@@ -185,6 +195,8 @@ export const academies: Academy[] = [
     ageMin: 10,
     ageMax: 14,
     levelLabel: "Regular club/school players",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Junior batter clearing the front leg on a lofted shot" },
     learn: [
       "Bat speed and efficient movement",
@@ -222,6 +234,8 @@ export const academies: Academy[] = [
     ageMin: 10,
     ageMax: 14,
     levelLabel: "Regular club/school and performance players",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Junior players in a match-scenario drill with fielders set" },
     learn: [
       "Performing under pressure",
@@ -260,6 +274,8 @@ export const academies: Academy[] = [
     ageMin: 7,
     ageMax: 14,
     levelLabel: "Beginners to experienced players",
+    sessionMinutes: 90,
+    pricePence: 2500,
     image: { alt: "Girls Academy players celebrating a wicket together" },
     learn: [
       "Batting, bowling and fielding fundamentals",
@@ -291,6 +307,8 @@ export const academies: Academy[] = [
     ageMin: 4,
     ageMax: 7,
     levelLabel: "No experience needed",
+    sessionMinutes: 60,
+    pricePence: 1500,
     image: { alt: "Young children catching soft balls with a coach" },
     learn: ["Hitting", "Catching", "Throwing", "Running and movement", "Simple team games"],
     howItWorks: standardHowItWorks,
@@ -310,4 +328,9 @@ export const specialistAcademies = academies.filter(
 
 export function getAcademy(key: string) {
   return academies.find((a) => a.key === key);
+}
+
+/** The refundable holding deposit for a trial request is the academy's first-session fee. */
+export function depositFor(key: string) {
+  return getAcademy(key)?.pricePence ?? 2500;
 }

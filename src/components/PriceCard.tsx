@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { site, formatPrice } from "@/data/site";
 import { ButtonLink } from "./Button";
+import { TermDates } from "./TermDates";
 
 const included = [
   "Lead coach",
@@ -34,11 +35,12 @@ export function PriceCard({ ctaHref = "/book", className = "" }: { ctaHref?: str
       <div className="mt-9 flex flex-col gap-6 border-t border-cream/10 pt-8 sm:flex-row sm:items-end sm:justify-between">
         <p>
           <span className="font-serif text-6xl leading-none text-cream">{formatPrice(site.standardSession.pricePence)}</span>
-          <span className="ml-2 text-slate">per session</span>
+          <span className="ml-2 text-slate">per session, paid termly</span>
         </p>
         <ButtonLink href={ctaHref} arrow className="group">Book a Trial</ButtonLink>
       </div>
-      <p className="mt-6 text-sm text-slate">
+      <TermDates className="mt-6" />
+      <p className="mt-4 text-sm text-slate">
         Not sure which academy is right?{" "}
         <Link href="/find-my-session" className="text-gold-soft underline underline-offset-4 hover:text-gold">
           Tell us about your child

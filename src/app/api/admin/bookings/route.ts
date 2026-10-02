@@ -17,6 +17,7 @@ const actionSchema = z.discriminatedUnion("action", [
     requestId: z.string().uuid(),
     status: z.enum(["new", "contacted", "booked", "closed"]),
   }),
+  z.object({ action: z.literal("depositStatus"), requestId: z.string().uuid(), status: z.literal("applied") }),
   z.object({
     action: z.literal("manual"),
     sessionId: z.string().min(1),
@@ -37,6 +38,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     case "trialStatus":
       await store.setTrialRequestStatus(a.requestId, a.status);
+      return NextResponse.json({ ok: true });
+    case "depositStatus":
+      await store.setDepositStatus(a.requestId, a.status);
       return NextResponse.json({ ok: true });
     case "cancel":
       await store.cancelBooking(a.bookingId, "cancelled");

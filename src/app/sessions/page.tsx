@@ -9,6 +9,7 @@ import { PriceCard } from "@/components/PriceCard";
 import { TestimonialCard } from "@/components/TestimonialCard";
 import { CTASection, NotSureBanner } from "@/components/CTASection";
 import { Reveal } from "@/components/Reveal";
+import { TermDates } from "@/components/TermDates";
 
 export const revalidate = 60;
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default async function SessionsPage() {
         eyebrow="Timetable & price"
         title="Every session, every week."
         intro={<p>Tuesday and Wednesday evenings plus weekend sessions at John Lyon School. Maximum 18 players in every academy group.</p>}
+        afterActions={<TermDates className="mt-6" />}
         actions={
           <>
             <ButtonLink href="/book" arrow className="group">Book a Trial</ButtonLink>

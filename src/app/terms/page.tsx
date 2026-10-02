@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { site } from "@/data/site";
 import { LegalPage } from "@/components/LegalPage";
+import { term, termPaymentDueLabel, termStartLabel } from "@/data/term";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 const sections = [
   ["about", "About these terms"],
   ["sessions", "Our sessions"],
-  ["trials", "Trial requests and waiting lists"],
+  ["trials", "Trial requests, deposits and waiting lists"],
   ["booking", "Booking and payment"],
   ["cancel-you", "If you need to cancel"],
   ["cancel-us", "If we cancel or change a session"],
@@ -72,7 +73,7 @@ export default function TermsPage() {
         <li>Sessions are junior cricket coaching for players aged approximately 4–14, held at {site.venue.name}, Harrow.</li>
         <li>
           Specialist academy sessions last 90 minutes and have a maximum of {site.standardSession.capacity} players. Each is led by a coaching
-          team of a lead coach, an assistant coach and two junior helpers. Little Cricketers sessions may be shorter.
+          team of a lead coach, an assistant coach and two junior helpers. Little Cricketers sessions (ages 4–7) last 60 minutes.
         </li>
         <li>
           We set the weekly programme, including which academy runs on which day and at what time. We may change it from term to term and
@@ -87,10 +88,24 @@ export default function TermsPage() {
         </li>
       </ul>
 
-      <h2 id="trials">3. Trial requests and waiting lists</h2>
+      <h2 id="trials">3. Trial requests, deposits and waiting lists</h2>
       <ul>
         <li>
-          A trial request or waiting-list place is free. It does not guarantee a place, and nothing is payable until you choose to book.
+          You can send a trial request or join a waiting list free of charge. A free request or waiting-list place does not guarantee a place.
+        </li>
+        <li>
+          While we finalise which academy runs on which day, you can secure your child&rsquo;s place by paying a{" "}
+          <strong>refundable holding deposit</strong> when you request a trial. The deposit is the fee for the first session: £25 for a
+          90-minute specialist academy session, or £15 for a 60-minute Little Cricketers session.
+        </li>
+        <li>
+          Once we confirm a day and time with you, the deposit pays for your child&rsquo;s first (trial) session, so there is nothing more
+          to pay for it, and it counts towards the term fee if your child continues for the term. From then on, the cancellation terms in
+          section 5 apply to that session.
+        </li>
+        <li>
+          We will refund the deposit in full if we can&rsquo;t offer a session that suits you, or if you ask us to before the trial session
+          is confirmed.
         </li>
         <li>
           When we offer a place, we&rsquo;ll send you a link to book it. Offers may be time-limited so that the place can be offered to other
@@ -104,9 +119,19 @@ export default function TermsPage() {
       <h2 id="booking">4. Booking and payment</h2>
       <ul>
         <li>
-          Prices are shown in pounds sterling on our website at the time you book. A specialist academy session is currently £
-          {site.standardSession.pricePence / 100}.
+          Prices are shown in pounds sterling on our website at the time you book. A 90-minute specialist academy session is currently £
+          {site.standardSession.pricePence / 100}, and a 60-minute Little Cricketers session is £{site.littleCricketers.pricePence / 100}.
         </li>
+        <li>
+          <strong>Fees are paid termly.</strong> The term fee covers the weekly sessions in the term, and is due no later than{" "}
+          {term.paymentDueDaysBefore} days before the term&rsquo;s sessions start. Our first term starts the {termStartLabel}, so fees are
+          due by {termPaymentDueLabel}. We&rsquo;ll confirm the amount and how to pay before the due date.
+        </li>
+        <li>
+          If the term fee hasn&rsquo;t been paid by the due date, we may offer your child&rsquo;s place to a family on the waiting list. Please
+          talk to us if you need more time.
+        </li>
+        <li>Players joining after a term has started pay for the remaining sessions in that term.</li>
         <li>
           Payment is taken securely by our payment provider, Stripe. We never see or store your full card details.
         </li>
@@ -125,7 +150,15 @@ export default function TermsPage() {
       <h2 id="cancel-you">5. If you need to cancel</h2>
       <p>
         Because our sessions are leisure services provided on a specific date, the statutory 14-day cancellation period for online purchases
-        does not apply. Instead, we offer the following:
+        does not apply. Instead, we offer the following.
+      </p>
+      <p>
+        <strong>Term fees:</strong> if you withdraw your child before the term fee due date, we&rsquo;ll refund any term fee you have paid
+        in full. After the due date, term fees are non-refundable, except where we cancel sessions (see section 6) or, at our discretion, in
+        exceptional circumstances such as long-term injury or illness.
+      </p>
+      <p>
+        <strong>Single sessions, including trials:</strong>
       </p>
       <ul>
         <li>

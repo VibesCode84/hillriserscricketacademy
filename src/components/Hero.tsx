@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ButtonLink } from "./Button";
 import { Photo } from "./Photo";
+import { TermDates } from "./TermDates";
 
 function HeroArtwork() {
   return (
@@ -35,6 +36,7 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
             <ButtonLink href="/find-my-session" variant="secondary">Find My Session</ButtonLink>
           </div>
           <p className="mt-4 text-sm italic text-slate">No need to know which group is right — we&rsquo;ll help you choose.</p>
+          <TermDates className="mt-6" />
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 
@@ -69,6 +71,7 @@ export function PageHero({
   actions,
   image,
   children,
+  afterActions,
 }: {
   eyebrow?: string;
   title: ReactNode;
@@ -76,6 +79,7 @@ export function PageHero({
   actions?: ReactNode;
   image?: { src?: string; alt: string };
   children?: ReactNode;
+  afterActions?: ReactNode;
 }) {
   return (
     <section className="relative overflow-hidden bg-navy-950 pb-16 pt-32 md:pb-24 md:pt-40">
@@ -86,6 +90,7 @@ export function PageHero({
           <h1 className="mt-6 text-[2.75rem] leading-[1.02] text-cream sm:text-6xl lg:text-[4.25rem]">{title}</h1>
           {intro && <div className="mt-6 max-w-2xl text-lg leading-relaxed text-slate md:text-xl">{intro}</div>}
           {actions && <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">{actions}</div>}
+          {afterActions}
           {children}
         </div>
         {image && (

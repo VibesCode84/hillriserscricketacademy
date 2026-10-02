@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAcademy } from "@/data/academies";
+import { formatPrice } from "@/data/site";
 import { coachesFor } from "@/data/coaches";
 import { testimonialsFor } from "@/data/testimonials";
 import { getAvailability } from "@/lib/booking";
@@ -57,7 +58,11 @@ export default async function LittleCricketersPage() {
           </>
         }
         image={academy.image}
-      />
+      >
+        <p className="mt-6 text-sm text-slate">
+          {academy.sessionMinutes}-minute sessions · {formatPrice(academy.pricePence)} per session · no kit or experience needed
+        </p>
+      </PageHero>
 
       <Section tone="light">
         <SectionHeader

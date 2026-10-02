@@ -84,8 +84,14 @@ create table if not exists trial_requests (
   preferred_days text[] not null default '{}',
   notes text,
   status text not null default 'new' check (status in ('new','contacted','booked','closed')),
+  deposit_status text not null default 'none' check (deposit_status in ('none','pending','paid','applied','refunded')),
+  deposit_pence int,
+  stripe_checkout_session_id text unique,
+  stripe_payment_intent_id text,
+  deposit_refunded_pence int,
   created_at timestamptz not null default now()
 );
+create index if not exists trial_requests_pi_idx on trial_requests(stripe_payment_intent_id);
 
 create table if not exists waitlist (
   id uuid primary key,

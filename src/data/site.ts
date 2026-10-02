@@ -31,6 +31,11 @@ export const site = {
     capacity: 18,
     team: "1 lead coach, 1 assistant coach and 2 junior helpers",
   },
+  /** Little Cricketers (ages 4–7) — shorter sessions */
+  littleCricketers: {
+    minutes: 60,
+    pricePence: 1500,
+  },
 } as const;
 
 export const nav = [

@@ -27,9 +27,9 @@ export async function GET(req: Request) {
     const trials = await getStore().listTrialRequests();
     return csv(
       "hillrisers-trial-requests",
-      ["Status", "Academy", "Preferred days", "Player", "Date of birth", "Gender", "Experience", "Interest", "Club/school", "Parent", "Email", "Mobile", "Emergency contact", "Emergency phone", "Medical / additional needs", "Photo consent", "Heard via", "Requested at"],
+      ["Status", "Deposit", "Deposit (£)", "Academy", "Preferred days", "Player", "Date of birth", "Gender", "Experience", "Interest", "Club/school", "Parent", "Email", "Mobile", "Emergency contact", "Emergency phone", "Medical / additional needs", "Photo consent", "Heard via", "Requested at"],
       trials.map((t) => [
-        t.status, getAcademy(t.academy)?.name ?? t.academy, t.preferredDays.join(" / ") || "Any", t.player?.name, t.player?.dateOfBirth,
+        t.status, t.depositStatus, t.depositPence !== undefined && t.depositStatus !== "none" ? (t.depositPence / 100).toFixed(2) : "", getAcademy(t.academy)?.name ?? t.academy, t.preferredDays.join(" / ") || "Any", t.player?.name, t.player?.dateOfBirth,
         t.player?.gender, t.player?.experience, t.player?.interest, t.player?.clubOrSchool, t.parent?.name, t.parent?.email,
         t.parent?.mobile, t.player?.emergencyContactName, t.player?.emergencyContactPhone, t.player?.medicalNotes,
         t.player?.photoConsent ? "Yes" : "No", t.player?.heardAbout, t.createdAt,

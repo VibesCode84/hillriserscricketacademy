@@ -7,6 +7,7 @@ import { getStore } from "@/lib/booking";
 import { AutoRefresh } from "@/components/booking/AutoRefresh";
 import { buttonClass } from "@/components/Button";
 import { Crest } from "@/components/Logo";
+import { TermDates } from "@/components/TermDates";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Welcome to Hillrisers", robots: { index: false } };
@@ -70,6 +71,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <p className="mt-3 text-sm text-slate">
             A confirmation has been sent to {parent.email}. Booking reference {booking.id.slice(0, 8).toUpperCase()}.
           </p>
+          <TermDates className="mt-6 justify-center" />
         </div>
       </section>
       <section className="surface-light bg-cream py-20">

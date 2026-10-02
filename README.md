@@ -32,10 +32,11 @@ All content is held in typed data files in `src/data/`:
 
 | File | What it controls |
 | --- | --- |
-| `sessions.ts` | **The weekly timetable**: days, times, groups, ages, capacity and price. Set `confirmed: false` for a session whose time isn't agreed yet. It then shows as "being finalised" and takes interest registrations instead of payments. |
-| `academies.ts` | Academy pages: what players learn, who each academy is for, FAQs and SEO copy |
+| `sessions.ts` | **The weekly timetable.** Slots currently have only a day and time; which academy runs in each slot is deliberately left unassigned. To open a slot for online booking, set its `discipline` (plus optional `group`, `ageMin`, `ageMax`) and make sure its times are set and `confirmed: true`. Little Cricketers slots should be 60 minutes at `pricePence: 1500`. |
+| `academies.ts` | Academy pages: what players learn, who each academy is for, FAQs, SEO copy, and each academy's **session length and fee** (90 min/£25; Little Cricketers 60 min/£15) |
 | `coaches.ts` | Coach cards (placeholders; replace with verified details) |
 | `testimonials.ts` | Parent quotes (**samples; replace with real, consented quotes**) |
+| `term.ts` | **Term dates.** Sessions start the week commencing 1 November 2026; termly fees are due one week before (Sunday 25 October). These dates appear on the homepage, timetable, prices, FAQs, terms and emails. Add `weeks` once the term length is known. |
 | `faqs.ts` | FAQ page |
 | `site.ts` | Contact details, venue address, welfare contact, standard price and capacity |
 
@@ -43,7 +44,14 @@ All content is held in typed data files in `src/data/`:
 
 ## Booking architecture
 
-The parent journey runs: **Player profile → recommendation → choose session → confirm details → Stripe Checkout → welcome**. Parents check out as guests and don't need an account.
+The parent journey runs: **Player profile → recommended academy → choose session → confirm details → Stripe Checkout → welcome**. Parents check out as guests and don't need an account.
+
+**While the weekly programme is unassigned** (no slot has a `discipline`), the same journey ends in a **trial request** instead. The parent picks the recommended academy and their preferred days, gives full player and welfare details, and chooses either:
+
+- **a refundable holding deposit**, equal to the first session fee (£25, or £15 for Little Cricketers), paid through Stripe Checkout. It secures the place, covers the trial session once a day and time are confirmed, and is refunded in full if no suitable session can be offered; or
+- **no deposit**, in which case the request is saved but the place isn't held.
+
+In the admin dashboard you then confirm a day with the family, add the session with "Add manual booking" and click "Mark deposit credited". Deposit refunds are issued in Stripe, and the webhook updates the status automatically.
 
 The academy database is the source of truth for players, sessions, capacity, bookings and attendance. Stripe is a replaceable payment layer (`src/lib/payments`) and is the source of truth only for payment and refunds.
 
@@ -53,7 +61,9 @@ The academy database is the source of truth for players, sessions, capacity, boo
 | `GET /api/booking/check-capacity` | Live availability |
 | `POST /api/booking/create` | Checks capacity and creates a `pending_payment` booking in one atomic step, holding the place |
 | `POST /api/stripe/create-checkout-session` | Creates a Stripe Checkout Session (booking metadata, promo codes, Apple/Google Pay) |
-| `POST /api/stripe/webhook` | `checkout.session.completed` confirms the booking and sends the welcome email; `checkout.session.expired` releases the place; `charge.refunded` records a refund |
+| `POST /api/stripe/webhook` | `checkout.session.completed` confirms a booking or deposit and sends the email; `checkout.session.expired` releases the place (or reverts an unpaid deposit); `charge.refunded` records a booking or deposit refund |
+| `POST /api/trial-request` | Trial request with preferred days; with `withDeposit` it starts Stripe Checkout for the holding deposit |
+| `POST /api/trial-request/deposit` | Retry the deposit payment, or continue without one (from `/book/deposit`) |
 | `POST /api/waitlist/join` | Waiting list / register interest (no payment) |
 | `POST /api/enquiry` | "I'd rather speak to someone" |
 
@@ -83,11 +93,13 @@ The data model already includes `paymentType` (`single | term | subscription | m
    - testimonials (sample ones show a red "Sample — replace" badge outside production)
    - refund, safeguarding and venue/parking wording
    - Saturday and Sunday session times (then set `confirmed: true`)
+   - the full Terms and Conditions (`/terms`), which should be reviewed by a solicitor, with the academy's legal entity details added
 
 ## Admin dashboard (`/admin/bookings`)
 
 The dashboard lets you:
 
+- work the trial requests: preferred days, deposit status, family details, status tracking, "Email family" and "Mark deposit credited"
 - see capacity per session (booked, held and waiting)
 - filter bookings by session
 - view player profiles, including medical notes, emergency contact and photo consent
@@ -98,8 +110,10 @@ The dashboard lets you:
 - add a manual booking
 - view the waiting list, with a "send booking link" action
 - read enquiries
-- export bookings to CSV
+- export bookings and trial requests to CSV
 
 ## Not yet built (phases 2–3)
+
+Online payment of **term fees** isn't built yet. It needs the number of weekly sessions per term (`weeks` in `src/data/term.ts`); the data model already supports `paymentType: "term"`. Single sessions, trials and holding deposits can already be paid online.
 
 Sibling booking in a single checkout, automatic waiting-list invitations, term rebooking, progress reports, a parent portal, camps and 1-to-1 coaching. The data model and payment layer are structured so these can be added without rebuilding.

@@ -14,7 +14,9 @@ export const DAYS: Day[] = ["Tuesday", "Wednesday", "Saturday", "Sunday"];
  * trial request with their preferred days instead of paying.
  *
  * - `confirmed` means the slot's day and time are agreed.
- * - `capacity` and `pricePence` are enforced by the booking engine.
+ * - `capacity` and `pricePence` are enforced by the booking engine. Specialist
+ *   sessions are 90 minutes at £25; a Little Cricketers slot should be
+ *   60 minutes (e.g. 09:00–10:00) at pricePence 1500, matching academies.ts.
  * - Availability ("Places available", "Limited places", "Waiting list") is never
  *   set here — it is calculated from real bookings.
  */

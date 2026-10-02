@@ -14,6 +14,7 @@ import type {
   SessionCounts,
   TrialRequest,
   TrialRequestStatus,
+  DepositStatus,
   TrialRequestView,
   WaitlistEntry,
 } from "./types";
@@ -90,6 +91,11 @@ const toTrialRequest = (r: any): TrialRequest => ({
   preferredDays: r.preferred_days ?? [],
   notes: opt(r.notes),
   status: r.status,
+  depositStatus: r.deposit_status,
+  depositPence: opt(r.deposit_pence),
+  stripeCheckoutSessionId: opt(r.stripe_checkout_session_id),
+  stripePaymentIntentId: opt(r.stripe_payment_intent_id),
+  depositRefundedPence: opt(r.deposit_refunded_pence),
   createdAt: iso(r.created_at),
 });
 
@@ -372,9 +378,12 @@ export class PgBookingStore implements BookingStore {
 
   async createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
     const { rows } = await this.q(
-      `insert into trial_requests (id, parent_id, player_id, academy, preferred_days, notes)
-       values ($1,$2,$3,$4,$5,$6) returning *`,
-      [randomUUID(), input.parentId, input.playerId, input.academy, input.preferredDays, input.notes ?? null],
+      `insert into trial_requests (id, parent_id, player_id, academy, preferred_days, notes, deposit_status, deposit_pence)
+       values ($1,$2,$3,$4,$5,$6,$7,$8) returning *`,
+      [
+        randomUUID(), input.parentId, input.playerId, input.academy, input.preferredDays, input.notes ?? null,
+        input.depositPence ? "pending" : "none", input.depositPence ?? null,
+      ],
     );
     return toTrialRequest(rows[0]);
   }
@@ -394,6 +403,67 @@ export class PgBookingStore implements BookingStore {
 
   async setTrialRequestStatus(id: string, status: TrialRequestStatus) {
     const { rows } = await this.q(`update trial_requests set status = $2 where id = $1 returning *`, [id, status]);
+    return rows[0] ? toTrialRequest(rows[0]) : undefined;
+  }
+
+  private async trialWhere(column: string, value: string) {
+    const { rows } = await this.q(`select * from trial_requests where ${column} = $1`, [value]);
+    return rows[0] ? toTrialRequest(rows[0]) : undefined;
+  }
+
+  getTrialRequest(id: string) {
+    return this.trialWhere("id", id);
+  }
+
+  findTrialRequestByCheckoutId(id: string) {
+    return this.trialWhere("stripe_checkout_session_id", id);
+  }
+
+  findTrialRequestByPaymentIntent(id: string) {
+    return this.trialWhere("stripe_payment_intent_id", id);
+  }
+
+  async attachDepositCheckout(id: string, checkoutSessionId: string) {
+    await this.q(
+      `update trial_requests set stripe_checkout_session_id = $2,
+         deposit_status = case when deposit_status = 'none' then 'pending' else deposit_status end
+       where id = $1`,
+      [id, checkoutSessionId],
+    );
+  }
+
+  async markDepositPaid(id: string, payment: { paymentIntentId?: string; amountPaidPence?: number }) {
+    const { rows } = await this.q(
+      `update trial_requests set deposit_status = 'paid',
+         stripe_payment_intent_id = coalesce($2, stripe_payment_intent_id),
+         deposit_pence = coalesce($3, deposit_pence)
+       where id = $1 and deposit_status not in ('paid','applied','refunded') returning *`,
+      [id, payment.paymentIntentId ?? null, payment.amountPaidPence ?? null],
+    );
+    if (rows[0]) return { request: toTrialRequest(rows[0]), changed: true };
+    return { request: await this.getTrialRequest(id), changed: false };
+  }
+
+  async markDepositUnpaid(id: string) {
+    const { rows } = await this.q(
+      `update trial_requests set deposit_status = 'none' where id = $1 and deposit_status = 'pending' returning *`,
+      [id],
+    );
+    return rows[0] ? toTrialRequest(rows[0]) : this.getTrialRequest(id);
+  }
+
+  async recordDepositRefund(id: string, amountRefundedPence: number) {
+    const { rows } = await this.q(
+      `update trial_requests set deposit_refunded_pence = $2,
+         deposit_status = case when $2 >= coalesce(deposit_pence, 0) then 'refunded' else deposit_status end
+       where id = $1 returning *`,
+      [id, amountRefundedPence],
+    );
+    return rows[0] ? toTrialRequest(rows[0]) : undefined;
+  }
+
+  async setDepositStatus(id: string, status: DepositStatus) {
+    const { rows } = await this.q(`update trial_requests set deposit_status = $2 where id = $1 returning *`, [id, status]);
     return rows[0] ? toTrialRequest(rows[0]) : undefined;
   }
 
