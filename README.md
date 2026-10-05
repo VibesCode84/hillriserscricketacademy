@@ -32,7 +32,7 @@ npm run build
 
 **Copy rules:**
 - **Public site:** a confident, big-sell tone is fine ("the very best coaches from the area"). Never invent facts: no fake testimonials, player numbers or results, and no coach names until they've signed.
-- **Coach with us** (`/coach-with-us`): a **private page**, not linked from the public site and hidden from search engines. Share the link directly with coaches. It's candid about where HillRisers is: a start-up with no players yet, hours depending on demand, equipment planned.
+- **Coach recruitment** (`/team/<key>`, default `/team/join-3uixtrgp`; set `COACH_PAGE_KEY` to change it): a **private, standalone page** with no links to or from the parent-facing site and hidden from search engines. Any other `/team/*` address (and the old `/coach-with-us`) is a 404. Share the link directly with coaches; it's also shown in `/admin/bookings`. It's candid about where HillRisers is: a start-up with no players yet, hours depending on demand, equipment planned.
 - No fixed times anywhere except Little Cricketers.
 
 ## Register-your-interest form (`/register`)
@@ -42,7 +42,7 @@ npm run build
 - **Confirmation:** an on-screen thank-you, plus a confirmation email explaining priority booking and next steps.
 - **Analysis:** `/admin/bookings` shows demand by availability, age band, level, format, session length and girls-only interest. **Export registrations** downloads a CSV with **one row per child**, with yes/no columns for each availability, format and session-length option, ready for a spreadsheet pivot.
 
-The **Coach with us** form (`/coach-with-us`, `POST /api/coach-interest`) works the same way, with its own admin list and CSV export.
+The private **coach recruitment** form (`/team/<key>`, `POST /api/coach-interest`) works the same way, with its own admin list and CSV export.
 
 ## Setting up storage and email on Vercel
 

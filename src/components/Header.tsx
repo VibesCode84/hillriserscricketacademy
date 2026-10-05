@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { nav, phoneHref, site } from "@/data/site";
+import { RECRUITMENT_PREFIX } from "@/data/recruitment";
 import { Logo } from "./Logo";
 import { ButtonLink } from "./Button";
 
@@ -31,7 +32,7 @@ export function Header() {
     };
   }, [open]);
 
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith(RECRUITMENT_PREFIX)) return null;
 
   // Booking pages have light backgrounds, so the header is always solid there
   const solid = scrolled || open || pathname.startsWith("/book") || pathname.startsWith("/register");
@@ -134,7 +135,7 @@ export function StickyMobileCTA() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (pathname.startsWith("/book") || pathname.startsWith("/register") || pathname.startsWith("/admin")) return null;
+  if (["/book", "/register", "/admin", RECRUITMENT_PREFIX].some((p) => pathname.startsWith(p))) return null;
 
   return (
     <div

@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { COACH_PAGE_KEY } from "@/data/recruitment";
+import { Crest } from "@/components/Logo";
 import { site } from "@/data/site";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
@@ -10,10 +14,15 @@ export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
   description:
     "HillRisers Cricket Academy is a start-up launching at John Lyon School, Harrow on the Hill, on 1 November. We're looking for lead, specialist, girls and early-years coaches, and helpers aged 16–18.",
-  alternates: { canonical: "/coach-with-us" },
-  // Private page: shared directly with prospective coaches, not linked from the public site
-  robots: { index: false, follow: false },
+  // Private page: shared directly with prospective coaches; never linked from the parent-facing site
+  robots: { index: false, follow: false, nocache: true },
 };
+
+// Only the configured key renders; any other /team/* URL is a 404
+export const dynamicParams = false;
+export function generateStaticParams() {
+  return [{ key: COACH_PAGE_KEY }];
+}
 
 // Candid status for prospective coaches (this page is private)
 const whereWeAre = [
@@ -62,9 +71,20 @@ const roles = [
 
 const requirements = ["ECB coaching qualification", "Enhanced cricket DBS check", "Safeguarding training", "First aid — an advantage"];
 
-export default function CoachWithUsPage() {
+export default async function CoachRecruitmentPage({ params }: { params: Promise<{ key: string }> }) {
+  if ((await params).key !== COACH_PAGE_KEY) notFound();
   return (
     <>
+      {/* Standalone header — no links into the parent-facing site */}
+      <header className="absolute inset-x-0 top-0 z-50">
+        <div className="container-x flex h-[4.5rem] items-center gap-3 lg:h-20">
+          <Crest className="h-10 w-auto" />
+          <span className="flex flex-col leading-none">
+            <span className="font-serif text-[1.55rem] font-semibold tracking-tight text-cream">HillRisers</span>
+            <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-gold">Coaching opportunities</span>
+          </span>
+        </div>
+      </header>
       <PageHero
         eyebrow="Coach with us"
         title="Help build a cricket academy from day one."
@@ -161,6 +181,12 @@ export default function CoachWithUsPage() {
           </Reveal>
         </div>
       </Section>
+      <footer className="bg-navy-950 py-10 text-sm text-slate">
+        <div className="container-x flex flex-col gap-2 sm:flex-row sm:justify-between">
+          <p>© {new Date().getFullYear()} {site.name}. This page is shared privately with prospective coaches.</p>
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-cream">Privacy</Link>
+        </div>
+      </footer>
     </>
   );
 }

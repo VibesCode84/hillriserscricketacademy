@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/data/sessions";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
+import { coachPagePath } from "@/data/recruitment";
 import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
@@ -161,7 +162,13 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
       {/* Coach with us */}
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-2xl">Coach interest <span className="text-base text-ink-muted">({coachInterests.length})</span></h2>
+          <div>
+            <h2 className="text-2xl">Coach interest <span className="text-base text-ink-muted">({coachInterests.length})</span></h2>
+            <p className="text-sm text-ink-muted">
+              Private recruitment page (share directly with coaches; not linked from the public site):{" "}
+              <a href={coachPagePath} className="font-semibold text-navy-950 underline" target="_blank" rel="noreferrer">{coachPagePath}</a>
+            </p>
+          </div>
           <a href="/api/admin/export?type=coaches" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export coach interest</a>
         </div>
         <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">

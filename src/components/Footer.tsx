@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { RECRUITMENT_PREFIX } from "@/data/recruitment";
 import { phoneHref, site } from "@/data/site";
 import { Logo } from "./Logo";
 
@@ -37,6 +41,9 @@ const groups = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  // The private coach recruitment page has its own minimal footer
+  if (pathname.startsWith(RECRUITMENT_PREFIX)) return null;
   return (
     <footer className="border-t border-gold/15 bg-navy-950 pb-28 pt-20 md:pb-12">
       <div className="container-x">
