@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { FileBookingStore } from "../src/lib/booking/file-store";
 import { coachInterestSchema, interestRegistrationSchema } from "../src/lib/validation";
-import { programmes, REGISTRATION_FEE_PENCE, formatProgrammePrice, getProgramme } from "../src/data/programmes";
+import { programmes, REGISTRATION_FEE_PENCE, formatOfferPrice, formatProgrammePrice, getProgramme } from "../src/data/programmes";
 import { sessions } from "../src/data/sessions";
 import { ageBand } from "../src/lib/age";
 
@@ -94,13 +94,16 @@ test("coach expressions of interest validate and store", async () => {
   assert.ok(!coachInterestSchema.safeParse({ ...input, roles: [] }).success);
 });
 
-test("price guide matches the brief", () => {
+test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Little Cricketers £18", () => {
   const price = (k: string) => getProgramme(k)!.pricePence;
+  const offer = (k: string) => getProgramme(k)!.offerPricePence;
   assert.equal(price("little-cricketers"), 1800);
-  assert.equal(price("development"), 2400);
-  assert.equal(price("girls-development"), 2400);
-  assert.equal(price("performance"), 3000);
-  assert.equal(price("girls-performance"), 3000);
+  assert.equal(offer("little-cricketers"), undefined);
+  for (const k of ["development", "girls-development", "performance", "girls-performance"]) {
+    assert.equal(price(k), 3000, k);
+    assert.equal(offer(k), 2500, k);
+  }
+  assert.equal(formatOfferPrice(getProgramme("development")!), "£25 per hour");
   assert.equal(price("small-group"), 4500);
   assert.equal(formatProgrammePrice(getProgramme("one-to-one")!), "from £75 per hour");
   assert.equal(REGISTRATION_FEE_PENCE, 3000);

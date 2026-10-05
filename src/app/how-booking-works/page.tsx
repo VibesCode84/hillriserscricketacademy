@@ -34,7 +34,7 @@ export default function HowBookingWorksPage() {
             <SectionHeader eyebrow="Key dates" title="Autumn 2026." />
             <p className="mt-6 leading-relaxed text-ink-muted">
               New players pay a one-off registration fee of {formatPrice(REGISTRATION_FEE_PENCE)}, which includes a HillRisers playing
-              shirt. See the <Link href="/programmes" className="underline underline-offset-4">price guide</Link> and our{" "}
+              shirt. See our <Link href="/programmes" className="underline underline-offset-4">programmes and prices</Link> and our{" "}
               <Link href="/terms" className="underline underline-offset-4">terms and conditions</Link>.
             </p>
           </div>

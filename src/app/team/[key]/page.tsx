@@ -13,7 +13,7 @@ import { CoachInterestForm } from "@/components/CoachInterestForm";
 export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
   description:
-    "HillRisers Cricket Academy is a start-up launching at John Lyon School, Harrow on the Hill, on 1 November. We're looking for lead, specialist, girls and early-years coaches, and helpers aged 16–18.",
+    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, on 1 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and helpers aged 16–18.",
   // Private page: shared directly with prospective coaches; never linked from the parent-facing site
   robots: { index: false, follow: false, nocache: true },
 };
@@ -24,14 +24,14 @@ export function generateStaticParams() {
   return [{ key: COACH_PAGE_KEY }];
 }
 
-// Candid status for prospective coaches (this page is private)
-const whereWeAre = [
-  { t: "Launching 1 November", b: "Sessions start at John Lyon School with a trial week on 1–7 November, and regular sessions from 8 November." },
-  { t: "No players yet", b: "Families are registering their interest now. We'll know how many players — and how many coaching hours — once registrations close on 19 October." },
-  { t: "Hours follow demand", b: "We can't promise a set number of hours until the timetable is built. It will be set from parent feedback and coach availability." },
-  { t: "Indoors in autumn and spring", b: "Three indoor nets in the John Lyon sports hall, with an 11-yard run-up — so indoor seam work focuses on action, accuracy and variations. Outdoors in summer." },
-  { t: "Equipment is planned", b: "A bowling machine and video analysis are planned, not yet bought." },
-  { t: "Small and hands-on", b: "It's a start-up. You'll be part of a small team, and your input will shape how we coach from day one." },
+// The opportunity, for prospective coaches (this page is private)
+const opportunity = [
+  { t: "Launching 1 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 1–7 November and regular sessions from 8 November." },
+  { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
+  { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
+  { t: "Indoors and out", b: "Three indoor nets at John Lyon through autumn and spring, then outdoor coaching all summer." },
+  { t: "Kit on the way", b: "A bowling machine and video analysis are coming, so you can show players exactly what you see." },
+  { t: "A founding team", b: "Be one of the coaches who shapes HillRisers from the very first session — your ideas will define how we coach." },
 ];
 
 const reasons = [
@@ -41,23 +41,23 @@ const reasons = [
   },
   {
     t: "Longer blocks, not odd hours",
-    b: "We aim to plan coaching in longer blocks rather than scattered single hours, so your time — and the journey — is worth it.",
+    b: "We plan coaching in longer blocks rather than scattered single hours, so your time — and the journey — is worth it.",
   },
   {
     t: "Freedom to coach your way",
     b: "You know how to coach. We'll give you small groups, your own net and the support you need — then trust you to coach the way you believe in.",
   },
   {
-    t: "Build something from day one",
-    b: "Join a small, ambitious team shaping a new academy from the start. Your ideas will shape how HillRisers coaches.",
+    t: "An exciting team",
+    b: "Work alongside ambitious, like-minded coaches who love developing young cricketers — and enjoy doing it.",
   },
   {
-    t: "Tools to help",
-    b: "A bowling machine and video analysis are planned, so you can show players what you see and give them more quality balls.",
+    t: "Technology to help",
+    b: "Bowling machines and video analysis will help you give players more quality balls and show them exactly what you see.",
   },
   {
     t: "Support in the net",
-    b: "Helpers aged 16–18 will support sessions where groups need it, leaving you free to coach.",
+    b: "Helpers aged 16–18 support sessions where groups need it, leaving you free to coach.",
   },
 ];
 
@@ -87,11 +87,11 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
       </header>
       <PageHero
         eyebrow="Coach with us"
-        title="Help build a cricket academy from day one."
+        title="Join the founding coaching team."
         intro={
           <p>
-            HillRisers is a start-up academy launching at {site.venue.name}, Harrow on the Hill, on 1 November. We don&rsquo;t have players
-            yet — we&rsquo;re looking for coaches to build it with us from the very first session.
+            HillRisers launches at {site.venue.name}, Harrow on the Hill, on 1 November — and we want the very best coaches in the area to
+            help us build something special. Market-leading pay, small groups, great facilities and the freedom to coach your way.
           </p>
         }
         actions={<ButtonLink href="#apply" arrow className="group">Express your interest</ButtonLink>}
@@ -100,13 +100,13 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
 
       <Section tone="cream">
         <SectionHeader
-          eyebrow="Where we are now"
-          title="An honest picture."
-          intro={<p className="text-ink-muted">We&rsquo;d rather you joined knowing exactly where things stand.</p>}
+          eyebrow="The opportunity"
+          title="Be part of something new."
+          intro={<p className="text-ink-muted">A new academy, a founding team, and young cricketers ready to learn.</p>}
           className="mb-12"
         />
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-          {whereWeAre.map((r, i) => (
+          {opportunity.map((r, i) => (
             <Reveal key={r.t} delay={(i % 3) * 80} className="border-t border-navy-950/10 pt-5">
               <h3 className="text-2xl text-navy-950">{r.t}</h3>
               <p className="mt-2 leading-relaxed text-ink-muted">{r.b}</p>

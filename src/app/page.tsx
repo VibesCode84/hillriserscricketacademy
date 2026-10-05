@@ -80,7 +80,7 @@ export default function HomePage() {
       <Section tone="cream" id="programmes">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <SectionHeader
-            eyebrow="Programmes and price guide"
+            eyebrow="Programmes and prices"
             title="World-class coaching at every stage."
             intro={<p className="text-ink-muted">From first steps with a soft ball to hard-ball specialist nets — exceptional coaching for every young cricketer.</p>}
           />

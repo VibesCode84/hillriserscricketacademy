@@ -10,7 +10,7 @@ import { CTASection, NotSureBanner } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Programmes & Prices — Junior Cricket Coaching in Harrow",
   description:
-    "HillRisers programmes at John Lyon School: Little Cricketers (4–7), Development (7–11), Performance (10–15), girls-only groups, small groups and 1-to-1 coaching. Guide prices per hour.",
+    "HillRisers programmes at John Lyon School: Little Cricketers (4–7), Development (7–11), Performance (10–15), girls-only groups, small groups and 1-to-1 coaching. Group programmes £30 per hour, with a 2026/27 offer of £25 per hour.",
   alternates: { canonical: "/programmes" },
 };
 
@@ -28,7 +28,7 @@ export default function ProgrammesPage() {
   return (
     <>
       <PageHero
-        eyebrow="Programmes and price guide"
+        eyebrow="Programmes and prices"
         title="Outstanding coaching at every stage."
         intro={<p>From first steps with a soft ball to elite hard-ball specialist nets — expertly coached in larger groups, small groups or 1-to-1.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}

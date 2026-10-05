@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { formatProgrammePrice, getProgramme, specialistSkills } from "@/data/programmes";
+import { getProgramme, specialistSkills } from "@/data/programmes";
+import { ProgrammePrice } from "@/components/ProgrammeTable";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -58,7 +59,9 @@ export default function GirlsPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-gold">Ages {g.ages}</p>
               <h3 className="mt-3 text-3xl">{g.name}</h3>
               <p className="mt-2 text-slate">{g.summary}</p>
-              <p className="mt-6 font-semibold">{formatProgrammePrice(g)} <span className="font-normal text-slate">(guide)</span></p>
+              <p className="mt-6">
+                <ProgrammePrice p={g} light={false} align="left" />
+              </p>
             </Reveal>
           ))}
         </div>

@@ -21,7 +21,7 @@ npm run build
 
 | File | What it controls |
 | --- | --- |
-| `src/data/programmes.ts` | Programmes, ages, guide prices, registration fee (£30 incl. shirt), group sizes and specialist skills |
+| `src/data/programmes.ts` | Programmes, ages and prices: group programmes £30/hr standard (`STANDARD_HOURLY_PENCE`) with a 2026/27 offer of £25/hr (`OFFER_HOURLY_PENCE`, `OFFER_LABEL`); Little Cricketers £18/session; registration fee (£30 incl. shirt); group sizes; specialist skills |
 | `src/data/launch.ts` | Key dates (registrations open/close, priority booking, trial week, decision deadline) and booking rules (48-hour priority, 24-hour trial cancellation) |
 | `src/data/coaches.ts` | Coaching team. **Leave empty until each coach has signed**, and the site shows "Coaching team announced soon". Add an entry per coach with factual credentials. |
 | `src/data/site.ts` | Contact email, phone and welfare email (all unset; anything unset is hidden rather than shown as a placeholder), venue, navigation, canonical URL |
@@ -32,7 +32,7 @@ npm run build
 
 **Copy rules:**
 - **Public site:** a confident, big-sell tone is fine ("the very best coaches from the area"). Never invent facts: no fake testimonials, player numbers or results, and no coach names until they've signed.
-- **Coach recruitment** (`/team/<key>`, default `/team/join-3uixtrgp`; set `COACH_PAGE_KEY` to change it): a **private, standalone page** with no links to or from the parent-facing site and hidden from search engines. Any other `/team/*` address (and the old `/coach-with-us`) is a 404. Share the link directly with coaches; it's also shown in `/admin/bookings`. It's candid about where HillRisers is: a start-up with no players yet, hours depending on demand, equipment planned.
+- **Coach recruitment** (`/team/<key>`, default `/team/join-3uixtrgp`; set `COACH_PAGE_KEY` to change it): a **private, standalone page** with no links to or from the parent-facing site and hidden from search engines. Any other `/team/*` address (and the old `/coach-with-us`) is a 404. Share the link directly with coaches; it's also shown in `/admin/bookings`. It sells the opportunity: market-leading pay, longer blocks, freedom to coach, a founding team.
 - No fixed times anywhere except Little Cricketers.
 
 ## Register-your-interest form (`/register`)

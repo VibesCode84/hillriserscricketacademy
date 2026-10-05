@@ -1,5 +1,6 @@
 /**
- * Programmes and price guide. Prices are a guide per hour of coaching —
+ * Programmes and price guide. Group programmes share one standard rate
+ * (£30 per hour) with a 2026/27 offer of £25 per hour. Prices are per hour —
  * sessions may run for 1 hour, 90 minutes or 2 hours depending on parent
  * feedback. Little Cricketers is the only programme with a fixed time.
  */
@@ -20,8 +21,10 @@ export type Programme = {
   ageMin?: number;
   ageMax?: number;
   summary: string;
-  /** Guide price in pence */
+  /** Standard price in pence */
   pricePence: number;
+  /** Special-offer price in pence (see OFFER_LABEL) */
+  offerPricePence?: number;
   /** How the price is quoted */
   priceUnit: "per session" | "per hour" | "per player per hour";
   /** "from £75" */
@@ -31,6 +34,12 @@ export type Programme = {
   fixedTime?: string;
   href?: string;
 };
+
+/** Standard hourly rate for all group programmes (everything bar Little Cricketers) */
+export const STANDARD_HOURLY_PENCE = 3000;
+/** 2026/27 special offer */
+export const OFFER_HOURLY_PENCE = 2500;
+export const OFFER_LABEL = "2026/27 offer";
 
 export const programmes: Programme[] = [
   {
@@ -52,7 +61,8 @@ export const programmes: Programme[] = [
     ageMin: 7,
     ageMax: 11,
     summary: "Technique, and the move from tennis ball to hard ball.",
-    pricePence: 2400,
+    pricePence: STANDARD_HOURLY_PENCE,
+    offerPricePence: OFFER_HOURLY_PENCE,
     priceUnit: "per hour",
   },
   {
@@ -62,7 +72,8 @@ export const programmes: Programme[] = [
     ageMin: 8,
     ageMax: 11,
     summary: "The Development format, girls only.",
-    pricePence: 2400,
+    pricePence: STANDARD_HOURLY_PENCE,
+    offerPricePence: OFFER_HOURLY_PENCE,
     priceUnit: "per hour",
     girlsOnly: true,
     href: "/girls",
@@ -74,7 +85,8 @@ export const programmes: Programme[] = [
     ageMin: 10,
     ageMax: 15,
     summary: "Hard ball, specialist nets.",
-    pricePence: 3000,
+    pricePence: STANDARD_HOURLY_PENCE,
+    offerPricePence: OFFER_HOURLY_PENCE,
     priceUnit: "per hour",
   },
   {
@@ -84,7 +96,8 @@ export const programmes: Programme[] = [
     ageMin: 11,
     ageMax: 15,
     summary: "The Performance format, girls only.",
-    pricePence: 3000,
+    pricePence: STANDARD_HOURLY_PENCE,
+    offerPricePence: OFFER_HOURLY_PENCE,
     priceUnit: "per hour",
     girlsOnly: true,
     href: "/girls",
@@ -124,7 +137,14 @@ export function getProgramme(key: string) {
   return programmes.find((p) => p.key === key);
 }
 
+const pounds = (pence: number) => (pence % 100 === 0 ? `£${pence / 100}` : `£${(pence / 100).toFixed(2)}`);
+
+/** Standard price, e.g. "£30 per hour" or "from £75 per hour" */
 export function formatProgrammePrice(p: Programme) {
-  const amount = p.pricePence % 100 === 0 ? `£${p.pricePence / 100}` : `£${(p.pricePence / 100).toFixed(2)}`;
-  return `${p.priceFrom ? "from " : ""}${amount} ${p.priceUnit}`;
+  return `${p.priceFrom ? "from " : ""}${pounds(p.pricePence)} ${p.priceUnit}`;
+}
+
+/** Offer price if one applies, e.g. "£25 per hour" */
+export function formatOfferPrice(p: Programme) {
+  return p.offerPricePence ? `${pounds(p.offerPricePence)} ${p.priceUnit}` : undefined;
 }
