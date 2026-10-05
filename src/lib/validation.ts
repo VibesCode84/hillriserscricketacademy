@@ -138,15 +138,13 @@ export const coachInterestSchema = z.object({
       saturday: multi(coachAvailabilityOptions.weekendHours),
       sunday: multi(coachAvailabilityOptions.weekendHours),
       weekdayBlocks: multi(coachAvailabilityOptions.weekdayBlocks),
-      summer: multi(coachAvailabilityOptions.summer),
       notes: optionalText(500),
       summerNotes: optionalText(500),
     })
     .refine((a) => a.saturday.length + a.sunday.length + a.weekdayBlocks.length > 0, {
       message: "Please tick when you could coach in autumn and spring",
       path: ["termTime"],
-    })
-    .refine((a) => a.summer.length > 0, { message: "Please tick your summer availability (or 'Not available')", path: ["summer"] }),
+    }),
   dbsStatus: z.string().trim().min(2, "Please tell us your DBS status").max(200),
   safeguardingStatus: z.string().trim().min(2, "Please tell us your safeguarding training status").max(200),
   firstAid: z.boolean().default(false),

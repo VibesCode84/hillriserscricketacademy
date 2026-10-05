@@ -190,7 +190,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                 {c.weaknesses && <div className="whitespace-pre-line">Weaknesses / working on: {c.weaknesses}</div>}
                 <div>Autumn/spring: {summariseCoachAvailability(c.availability)}</div>
                 {c.availability.notes && <div>Notes: {c.availability.notes}</div>}
-                <div>Summer: {c.availability.summer.join(", ") || "—"}{c.availability.summerNotes ? ` — ${c.availability.summerNotes}` : ""}</div>
+                {c.availability.summerNotes && <div>Summer notes: {c.availability.summerNotes}</div>}
                 <div>DBS: {c.dbsStatus} · Safeguarding: {c.safeguardingStatus} · First aid: {c.firstAid ? "Yes" : "No"}</div>
                 {c.message && <div className="whitespace-pre-line">Message: {c.message}</div>}
                 <div>{new Date(c.createdAt).toLocaleString("en-GB")}</div>

@@ -77,7 +77,6 @@ export async function GET(req: Request) {
         ...coachAvailabilityOptions.weekendHours.map((h) => `Sun ${h}`),
         ...coachAvailabilityOptions.weekdayBlocks,
         "Availability notes",
-        ...coachAvailabilityOptions.summer.map((s) => `Summer: ${s}`),
         "Summer notes", "DBS", "Safeguarding", "First aid", "Message",
       ],
       rows.map((c) => [
@@ -86,7 +85,6 @@ export async function GET(req: Request) {
         ...coachAvailabilityOptions.weekendHours.map((h) => (c.availability.sunday.includes(h) ? "Yes" : "")),
         ...coachAvailabilityOptions.weekdayBlocks.map((b) => (c.availability.weekdayBlocks.includes(b) ? "Yes" : "")),
         c.availability.notes,
-        ...coachAvailabilityOptions.summer.map((s) => (c.availability.summer.includes(s) ? "Yes" : "")),
         c.availability.summerNotes, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
       ]),
     );

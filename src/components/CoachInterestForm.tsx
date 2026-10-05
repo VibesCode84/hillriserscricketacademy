@@ -10,7 +10,6 @@ export function CoachInterestForm() {
   const [saturday, setSaturday] = useState<string[]>([]);
   const [sunday, setSunday] = useState<string[]>([]);
   const [weekdayBlocks, setWeekdayBlocks] = useState<string[]>([]);
-  const [summer, setSummer] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -30,7 +29,7 @@ export function CoachInterestForm() {
           ...fd,
           roles,
           firstAid,
-          availability: { saturday, sunday, weekdayBlocks, summer, notes: fd.availabilityNotes, summerNotes: fd.summerNotes },
+          availability: { saturday, sunday, weekdayBlocks, notes: fd.availabilityNotes, summerNotes: fd.summerNotes },
           availabilityNotes: undefined,
           summerNotes: undefined,
           company: fd.company || undefined,
@@ -124,8 +123,6 @@ export function CoachInterestForm() {
         setSunday={setSunday}
         weekdayBlocks={weekdayBlocks}
         setWeekdayBlocks={setWeekdayBlocks}
-        summer={summer}
-        setSummer={setSummer}
         errors={errors}
       />
 
@@ -192,19 +189,9 @@ function AvailabilityPicker(props: {
   setSunday: (v: string[]) => void;
   weekdayBlocks: string[];
   setWeekdayBlocks: (v: string[]) => void;
-  summer: string[];
-  setSummer: (v: string[]) => void;
   errors: Record<string, string>;
 }) {
   const termErr = props.errors["availability.termTime"];
-  const summerErr = props.errors["availability.summer"];
-  const notInSummer = "Not available in summer";
-  const toggleSummer = (v: string) =>
-    props.setSummer(
-      v === notInSummer
-        ? props.summer.includes(v) ? [] : [v]
-        : toggleIn(props.summer.filter((x) => x !== notInSummer), v),
-    );
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-cream p-5 md:p-6">
@@ -232,28 +219,13 @@ function AvailabilityPicker(props: {
       </section>
 
       <section className="rounded-2xl bg-navy-950 p-5 text-cream md:p-6">
-        <h3 className="font-serif text-2xl">Summer availability</h3>
+        <h3 className="font-serif text-2xl">Summer: to be confirmed</h3>
         <p className="mt-1 text-sm leading-relaxed text-slate">
-          In summer, coaching moves outdoors and fits around the cricket season — so sessions are likely to be on weekday evenings and
-          weekend mornings, leaving afternoons free for matches. Tick what could work for you; we&rsquo;ll confirm the summer timetable nearer
-          the time.
+          The summer timetable is still to be confirmed. The John Lyon sports hall isn&rsquo;t available during exam season, so we expect to
+          coach outdoors, with outdoor nets available. We&rsquo;ll talk to you about summer sessions nearer the time.
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {opts.summer.map((s) => (
-            <label
-              key={s}
-              className={`flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2.5 text-center text-sm font-medium transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
-                props.summer.includes(s) ? "border-gold bg-gold text-navy-950" : "border-cream/20 text-cream hover:border-gold/60"
-              }`}
-            >
-              <input type="checkbox" className="sr-only" checked={props.summer.includes(s)} onChange={() => toggleSummer(s)} />
-              {s}
-            </label>
-          ))}
-        </div>
-        <label htmlFor="co-summerNotes" className="label mt-5 !text-cream">Summer notes <span className="font-normal text-slate">(optional)</span></label>
-        <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play Saturdays, so Sundays and weekday evenings suit best" />
-        {summerErr && <p className="error-text !text-[#f4c7c3]">{summerErr}</p>}
+        <label htmlFor="co-summerNotes" className="label mt-5 !text-cream">Any summer commitments we should know about? <span className="font-normal text-slate">(optional)</span></label>
+        <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play club cricket on Saturdays" />
       </section>
     </div>
   );

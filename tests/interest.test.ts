@@ -90,7 +90,6 @@ test("coach expressions of interest validate and store", async () => {
       saturday: ["9–10am", "10–11am"],
       sunday: [],
       weekdayBlocks: ["Wednesday evening (3-hour block)"],
-      summer: ["Tuesday evening", "Sunday morning"],
     },
     dbsStatus: "Enhanced cricket DBS 2025",
     safeguardingStatus: "Completed 2025",
@@ -107,7 +106,7 @@ test("coach expressions of interest validate and store", async () => {
   assert.deepEqual(c.availability.saturday, ["9–10am", "10–11am"]);
 });
 
-test("coach availability: weekend hours 8am–6pm, Wed/Thu 3-hour blocks, summer required", () => {
+test("coach availability: weekend hours 8am–6pm and Wed/Thu 3-hour blocks; summer TBC", () => {
   const base = {
     name: "Alex Coach", email: "a@example.com", phone: "07000 111222", roles: ["Lead coach"], qualifications: "ECB L2",
     coachingExperience: "Ten seasons of junior coaching", coachingPhilosophy: "Players first, always.", strengths: "Batting",
@@ -116,13 +115,12 @@ test("coach availability: weekend hours 8am–6pm, Wed/Thu 3-hour blocks, summer
   assert.equal(coachAvailabilityOptions.weekendHours[0], "8–9am");
   assert.equal(coachAvailabilityOptions.weekendHours.at(-1), "5–6pm");
   assert.ok(coachAvailabilityOptions.weekendHours.includes("11am–12pm"));
-  const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [], summer: [] } });
+  const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [] } });
   assert.ok(!none.success);
-  const paths = none.error.issues.map((i) => i.path.join("."));
-  assert.ok(paths.includes("availability.termTime") && paths.includes("availability.summer"));
-  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["7–8pm"], sunday: [], weekdayBlocks: [], summer: ["Sunday morning"] } });
+  assert.ok(none.error.issues.map((i) => i.path.join(".")).includes("availability.termTime"));
+  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["7–8pm"], sunday: [], weekdayBlocks: [] } });
   assert.ok(!bad.success);
-  const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], summer: ["Not available in summer"] } });
+  const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], summerNotes: "Club cricket Saturdays" } });
   assert.ok(ok.success);
   assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
 });

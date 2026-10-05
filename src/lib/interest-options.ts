@@ -90,25 +90,14 @@ export const coachAvailabilityOptions = {
   weekendHours: Array.from({ length: WEEKEND_LAST_HOUR - WEEKEND_FIRST_HOUR + 1 }, (_, i) => hourLabel(WEEKEND_FIRST_HOUR + i)),
   /** Autumn & spring: one 3-hour evening block on Wednesdays and Thursdays */
   weekdayBlocks: ["Wednesday evening (3-hour block)", "Thursday evening (3-hour block)"],
-  /** Summer (cricket season, outdoors) */
-  summer: [
-    "Monday evening",
-    "Tuesday evening",
-    "Wednesday evening",
-    "Thursday evening",
-    "Friday evening",
-    "Saturday morning",
-    "Sunday morning",
-    "Not available in summer",
-  ],
 };
 
 export type CoachAvailability = {
   saturday: string[];
   sunday: string[];
   weekdayBlocks: string[];
-  summer: string[];
   notes?: string;
+  /** Summer timetable is TBC — coaches can note any summer commitments */
   summerNotes?: string;
 };
 

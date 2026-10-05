@@ -109,7 +109,7 @@ const toCoachInterest = (r: any): CoachInterest => ({
   coachingPhilosophy: r.coaching_philosophy ?? "",
   strengths: r.strengths ?? "",
   weaknesses: r.weaknesses ?? "",
-  availability: r.availability_slots ?? { saturday: [], sunday: [], weekdayBlocks: [], summer: [], notes: r.availability },
+  availability: r.availability_slots ?? { saturday: [], sunday: [], weekdayBlocks: [], notes: r.availability },
   dbsStatus: r.dbs_status,
   safeguardingStatus: r.safeguarding_status,
   firstAid: r.first_aid,
@@ -432,7 +432,7 @@ export class PgBookingStore implements BookingStore {
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) returning *`,
       [
         randomUUID(), c.name, c.email.trim().toLowerCase(), c.phone, c.roles, c.specialism ?? null, c.qualifications,
-        c.playingBackground ?? null, summariseCoachAvailability(c.availability), c.availability.summer.join(", ") || null,
+        c.playingBackground ?? null, summariseCoachAvailability(c.availability), c.availability.summerNotes ?? null,
         c.dbsStatus, c.safeguardingStatus, c.firstAid,
         c.message ?? null, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses, JSON.stringify(c.availability),
       ],
