@@ -1,31 +1,30 @@
 import { site, formatPrice } from "../data/site";
 import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sessions";
-import { depositFor, getAcademy } from "../data/academies";
-import { coachesFor } from "../data/coaches";
-import { formatTermDate, paymentDueDate, termStartLabel, upcomingTerm } from "../data/term";
-
-function termLine() {
-  const t = upcomingTerm();
-  return `${t.name} starts on ${termStartLabel(t)} and runs until ${formatTermDate(t.endsOn, { weekday: true })}. Fees are paid termly and are due by ${formatTermDate(paymentDueDate(t), { weekday: true })}. Term dates: ${site.url}/sessions#term-dates`;
-}
-import type { Booking, CampInterest, Parent, Player, TrialRequest } from "./booking/types";
+import { launch } from "../data/launch";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
+import type { Booking, CampInterest, CoachInterest, InterestRegistration, Parent, Player } from "./booking/types";
+import { labelFor } from "./interest-options";
 
 type Email = { to: string; subject: string; text: string };
 
+/**
+ * Sends via Resend when RESEND_API_KEY and EMAIL_FROM are set; otherwise logs.
+ * Internal notifications go to ACADEMY_NOTIFY_EMAIL (skipped if unset).
+ */
 async function send(email: Email) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.info(`[hillrisers] email (not sent — RESEND_API_KEY unset)\nTo: ${email.to}\nSubject: ${email.subject}\n\n${email.text}`);
+  const from = process.env.EMAIL_FROM;
+  if (!key || !from) {
+    console.info(`[hillrisers] email (not sent — RESEND_API_KEY/EMAIL_FROM unset)\nTo: ${email.to}\nSubject: ${email.subject}\n\n${email.text}`);
     return;
   }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? `${site.name} <${site.email}>`,
+      from,
       to: [email.to],
-      reply_to: site.email,
+      reply_to: site.email ?? process.env.ACADEMY_NOTIFY_EMAIL,
       subject: email.subject,
       text: email.text,
     }),
@@ -33,147 +32,83 @@ async function send(email: Email) {
   if (!res.ok) console.error("[hillrisers] email failed", res.status, await res.text());
 }
 
-/** The welcome email is part of the product: everything a parent needs before the first session. */
-export async function sendBookingConfirmation(args: {
-  booking: Booking;
-  session: AcademySession;
-  player: Player;
-  parent: Parent;
-}) {
-  const { booking, session, player, parent } = args;
-  const coach = session.discipline ? coachesFor(session.discipline)[0] : undefined;
-  const first = player.name.split(" ")[0];
-  const text = `Hi ${parent.name.split(" ")[0]},
-
-${first}'s place is confirmed. Welcome to HillRisers.
-
-YOUR ACADEMY PLACE
-Player: ${player.name}
-Session: ${sessionLabel(session)}
-When: ${session.day}, ${formatTimeRange(session)}${session.confirmed ? "" : " — we'll confirm the exact time with you"}
-Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
-${coach ? `Coach: ${coach.name} — ${coach.role}\n` : ""}Paid: ${formatPrice(booking.amountPaidPence ?? session.pricePence)}
-
-TERM DATES
-${termLine()}
-
-WHAT TO BRING
-• Comfortable sportswear and indoor trainers
-• A named water bottle
-• Any cricket kit they have — for hard-ball sessions a helmet, pads and gloves are essential (reply if you need to borrow kit)
-
-WHEN YOU ARRIVE
-Please arrive 10 minutes early. A coach will meet you at the entrance and sign ${first} in. Parking and arrival details: ${site.url}/venue
-
-WHAT TO EXPECT
-The coaching team will know ${first} is new. They'll introduce ${first} to the group, work in small stations so there are plenty of turns, and finish with one clear thing to work on next time.
-Within a day or two we'll get in touch to ask how ${first} found it.
-
-Questions? Reply to this email or call ${site.phone}.
-
-See you soon,
-The HillRisers coaching team
-
-Booking reference: ${booking.id.slice(0, 8).toUpperCase()}
-Cancellations more than 48 hours before the session are refunded in full: ${site.url}/refunds
-`;
-  await send({ to: parent.email, subject: `${first}'s HillRisers place is confirmed — ${session.day} ${formatTimeRange(session)}`, text });
+async function notifyAcademy(subject: string, text: string) {
+  const to = process.env.ACADEMY_NOTIFY_EMAIL;
+  if (to) await send({ to, subject, text });
+  else console.info(`[hillrisers] academy notification (ACADEMY_NOTIFY_EMAIL unset): ${subject}`);
 }
 
-export async function sendWaitlistConfirmation(args: { to: string; playerName: string; session: AcademySession }) {
-  const { to, playerName, session } = args;
+function contactLine() {
+  const parts = [site.email, site.phone].filter(Boolean);
+  return parts.length ? `Questions? Reply to this email or contact us: ${parts.join(" · ")}.` : "Questions? Just reply to this email.";
+}
+
+const signOff = "The HillRisers coaching team";
+
+/* ── Register your interest ─────────────────────────────────────────────── */
+
+export async function sendInterestConfirmation(r: InterestRegistration) {
+  const names = r.children.map((c) => c.firstName);
+  const who = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
   await send({
-    to,
-    subject: `You're on the waiting list — ${session.title}, ${session.day}`,
-    text: `Thanks — ${playerName} is on the waiting list for ${sessionLabel(session)}, ${session.day} ${formatTimeRange(session)}.
+    to: r.email,
+    subject: `Thanks for registering ${who} with HillRisers`,
+    text: `Hi ${r.parentName.split(" ")[0]},
 
-There's nothing to pay. As soon as a place opens we'll email you a link to book it.
-
-In the meantime, if another day would work, reply and we'll suggest an alternative.
-
-The HillRisers coaching team · ${site.phone}`,
-  });
-}
-
-/** Sent when a family requests a trial while the weekly programme is being finalised. */
-export async function sendTrialRequestConfirmation(args: {
-  parent: Parent;
-  player: Player;
-  academyKey: string;
-  preferredDays: string[];
-}) {
-  const { parent, player, academyKey, preferredDays } = args;
-  const academy = getAcademy(academyKey);
-  const first = player.name.split(" ")[0];
-  const days = preferredDays.length ? preferredDays.join(", ") : "Any day";
-  const text = `Hi ${parent.name.split(" ")[0]},
-
-Thank you — we've received ${first}'s trial request. There's nothing to pay yet.
-
-YOUR REQUEST
-Player: ${player.name}
-Academy: ${academy?.name ?? academyKey}
-Preferred days: ${days}
-Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
+Thank you for registering your interest in HillRisers Cricket Academy for ${who}. There's nothing to pay at this stage.
 
 WHAT HAPPENS NEXT
-We're finalising which academy runs on which day. A coach will be in touch shortly to confirm the best day and time for ${first}, and send you a link to secure the place.
+1. We're using every family's answers — availability, level and what each child wants from cricket — to build the timetable.
+2. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking before places open to everyone.
+3. You then book a trial session in trial week (${launch.trialWeek}), paying a deposit equal to one session fee.
+4. After the trial, the deposit is credited if your child joins, or refunded if they don't (provided they attended or cancelled with at least ${launch.trialCancellationHours} hours' notice).
 
-${termLine()}
+Regular sessions start from ${launch.regularSessionsFrom}. How booking works: ${site.url}/how-booking-works
 
-Questions? Reply to this email or call ${site.phone}.
+${contactLine()}
 
-The HillRisers coaching team
-`;
-  await send({ to: parent.email, subject: `We've received ${first}'s trial request — HillRisers`, text });
-  await send({
-    to: site.email,
-    subject: `New trial request: ${player.name} — ${academy?.name ?? academyKey}`,
-    text: `${player.name} (DOB ${player.dateOfBirth}, ${player.experience}, interest: ${player.interest})\nAcademy: ${academy?.name ?? academyKey}\nPreferred days: ${days}\nParent: ${parent.name} <${parent.email}> ${parent.mobile}\n\nSee /admin/bookings`,
-  });
-}
-
-export async function sendDepositConfirmation(args: { request: TrialRequest; player: Player; parent: Parent }) {
-  const { request, player, parent } = args;
-  const academy = getAcademy(request.academy);
-  const first = player.name.split(" ")[0];
-  const days = request.preferredDays.length ? request.preferredDays.join(", ") : "Any day";
-  const amount = formatPrice(request.depositPence ?? depositFor(request.academy));
-  await send({
-    to: parent.email,
-    subject: `${first}'s place is secured — HillRisers`,
-    text: `Hi ${parent.name.split(" ")[0]},
-
-Thank you — we've received your ${amount} refundable holding deposit, and ${first}'s place in ${academy?.name ?? request.academy} is secured.
-
-WHAT HAPPENS NEXT
-We're finalising which academy runs on which day. A coach will be in touch to confirm the best day and time for ${first} (preferred: ${days}).
-Your deposit pays for ${first}'s first session, and counts towards the term fee if ${first} continues for the term.
-${termLine()}
-
-IF PLANS CHANGE
-If we can't offer a session that suits you, or you change your mind before the session is confirmed, just reply and we'll refund the deposit in full.
-
-The HillRisers coaching team · ${site.phone}
-Reference: ${request.id.slice(0, 8).toUpperCase()}
+${signOff}
 `,
   });
-  await send({
-    to: site.email,
-    subject: `Deposit paid: ${player.name} — ${academy?.name ?? request.academy}`,
-    text: `${amount} holding deposit received for ${player.name}.\nPreferred days: ${days}\nParent: ${parent.name} <${parent.email}> ${parent.mobile}\n\nSee /admin/bookings`,
-  });
+  await notifyAcademy(
+    `New registration: ${who} (${r.postcode})`,
+    `${r.parentName} <${r.email}> ${r.mobile} · ${r.postcode}\nHeard via: ${r.heardAbout ?? "—"}\n\n` +
+      r.children
+        .map(
+          (c) =>
+            `${c.firstName} (DOB ${c.dateOfBirth}) — ${labelFor("level", c.level)}, ${labelFor("mainRole", c.mainRole)}\n` +
+            `  Available: ${c.availability.join(", ") || "—"}${c.availabilityNotes ? ` (${c.availabilityNotes})` : ""}\n` +
+            `  Wants: ${c.wants.join(", ") || "—"}\n  Formats: ${c.formats.join(", ") || "—"} · Lengths: ${c.sessionLengths.join(", ") || "—"}`,
+        )
+        .join("\n\n") +
+      `\n\nSee ${site.url}/admin/bookings`,
+  );
 }
+
+/* ── Coach with us ──────────────────────────────────────────────────────── */
+
+export async function sendCoachInterestConfirmation(c: CoachInterest) {
+  await send({
+    to: c.email,
+    subject: "Thanks for your interest in coaching with HillRisers",
+    text: `Hi ${c.name.split(" ")[0]},
+
+Thank you for getting in touch about coaching with HillRisers. We'll be in touch soon to talk it through.
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `Coach interest: ${c.name} — ${c.roles.join(", ")}`,
+    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nAvailability: ${c.availability}\nSummer: ${c.summerAvailability ?? "—"}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
+  );
+}
+
+/* ── Holiday camps ──────────────────────────────────────────────────────── */
 
 export async function sendCampInterestConfirmation(c: CampInterest) {
   const first = c.childName.split(" ")[0];
-  const campList = c.camps
-    .map((id) => {
-      if (id === FUTURE_CAMPS) return "• Future holiday camps";
-      const camp = getCamp(id);
-      return `• ${camp?.name ?? id}`;
-    })
-    .join("\n");
+  const campList = c.camps.map((id) => `• ${id === FUTURE_CAMPS ? "Future holiday camps" : getCamp(id)?.name ?? id}`).join("\n");
   await send({
     to: c.email,
     subject: `Holiday camps — we'll keep you posted about ${first}`,
@@ -182,24 +117,68 @@ export async function sendCampInterestConfirmation(c: CampInterest) {
 Thank you for registering ${first}'s interest in HillRisers specialist holiday camps:
 ${campList}
 
-Details are to be confirmed. You'll hear from us first, before booking opens to everyone.
+Details are to be confirmed. You'll hear from us first, before booking opens to everyone. There's nothing to pay, and registering doesn't commit you to anything.
 
-There's nothing to pay, and registering doesn't commit you to anything.
-
-The HillRisers coaching team · ${site.phone}
+${signOff}
 `,
   });
+  await notifyAcademy(
+    `Camp interest: ${c.childName} (${c.childAge})`,
+    `${c.parentName} <${c.email}> ${c.mobile ?? ""}\nChild: ${c.childName}, age ${c.childAge}, interest: ${c.interest}\nCamps:\n${campList}${c.notes ? `\n\nNotes: ${c.notes}` : ""}`,
+  );
+}
+
+/* ── General enquiries ──────────────────────────────────────────────────── */
+
+export async function sendEnquiryNotification(args: { parentName: string; email: string; message: string }) {
+  await notifyAcademy(`New enquiry from ${args.parentName}`, `${args.parentName} <${args.email}>\n\n${args.message}`);
+}
+
+/* ── Session bookings (used once trial booking opens) ───────────────────── */
+
+export async function sendBookingConfirmation(args: { booking: Booking; session: AcademySession; player: Player; parent: Parent }) {
+  const { booking, session, player, parent } = args;
+  const first = player.name.split(" ")[0];
   await send({
-    to: site.email,
-    subject: `Camp interest: ${c.childName} (${c.childAge})`,
-    text: `${c.parentName} <${c.email}> ${c.mobile ?? ""}\nChild: ${c.childName}, age ${c.childAge}, interest: ${c.interest}\nCamps:\n${campList}${c.notes ? `\n\nNotes: ${c.notes}` : ""}`,
+    to: parent.email,
+    subject: `${first}'s HillRisers place is confirmed — ${session.day} ${formatTimeRange(session)}`,
+    text: `Hi ${parent.name.split(" ")[0]},
+
+${first}'s place is confirmed. Welcome to HillRisers.
+
+YOUR PLACE
+Player: ${player.name}
+Session: ${sessionLabel(session)}
+When: ${session.day}, ${formatTimeRange(session)}
+Venue: ${site.venue.name}, ${site.venue.addressLines.join(", ")}
+Paid: ${formatPrice(booking.amountPaidPence ?? session.pricePence)}
+
+WHAT TO BRING
+• Comfortable sportswear and indoor trainers
+• A named water bottle
+• Any cricket kit they have
+
+WHEN YOU ARRIVE
+Please arrive 10 minutes early. A coach will meet you and sign ${first} in. Arrival details: ${site.url}/venue
+
+${contactLine()}
+
+${signOff}
+Booking reference: ${booking.id.slice(0, 8).toUpperCase()}
+`,
   });
 }
 
-export async function sendEnquiryNotification(args: { parentName: string; email: string; message: string }) {
+export async function sendWaitlistConfirmation(args: { to: string; playerName: string; session: AcademySession }) {
+  const { to, playerName, session } = args;
   await send({
-    to: site.email,
-    subject: `New enquiry from ${args.parentName}`,
-    text: `${args.parentName} <${args.email}>\n\n${args.message}`,
+    to,
+    subject: `You're on the waiting list — ${sessionLabel(session)}, ${session.day}`,
+    text: `Thanks — ${playerName} is on the waiting list for ${sessionLabel(session)}, ${session.day} ${formatTimeRange(session)}.
+
+There's nothing to pay. As soon as a place opens we'll email you a link to book it.
+
+${signOff}
+`,
   });
 }

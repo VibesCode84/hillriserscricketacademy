@@ -1,8 +1,10 @@
-const items = ["Ages 4–14", "Specialist Coaches", "Girls Academy", "John Lyon School"];
+import { site } from "@/data/site";
+
+const items = [`Ages ${site.ages}`, "Max six per net", "Girls-only pathway", "John Lyon School"];
 
 export function TrustStrip({ className = "" }: { className?: string }) {
   return (
-    <ul className={`flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-cream/80 ${className}`} aria-label="Why families choose HillRisers">
+    <ul className={`flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-cream/80 ${className}`} aria-label="HillRisers at a glance">
       {items.map((item, i) => (
         <li key={item} className="flex items-center gap-5">
           {i > 0 && <span className="h-1 w-1 rounded-full bg-gold" aria-hidden="true" />}
@@ -16,13 +18,13 @@ export function TrustStrip({ className = "" }: { className?: string }) {
 /** Full-width band version used under the hero */
 export function TrustBand() {
   const facts = [
-    { k: "4–14", v: "Junior players, from first swing to confident cricketer" },
-    { k: "18", v: "Maximum players in every academy group" },
-    { k: "4", v: "Coaches per session: lead, assistant and two helpers" },
-    { k: "90", v: "Minutes of purposeful, structured coaching" },
+    { k: "6", v: "Maximum players per net, each net with its own coach" },
+    { k: "3", v: "Indoor nets at John Lyon in autumn and spring" },
+    { k: site.ages, v: "Ages, placed by ability — not just age" },
+    { k: "100%", v: "Of sessions include fielding" },
   ];
   return (
-    <section className="border-y border-gold/15 bg-navy-900" aria-label="The HillRisers academy at a glance">
+    <section className="border-y border-gold/15 bg-navy-900" aria-label="HillRisers at a glance">
       <div className="container-x grid grid-cols-2 gap-px lg:grid-cols-4">
         {facts.map((f) => (
           <div key={f.k} className="py-8 pr-4 md:py-10">

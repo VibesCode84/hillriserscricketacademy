@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession, formatTimeRange } from "@/data/sessions";
-import { getAcademy } from "@/data/academies";
+import { getProgramme } from "@/data/programmes";
 import { formatPrice, site } from "@/data/site";
 import { getStore } from "@/lib/booking";
 import { ConfirmPlaceButton } from "@/components/booking/ConfirmPlaceButton";
@@ -62,7 +62,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
   const rows: [string, string][] = [
     ["Player", player.name],
-    ["Academy", (session.discipline && getAcademy(session.discipline)?.name) || session.title],
+    ["Programme", (session.discipline && getProgramme(session.discipline)?.name) || session.title],
     ...(session.group ? ([["Group", session.group]] as [string, string][]) : []),
     ["Day", session.day],
     ["Time", formatTimeRange(session)],
@@ -99,7 +99,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
       <p className="mt-6 text-sm text-ink-muted">
-        Free cancellation more than 48 hours before the session — see our <Link href="/refunds" className="underline underline-offset-2">refund policy</Link>.
+        Trial deposits are credited if your child joins, or refunded if they attend (or cancel with at least 24 hours&rsquo; notice) and
+        decide not to — see our <Link href="/terms" className="underline underline-offset-2">terms</Link>.
         Need to change something? <Link href={`/book?session=${session.id}`} className="underline underline-offset-2">Start again</Link>.
       </p>
     </Shell>

@@ -8,37 +8,32 @@ import { Reveal } from "@/components/Reveal";
 import { CTASection } from "@/components/CTASection";
 
 export const metadata: Metadata = {
-  title: "Venue — Train at John Lyon School, Harrow",
+  title: "Venue — John Lyon School, Harrow on the Hill",
   description:
-    "HillRisers Cricket Academy trains at John Lyon School, Middle Road, Harrow on the Hill. Indoor cricket facilities, parking, arrival instructions and accessibility.",
+    "HillRisers coaches indoors in the John Lyon School sports hall, Harrow on the Hill, in autumn and spring — three indoor nets — and outdoors in summer.",
   alternates: { canonical: "/venue" },
 };
 
-// TODO: confirm parking, entrance and waiting arrangements with John Lyon School.
 const info = [
   {
-    t: "Getting there",
-    b: "John Lyon School is on Middle Road, Harrow on the Hill — a short drive from Harrow, Pinner, Northwood, Ruislip and Wembley. Harrow-on-the-Hill station and several bus routes are nearby.",
+    t: "Autumn and spring: indoors",
+    b: `Coaching takes place in the ${site.venue.name} sports hall, Harrow on the Hill, which has three indoor nets.`,
   },
   {
-    t: "Parking",
-    b: "Parking arrangements are confirmed in your welcome email. Please drive slowly on site and follow any instructions from school staff.",
+    t: "About the run-up",
+    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected, and full run-ups return outdoors in summer.",
   },
   {
-    t: "Arrival",
-    b: "Arrive 10 minutes before your session. A coach meets players at the entrance, signs them in and takes them through to the hall. On your first visit, the coach will introduce themselves to you.",
+    t: "Summer: outdoors",
+    b: "In summer, coaching moves outdoors, with a multi-use games area (MUGA) for fielding.",
   },
   {
-    t: "Collection",
-    b: "Please collect your child from the same entrance at the end of the session. Players are only released to a parent or a named adult.",
-  },
-  {
-    t: "Parents waiting",
-    b: "Parents are welcome to wait at the venue. The coaching team will explain where on your first visit.",
+    t: "Arrival and collection",
+    b: "We'll send arrival, parking and collection details before your child's first session.",
   },
   {
     t: "Accessibility",
-    b: "Let us know about any access needs when you book and we'll make sure arrival and the session work for your child and your family.",
+    b: "Tell us about any access needs and we'll make sure arrival and sessions work for your child and your family.",
   },
 ];
 
@@ -48,29 +43,27 @@ export default function VenuePage() {
     <>
       <PageHero
         eyebrow="The venue"
-        title="Train at John Lyon School"
-        intro={<p>High-quality indoor cricket facilities at one of Harrow&rsquo;s leading schools — easy to reach, and a coach at the door to welcome you.</p>}
+        title="John Lyon School, Harrow on the Hill."
+        intro={<p>Indoors in the sports hall in autumn and spring. Outdoors in summer.</p>}
         actions={
           <>
-            <ButtonLink href="/book" arrow className="group">Book a Trial</ButtonLink>
-            <ButtonLink href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(site.venue.mapQuery)}`} variant="secondary" target="_blank" rel="noopener noreferrer">
+            <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
+            <ButtonLink
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(site.venue.mapQuery)}`}
+              variant="secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Get directions
             </ButtonLink>
           </>
         }
-        image={{ alt: "John Lyon School indoor cricket hall set up for an academy session" }}
+        image={{ alt: "John Lyon School sports hall with indoor nets" }}
       />
-      <section className="bg-navy-950">
-        <div className="grid gap-1 sm:grid-cols-3">
-          <Photo alt="Indoor nets at John Lyon School" className="aspect-[4/3]" sizes="33vw" />
-          <Photo alt="Sports hall with academy stations laid out" className="aspect-[4/3]" tone="warm" sizes="33vw" />
-          <Photo alt="School entrance where coaches meet players" className="aspect-[4/3]" tone="deep" sizes="33vw" />
-        </div>
-      </section>
       <Section tone="light">
         <div className="grid gap-14 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <SectionHeader eyebrow="Arrival & practicalities" title="Everything you need for the first visit." className="mb-10" />
+            <SectionHeader eyebrow="Facilities" title="What to expect." className="mb-10" />
             <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {info.map((x, i) => (
                 <Reveal key={x.t} delay={(i % 2) * 80} className="border-t border-navy-950/10 pt-5">
@@ -98,6 +91,12 @@ export default function VenuePage() {
           </Reveal>
         </div>
       </Section>
+      <section className="bg-navy-950">
+        <div className="grid gap-1 sm:grid-cols-2">
+          <Photo alt="Indoor net at John Lyon School" className="aspect-[16/10]" sizes="50vw" />
+          <Photo alt="Outdoor summer coaching" className="aspect-[16/10]" tone="warm" sizes="50vw" />
+        </div>
+      </section>
       <CTASection />
     </>
   );

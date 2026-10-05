@@ -76,22 +76,36 @@ alter table academy_sessions alter column end_time drop not null;
 alter table academy_sessions alter column age_min drop not null;
 alter table academy_sessions alter column age_max drop not null;
 
-create table if not exists trial_requests (
+create table if not exists interest_registrations (
   id uuid primary key,
-  parent_id uuid not null references parents(id),
-  player_id uuid not null references players(id),
-  academy text not null,
-  preferred_days text[] not null default '{}',
-  notes text,
-  status text not null default 'new' check (status in ('new','contacted','booked','closed')),
-  deposit_status text not null default 'none' check (deposit_status in ('none','pending','paid','applied','refunded')),
-  deposit_pence int,
-  stripe_checkout_session_id text unique,
-  stripe_payment_intent_id text,
-  deposit_refunded_pence int,
+  parent_name text not null,
+  email text not null,
+  mobile text not null,
+  postcode text not null,
+  heard_about text,
+  children jsonb not null,          -- one entry per child: level, role, wants, formats, availability…
+  contact_consent boolean not null,
+  marketing_consent boolean not null default false,
   created_at timestamptz not null default now()
 );
-create index if not exists trial_requests_pi_idx on trial_requests(stripe_payment_intent_id);
+
+create table if not exists coach_interests (
+  id uuid primary key,
+  name text not null,
+  email text not null,
+  phone text not null,
+  roles text[] not null default '{}',
+  specialism text,
+  qualifications text not null,
+  playing_background text,
+  availability text not null,
+  summer_availability text,
+  dbs_status text not null,
+  safeguarding_status text not null,
+  first_aid boolean not null default false,
+  message text,
+  created_at timestamptz not null default now()
+);
 
 create table if not exists waitlist (
   id uuid primary key,

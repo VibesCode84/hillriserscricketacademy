@@ -3,10 +3,10 @@ import { ButtonLink } from "./Button";
 import { Reveal } from "./Reveal";
 
 export function CTASection({
-  title = "The best way to understand HillRisers is to experience it.",
-  body = "Tell us a little about your child and we’ll help you find the right first session.",
-  primary = { href: "/book", label: "Book a Trial" },
-  secondary = { href: "/find-my-session", label: "Find My Session" },
+  title = "Help us build the timetable around your child.",
+  body = "Tell us when your child can attend and what they want from cricket. Registered families get priority booking.",
+  primary = { href: "/register", label: "Register your interest" },
+  secondary = { href: "/how-booking-works", label: "How booking works" },
   children,
 }: {
   title?: ReactNode;
@@ -50,13 +50,13 @@ export function NotSureBanner({ tone = "dark" }: { tone?: "dark" | "light" }) {
       }`}
     >
       <p className={`max-w-2xl text-[1.05rem] leading-relaxed ${light ? "text-navy-950" : "text-cream"}`}>
-        <span className="font-serif text-xl">Not sure which session is right?</span>{" "}
+        <span className="font-serif text-xl">Not sure which group is right?</span>{" "}
         <span className={light ? "text-ink-muted" : "text-slate"}>
-          Tell us a little about your child and we&rsquo;ll recommend the best starting point.
+          You don&rsquo;t need to know. Tell us about your child and we&rsquo;ll place them by ability, not just age.
         </span>
       </p>
-      <ButtonLink href="/find-my-session" variant={light ? "dark" : "secondary"} className="shrink-0">
-        Find My Session
+      <ButtonLink href="/register" variant={light ? "dark" : "secondary"} className="shrink-0">
+        Register your interest
       </ButtonLink>
     </div>
   );

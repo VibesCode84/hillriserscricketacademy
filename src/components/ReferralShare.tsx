@@ -5,13 +5,12 @@ import { site } from "@/data/site";
 import { buttonClass } from "./Button";
 
 export function ReferralShare() {
-  const [name, setName] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [origin, setOrigin] = useState<string>(site.url);
   useEffect(() => setOrigin(window.location.origin), []);
-  const link = `${origin}/book${name.trim() ? `?ref=${encodeURIComponent(name.trim())}` : ""}`;
-  const message = `We've been going to HillRisers Cricket Academy at John Lyon School and thought you'd love it too. Cricket's better with a mate! You can book a trial here: ${link}`;
+  const link = `${origin}/register`;
+  const message = `HillRisers Cricket Academy is launching at John Lyon School and is building its timetable around the families who register. Cricket's better with a mate — register your interest here: ${link}`;
 
   const copy = async () => {
     try {
@@ -25,8 +24,7 @@ export function ReferralShare() {
 
   return (
     <div className="rounded-3xl bg-white p-6 md:p-9">
-      <label htmlFor="ref-name" className="label">Your child&rsquo;s name (so your friend knows who invited them)</label>
-      <input id="ref-name" className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Arjun K" maxLength={60} />
+      <p className="text-navy-950">Share the HillRisers interest form with a friend:</p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <a href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" className={buttonClass("dark")}>
           Share on WhatsApp

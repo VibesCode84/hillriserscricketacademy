@@ -13,10 +13,8 @@ import type {
   Player,
   ReserveResult,
   SessionCounts,
-  TrialRequest,
-  TrialRequestStatus,
-  DepositStatus,
-  TrialRequestView,
+  CoachInterest,
+  InterestRegistration,
   WaitlistEntry,
 } from "./types";
 
@@ -84,19 +82,34 @@ const toWaitlist = (r: any): WaitlistEntry => ({
   createdAt: iso(r.created_at),
 });
 
-const toTrialRequest = (r: any): TrialRequest => ({
+const toInterestRegistration = (r: any): InterestRegistration => ({
   id: r.id,
-  parentId: r.parent_id,
-  playerId: r.player_id,
-  academy: r.academy,
-  preferredDays: r.preferred_days ?? [],
-  notes: opt(r.notes),
-  status: r.status,
-  depositStatus: r.deposit_status,
-  depositPence: opt(r.deposit_pence),
-  stripeCheckoutSessionId: opt(r.stripe_checkout_session_id),
-  stripePaymentIntentId: opt(r.stripe_payment_intent_id),
-  depositRefundedPence: opt(r.deposit_refunded_pence),
+  parentName: r.parent_name,
+  email: r.email,
+  mobile: r.mobile,
+  postcode: r.postcode,
+  heardAbout: opt(r.heard_about),
+  children: r.children ?? [],
+  contactConsent: true,
+  marketingConsent: r.marketing_consent,
+  createdAt: iso(r.created_at),
+});
+
+const toCoachInterest = (r: any): CoachInterest => ({
+  id: r.id,
+  name: r.name,
+  email: r.email,
+  phone: r.phone,
+  roles: r.roles ?? [],
+  specialism: opt(r.specialism),
+  qualifications: r.qualifications,
+  playingBackground: opt(r.playing_background),
+  availability: r.availability,
+  summerAvailability: opt(r.summer_availability),
+  dbsStatus: r.dbs_status,
+  safeguardingStatus: r.safeguarding_status,
+  firstAid: r.first_aid,
+  message: opt(r.message),
   createdAt: iso(r.created_at),
 });
 
@@ -390,95 +403,40 @@ export class PgBookingStore implements BookingStore {
     return rows.map(toWaitlist);
   }
 
-  async createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
+  async createInterestRegistration(r: Parameters<BookingStore["createInterestRegistration"]>[0]) {
     const { rows } = await this.q(
-      `insert into trial_requests (id, parent_id, player_id, academy, preferred_days, notes, deposit_status, deposit_pence)
-       values ($1,$2,$3,$4,$5,$6,$7,$8) returning *`,
+      `insert into interest_registrations (id, parent_name, email, mobile, postcode, heard_about, children, contact_consent, marketing_consent)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning *`,
       [
-        randomUUID(), input.parentId, input.playerId, input.academy, input.preferredDays, input.notes ?? null,
-        input.depositPence ? "pending" : "none", input.depositPence ?? null,
+        randomUUID(), r.parentName, r.email.trim().toLowerCase(), r.mobile, r.postcode, r.heardAbout ?? null,
+        JSON.stringify(r.children), r.contactConsent, r.marketingConsent,
       ],
     );
-    return toTrialRequest(rows[0]);
+    return toInterestRegistration(rows[0]);
   }
 
-  async listTrialRequests(): Promise<TrialRequestView[]> {
+  async listInterestRegistrations() {
+    const { rows } = await this.q(`select * from interest_registrations order by created_at desc`);
+    return rows.map(toInterestRegistration);
+  }
+
+  async createCoachInterest(c: Parameters<BookingStore["createCoachInterest"]>[0]) {
     const { rows } = await this.q(
-      `select t.*, row_to_json(pl) as player_row, row_to_json(pa) as parent_row
-       from trial_requests t join players pl on pl.id = t.player_id join parents pa on pa.id = t.parent_id
-       order by t.created_at desc`,
+      `insert into coach_interests (id, name, email, phone, roles, specialism, qualifications, playing_background, availability,
+         summer_availability, dbs_status, safeguarding_status, first_aid, message)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) returning *`,
+      [
+        randomUUID(), c.name, c.email.trim().toLowerCase(), c.phone, c.roles, c.specialism ?? null, c.qualifications,
+        c.playingBackground ?? null, c.availability, c.summerAvailability ?? null, c.dbsStatus, c.safeguardingStatus, c.firstAid,
+        c.message ?? null,
+      ],
     );
-    return rows.map((r) => ({
-      ...toTrialRequest(r),
-      player: r.player_row ? toPlayer(r.player_row) : undefined,
-      parent: r.parent_row ? toParent(r.parent_row) : undefined,
-    }));
+    return toCoachInterest(rows[0]);
   }
 
-  async setTrialRequestStatus(id: string, status: TrialRequestStatus) {
-    const { rows } = await this.q(`update trial_requests set status = $2 where id = $1 returning *`, [id, status]);
-    return rows[0] ? toTrialRequest(rows[0]) : undefined;
-  }
-
-  private async trialWhere(column: string, value: string) {
-    const { rows } = await this.q(`select * from trial_requests where ${column} = $1`, [value]);
-    return rows[0] ? toTrialRequest(rows[0]) : undefined;
-  }
-
-  getTrialRequest(id: string) {
-    return this.trialWhere("id", id);
-  }
-
-  findTrialRequestByCheckoutId(id: string) {
-    return this.trialWhere("stripe_checkout_session_id", id);
-  }
-
-  findTrialRequestByPaymentIntent(id: string) {
-    return this.trialWhere("stripe_payment_intent_id", id);
-  }
-
-  async attachDepositCheckout(id: string, checkoutSessionId: string) {
-    await this.q(
-      `update trial_requests set stripe_checkout_session_id = $2,
-         deposit_status = case when deposit_status = 'none' then 'pending' else deposit_status end
-       where id = $1`,
-      [id, checkoutSessionId],
-    );
-  }
-
-  async markDepositPaid(id: string, payment: { paymentIntentId?: string; amountPaidPence?: number }) {
-    const { rows } = await this.q(
-      `update trial_requests set deposit_status = 'paid',
-         stripe_payment_intent_id = coalesce($2, stripe_payment_intent_id),
-         deposit_pence = coalesce($3, deposit_pence)
-       where id = $1 and deposit_status not in ('paid','applied','refunded') returning *`,
-      [id, payment.paymentIntentId ?? null, payment.amountPaidPence ?? null],
-    );
-    if (rows[0]) return { request: toTrialRequest(rows[0]), changed: true };
-    return { request: await this.getTrialRequest(id), changed: false };
-  }
-
-  async markDepositUnpaid(id: string) {
-    const { rows } = await this.q(
-      `update trial_requests set deposit_status = 'none' where id = $1 and deposit_status = 'pending' returning *`,
-      [id],
-    );
-    return rows[0] ? toTrialRequest(rows[0]) : this.getTrialRequest(id);
-  }
-
-  async recordDepositRefund(id: string, amountRefundedPence: number) {
-    const { rows } = await this.q(
-      `update trial_requests set deposit_refunded_pence = $2,
-         deposit_status = case when $2 >= coalesce(deposit_pence, 0) then 'refunded' else deposit_status end
-       where id = $1 returning *`,
-      [id, amountRefundedPence],
-    );
-    return rows[0] ? toTrialRequest(rows[0]) : undefined;
-  }
-
-  async setDepositStatus(id: string, status: DepositStatus) {
-    const { rows } = await this.q(`update trial_requests set deposit_status = $2 where id = $1 returning *`, [id, status]);
-    return rows[0] ? toTrialRequest(rows[0]) : undefined;
+  async listCoachInterests() {
+    const { rows } = await this.q(`select * from coach_interests order by created_at desc`);
+    return rows.map(toCoachInterest);
   }
 
   async createCampInterest(c: Parameters<BookingStore["createCampInterest"]>[0]) {

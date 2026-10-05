@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { site } from "@/data/site";
+import { ContactLink } from "@/components/ContactLink";
 import { LegalPage } from "@/components/LegalPage";
 
 export const metadata: Metadata = { title: "Accessibility", alternates: { canonical: "/accessibility" } };
 
 export default function Page() {
   return (
-    <LegalPage eyebrow="Trust" title="Accessibility">
+    <LegalPage eyebrow="Policies" title="Accessibility" draft={false}>
       <h2>This website</h2>
       <p>
         We want everyone to be able to use this website. It is designed to work with screen readers, keyboard navigation and browser
@@ -19,7 +19,7 @@ export default function Page() {
       </p>
       <h2>Feedback</h2>
       <p>
-        If something on this site doesn&rsquo;t work for you, please email <a href={`mailto:${site.email}`}>{site.email}</a> and we&rsquo;ll fix it.
+        If something on this site doesn&rsquo;t work for you, please <ContactLink>let us know</ContactLink> and we&rsquo;ll fix it.
       </p>
     </LegalPage>
   );

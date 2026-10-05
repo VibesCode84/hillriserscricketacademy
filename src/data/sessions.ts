@@ -1,37 +1,31 @@
-import type { DisciplineKey } from "./academies";
+import type { ProgrammeKey } from "./programmes";
 
-export type Day = "Wednesday" | "Saturday" | "Sunday";
-export const DAYS: Day[] = ["Wednesday", "Saturday", "Sunday"];
+export type Day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+export const DAYS: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 /**
- * The weekly timetable. This is the single place to edit the session mix.
+ * Bookable sessions, used by the booking engine (capacity, Stripe checkout).
  *
- * Which academy runs in which slot has NOT been decided yet, so slots carry
- * only a day and (where agreed) a time. To open a slot for online booking:
- *   1. set `discipline` (and optionally `group`, `ageMin`, `ageMax`, `title`)
- *   2. make sure `startTime`/`endTime` are set and `confirmed: true`
- * Until then the site shows "programme to be confirmed" and parents send a
- * trial request with their preferred days instead of paying.
+ * The public site shows NO fixed times except Little Cricketers on Sundays
+ * 9:00–9:50am — the timetable will be built from parent feedback. Add sessions
+ * here when the timetable is published, then open trial booking.
  *
  * - `confirmed` means the slot's day and time are agreed.
- * - `capacity` and `pricePence` are enforced by the booking engine. Specialist
- *   sessions are 90 minutes at £25; a Little Cricketers slot should be
- *   60 minutes (e.g. 09:00–10:00) at pricePence 1500, matching academies.ts.
- * - Availability ("Places available", "Limited places", "Waiting list") is never
- *   set here — it is calculated from real bookings.
+ * - `capacity` and `pricePence` are enforced by the booking engine.
+ * - Availability is never set here — it is calculated from real bookings.
  */
 export type AcademySession = {
   id: string;
   title: string;
-  /** Which academy runs in this slot — leave unset until decided */
-  discipline?: DisciplineKey;
+  /** Which programme runs in this slot */
+  discipline?: ProgrammeKey;
   /** e.g. "Younger Juniors" */
   group?: string;
   day: Day;
-  /** Short note about the venue block, e.g. "John Lyon weekday academy block" */
+  /** Short note about the venue block */
   block: string;
-  startTime?: string; // "18:00"
-  endTime?: string; // "19:30"
+  startTime?: string; // "09:00"
+  endTime?: string; // "09:50"
   ageMin?: number;
   ageMax?: number;
   capacity: number;
@@ -43,29 +37,35 @@ export type AcademySession = {
   girlsOnly?: boolean;
 };
 
-const standard = { capacity: 18, pricePence: 2500, active: true, title: "Academy session" } as const;
-const weekday = "John Lyon weekday academy block";
-
 export const sessions: AcademySession[] = [
-  // ── Wednesday — John Lyon weekday academy block ──────────────────────────
-  { id: "wed-1800", day: "Wednesday", block: weekday, startTime: "18:00", endTime: "19:30", confirmed: true, ...standard },
-  { id: "wed-1930", day: "Wednesday", block: weekday, startTime: "19:30", endTime: "21:00", confirmed: true, ...standard },
-  // ── Weekend — agreed John Lyon blocks, times to be confirmed ─────────────
-  { id: "sat-block", day: "Saturday", block: "John Lyon weekend block", confirmed: false, ...standard },
-  { id: "sun-block", day: "Sunday", block: "John Lyon Sunday block", confirmed: false, ...standard },
+  {
+    id: "sun-0900-little-cricketers",
+    title: "Little Cricketers",
+    discipline: "little-cricketers",
+    day: "Sunday",
+    block: "John Lyon School sports hall",
+    startTime: "09:00",
+    endTime: "09:50",
+    ageMin: 4,
+    ageMax: 7,
+    capacity: 24,
+    pricePence: 1800,
+    active: true,
+    confirmed: true,
+  },
 ];
 
 export function getSession(id: string) {
   return sessions.find((s) => s.id === id);
 }
 
-/** A slot can take online bookings once its academy, day and time are all set. */
+/** A slot can take online bookings once its programme, day and time are all set. */
 export function isBookable(s: AcademySession) {
   return s.active && s.confirmed && !!s.discipline && !!s.startTime && !!s.endTime;
 }
 
-/** Bookable slots for an academy (empty while the programme is being finalised). */
-export function sessionsFor(discipline: DisciplineKey) {
+/** Bookable slots for a programme. */
+export function sessionsFor(discipline: ProgrammeKey) {
   return sessions.filter((s) => isBookable(s) && s.discipline === discipline);
 }
 

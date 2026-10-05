@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/data/sessions";
-import { getAcademy } from "@/data/academies";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
-import { BookingRowActions, ManualBookingForm, TrialRequestRow, WaitlistRow } from "@/components/admin/AdminActions";
+import { BookingRowActions, ManualBookingForm, WaitlistRow } from "@/components/admin/AdminActions";
+import { interestOptions, labelFor } from "@/lib/interest-options";
+import { ageOn, ageBand } from "@/lib/age";
 import { getPaymentProvider } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
@@ -32,16 +33,26 @@ const statusLabel: Record<BookingStatus, string> = {
 export default async function AdminBookingsPage({ searchParams }: { searchParams: Promise<{ session?: string; show?: string }> }) {
   const { session: sessionFilter, show } = await searchParams;
   const store = getStore();
-  const [counts, bookings, waitlist, enquiries, trialRequests, campInterests] = await Promise.all([
+  const [counts, bookings, waitlist, enquiries, registrations, coachInterests, campInterests] = await Promise.all([
     store.sessionCounts(),
     store.listBookings({ sessionId: sessionFilter }),
     store.listWaitlist({ sessionId: sessionFilter }),
     store.listEnquiries(),
-    store.listTrialRequests(),
+    store.listInterestRegistrations(),
+    store.listCoachInterests(),
     store.listCampInterests(),
   ]);
-  const openTrials = trialRequests.filter((t) => t.status === "new" || t.status === "contacted");
-  const securedTrials = openTrials.filter((t) => t.depositStatus === "paid");
+  const children = registrations.flatMap((r) => r.children);
+  const tally = (values: string[], options: readonly string[]) =>
+    options.map((o) => ({ label: o, n: values.filter((v) => v === o).length }));
+  const demand = [
+    { title: "When they can attend", rows: tally(children.flatMap((c) => c.availability), interestOptions.availability) },
+    { title: "Age band (today)", rows: tally(children.map((c) => ageBand(ageOn(c.dateOfBirth))), ["4–7", "8–11", "12–15", "Other"]) },
+    { title: "Level", rows: tally(children.map((c) => labelFor("level", c.level)), interestOptions.level.map((o) => o.label)) },
+    { title: "Preferred format", rows: tally(children.flatMap((c) => c.formats), interestOptions.formats) },
+    { title: "Session length", rows: tally(children.flatMap((c) => c.sessionLengths), interestOptions.sessionLengths) },
+    { title: "Girls-only interest", rows: tally(children.map((c) => labelFor("girlsOnly", c.girlsOnly)), interestOptions.girlsOnly.map((o) => o.label)) },
+  ];
   const activeOnly = show !== "all";
   const visible = bookings.filter((b) => !activeOnly || ["confirmed", "pending_payment", "part_refunded"].includes(b.status));
   const selected = sessionFilter ? getSession(sessionFilter) : undefined;
@@ -74,21 +85,105 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
         </div>
       </header>
 
-      {/* Trial requests — taken while the weekly programme is being finalised */}
+      {!process.env.DATABASE_URL && process.env.VERCEL && (
+        <p className="mt-6 rounded-2xl border border-[#8c1d18]/30 bg-[#fbeae8] p-4 text-sm text-[#8c1d18]" role="alert">
+          <strong>Submissions are not being saved permanently.</strong> No database is connected, so registrations are kept in temporary
+          storage and will be lost. Connect a Postgres database (Vercel → Storage → Neon, or set DATABASE_URL) before sharing the site.
+        </p>
+      )}
+
+      {/* Register-your-interest submissions */}
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl">Trial requests</h2>
+            <h2 className="text-2xl">Registrations of interest</h2>
             <p className="text-sm text-ink-muted">
-              {openTrials.length} open ({securedTrials.length} with a deposit paid) · families waiting for a confirmed day and time. Preferred days help decide which academy runs when.
+              {registrations.length} families · {children.length} children. Use this to build the timetable.
             </p>
           </div>
-          <a href="/api/admin/export?type=trials" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export trial requests</a>
+          <a href="/api/admin/export?type=interest" className="rounded-full bg-navy-950 px-4 py-2 text-sm font-semibold text-cream">
+            Export registrations (one row per child)
+          </a>
+        </div>
+        {children.length > 0 && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {demand.map((d) => (
+              <div key={d.title} className="rounded-2xl border border-navy-950/10 bg-white p-4">
+                <p className="text-sm font-semibold">{d.title}</p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {d.rows.map((r) => (
+                    <li key={r.label} className="flex items-center gap-2">
+                      <span className="w-40 shrink-0 truncate text-ink-muted" title={r.label}>{r.label}</span>
+                      <span className="h-2 rounded-full bg-gold" style={{ width: `${children.length ? (r.n / children.length) * 100 : 0}%`, minWidth: r.n ? 4 : 0, maxWidth: "50%" }} />
+                      <span className="tabular-nums">{r.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">
+          {registrations.length === 0 && <p className="p-5 text-sm text-ink-muted">No registrations yet.</p>}
+          {registrations.slice(0, 100).map((r) => (
+            <details key={r.id} className="p-5 text-sm">
+              <summary className="cursor-pointer">
+                <span className="font-semibold">{r.parentName}</span>
+                <span className="text-ink-muted">
+                  {" "}· {r.children.map((c) => `${c.firstName} (${ageOn(c.dateOfBirth)})`).join(", ")} · {r.postcode}
+                </span>
+              </summary>
+              <p className="mt-2 text-ink-muted">
+                <a href={`mailto:${r.email}`} className="underline">{r.email}</a> · {r.mobile} · heard via {r.heardAbout ?? "—"} · news & offers:{" "}
+                {r.marketingConsent ? "yes" : "no"} · {new Date(r.createdAt).toLocaleString("en-GB")}
+              </p>
+              {r.children.map((c, i) => (
+                <dl key={i} className="mt-3 grid gap-x-6 gap-y-1 rounded-xl bg-cream p-3 text-xs text-ink-muted sm:grid-cols-2">
+                  <div className="font-semibold text-navy-950 sm:col-span-2">
+                    {c.firstName} · DOB {c.dateOfBirth} · {labelFor("level", c.level)} · {labelFor("mainRole", c.mainRole)}
+                  </div>
+                  <div>School/club: {[c.school, c.club].filter(Boolean).join(" / ") || "—"}</div>
+                  <div>Girls-only: {labelFor("girlsOnly", c.girlsOnly)}</div>
+                  <div>Available: {c.availability.join(", ") || "—"}{c.availabilityNotes ? ` — ${c.availabilityNotes}` : ""}</div>
+                  <div>How often: {labelFor("frequency", c.frequency)}</div>
+                  <div>Formats: {c.formats.join(", ") || "—"}</div>
+                  <div>Lengths: {c.sessionLengths.join(", ") || "—"}</div>
+                  <div className="sm:col-span-2">Wants: {c.wants.join(", ") || "—"}</div>
+                  <div>Other interests: {c.otherInterests.join(", ") || "—"}</div>
+                  <div>Payment: {labelFor("paymentPreference", c.paymentPreference)}</div>
+                </dl>
+              ))}
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Coach with us */}
+      <section className="mt-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-2xl">Coach interest <span className="text-base text-ink-muted">({coachInterests.length})</span></h2>
+          <a href="/api/admin/export?type=coaches" className="rounded-full border border-navy-950/20 px-4 py-2 text-sm font-semibold">Export coach interest</a>
         </div>
         <div className="mt-4 divide-y divide-navy-950/10 rounded-2xl border border-navy-950/10 bg-white">
-          {trialRequests.length === 0 && <p className="p-5 text-sm text-ink-muted">No trial requests yet.</p>}
-          {trialRequests.map((t) => (
-            <TrialRequestRow key={t.id} request={t} academyName={getAcademy(t.academy)?.name ?? t.academy} />
+          {coachInterests.length === 0 && <p className="p-5 text-sm text-ink-muted">No coach applications yet.</p>}
+          {coachInterests.map((c) => (
+            <details key={c.id} className="p-5 text-sm">
+              <summary className="cursor-pointer">
+                <span className="font-semibold">{c.name}</span>
+                <span className="text-ink-muted"> · {c.roles.join(", ")}</span>
+              </summary>
+              <dl className="mt-2 space-y-1 text-xs text-ink-muted">
+                <div><a href={`mailto:${c.email}`} className="underline">{c.email}</a> · {c.phone}</div>
+                {c.specialism && <div>Specialism: {c.specialism}</div>}
+                <div>Qualifications: {c.qualifications}</div>
+                {c.playingBackground && <div>Playing background: {c.playingBackground}</div>}
+                <div>Availability: {c.availability}</div>
+                {c.summerAvailability && <div>Summer: {c.summerAvailability}</div>}
+                <div>DBS: {c.dbsStatus} · Safeguarding: {c.safeguardingStatus} · First aid: {c.firstAid ? "Yes" : "No"}</div>
+                {c.message && <div className="whitespace-pre-line">Message: {c.message}</div>}
+                <div>{new Date(c.createdAt).toLocaleString("en-GB")}</div>
+              </dl>
+            </details>
           ))}
         </div>
       </section>

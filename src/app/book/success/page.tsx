@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
-import { coachesFor } from "@/data/coaches";
 import { site } from "@/data/site";
 import { getStore } from "@/lib/booking";
 import { AutoRefresh } from "@/components/booking/AutoRefresh";
 import { buttonClass } from "@/components/Button";
 import { Crest } from "@/components/Logo";
-import { TermDates } from "@/components/TermDates";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Welcome to HillRisers", robots: { index: false } };
@@ -27,7 +25,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
         <div className="container-x max-w-3xl">
           <h1 className="text-5xl text-navy-950">Thank you.</h1>
           <p className="mt-4 text-lg text-ink-muted">
-            If you&rsquo;ve completed payment, your confirmation email is on its way. Any questions, call us on {site.phone}.
+            If you&rsquo;ve completed payment, your confirmation email is on its way.
           </p>
         </div>
       </section>
@@ -36,7 +34,6 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
 
   const first = player.name.split(" ")[0];
   const confirmed = booking.status === "confirmed";
-  const coach = session.discipline ? coachesFor(session.discipline)[0] : undefined;
 
   if (!confirmed) {
     return (
@@ -54,8 +51,8 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
   const nextSteps = [
     { t: "What to bring", b: "Sportswear, indoor trainers, a named water bottle and any cricket kit they have. For hard-ball sessions a helmet, pads and gloves are essential — reply to your email if you need to borrow kit." },
     { t: "When you arrive", b: `Arrive 10 minutes early at ${site.venue.name}. A coach will meet you at the entrance and sign ${first} in.` },
-    { t: "Your coach", b: coach ? `${coach.name} (${coach.role}) and the coaching team know ${first} is new and will help them settle in.` : `The coaching team know ${first} is new and will help them settle in.` },
-    { t: "Afterwards", b: `Within a day or two we'll ask how ${first} found it, and recommend their academy pathway.` },
+    { t: "Your coach", b: `The coaching team know ${first} is new and will help them settle in.` },
+    { t: "Afterwards", b: `Within a day or two we'll ask how ${first} found it, and talk about next steps.` },
   ];
 
   return (
@@ -71,7 +68,6 @@ export default async function SuccessPage({ searchParams }: { searchParams: Prom
           <p className="mt-3 text-sm text-slate">
             A confirmation has been sent to {parent.email}. Booking reference {booking.id.slice(0, 8).toUpperCase()}.
           </p>
-          <TermDates className="mt-6 justify-center" />
         </div>
       </section>
       <section className="surface-light bg-cream py-20">

@@ -102,7 +102,7 @@ export function CampInterestForm() {
         </div>
         <div>
           <label className="label" htmlFor="ci-age">Child&rsquo;s age</label>
-          <input id="ci-age" name="childAge" type="number" min={4} max={14} inputMode="numeric" className="field" aria-invalid={!!errors.childAge} />
+          <input id="ci-age" name="childAge" type="number" min={4} max={15} inputMode="numeric" className="field" aria-invalid={!!errors.childAge} />
           {err("childAge")}
         </div>
       </div>

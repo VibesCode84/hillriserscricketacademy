@@ -10,7 +10,7 @@ export default function NotFound() {
       actions={
         <>
           <ButtonLink href="/">Back to home</ButtonLink>
-          <ButtonLink href="/sessions" variant="secondary">See the timetable</ButtonLink>
+          <ButtonLink href="/register" variant="secondary">Register your interest</ButtonLink>
         </>
       }
     />

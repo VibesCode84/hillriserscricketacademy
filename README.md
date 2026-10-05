@@ -1,26 +1,17 @@
 # HillRisers Cricket Academy
 
-The website and booking system for HillRisers Cricket Academy: specialist junior cricket coaching for ages 4–14 at John Lyon School, Harrow.
+The website for HillRisers Cricket Academy: specialist junior cricket coaching (ages 4–15) at John Lyon School, Harrow on the Hill.
 
-Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4. It is ready to deploy on Vercel.
+**Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed time is **Little Cricketers, Sundays 9:00–9:50am**.
+
+Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Vercel.
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env.local   # optional in development
-npm run dev                  # http://localhost:3000
-```
-
-You don't need any keys in development:
-
-- **Payments.** With no `STRIPE_SECRET_KEY`, booking uses a built-in *development checkout* (`/book/dev-checkout`) that simulates Stripe, so you can test the whole journey.
-- **Storage.** With no `DATABASE_URL`, bookings are saved to `.data/store.json`.
-- **Email.** With no `RESEND_API_KEY`, confirmation emails are printed to the server console.
-- **Admin.** Set `ADMIN_PASSWORD` to open `/admin/bookings`. It uses HTTP Basic auth, and the username defaults to `admin`.
-
-```bash
-npm test          # recommendation + capacity/booking engine tests
+npm run dev        # http://localhost:3000
+npm test           # form validation, storage, price guide, capacity
 npm run lint
 npm run typecheck
 npm run build
@@ -28,95 +19,67 @@ npm run build
 
 ## Editing content
 
-All content is held in typed data files in `src/data/`:
-
 | File | What it controls |
 | --- | --- |
-| `sessions.ts` | **The weekly timetable.** Slots currently have only a day and time; which academy runs in each slot is deliberately left unassigned. To open a slot for online booking, set its `discipline` (plus optional `group`, `ageMin`, `ageMax`) and make sure its times are set and `confirmed: true`. Little Cricketers slots should be 60 minutes at `pricePence: 1500`. |
-| `academies.ts` | Academy pages: what players learn, who each academy is for, FAQs, SEO copy, and each academy's **session length and fee** (90 min/£25; Little Cricketers 60 min/£15) |
-| `coaches.ts` | Coach cards (placeholders; replace with verified details) |
-| `testimonials.ts` | Parent quotes (**samples; replace with real, consented quotes**) |
-| `term.ts` | **Term dates**, following the [John Lyon School calendar](https://www.johnlyon.org/information/term-dates/): Autumn 2026 (Sunday 1 November – 11 December), Spring 2027 (7 January – 25 March) and Summer 2027 (16 April – 9 July). There are no academy sessions in half terms, including the weekends either side, because half terms are for holiday camps. Fees are due at least 10 days before each term (`PAYMENT_DUE_DAYS_BEFORE`), or on an earlier `paymentDueOn` date (spring fees are due Friday 11 December, before Christmas). Session dates, sessions per weekday and term fees (sessions × session fee) are all calculated from this. The site always shows the upcoming term. Add next year's terms here each summer. |
-| `camps.ts` | **Holiday camps**, which run in half terms while academy sessions pause. The first is the Spring Half Term Camp. Its details are TBC, so `/camps` shows only its name and takes register-interest forms. Add details (dates, times, ages, price) to `camps.ts` and `src/app/camps/page.tsx` when confirmed. |
-| `faqs.ts` | FAQ page |
-| `site.ts` | Contact details, venue address, welfare contact, standard price and capacity |
+| `src/data/programmes.ts` | Programmes, ages, guide prices, registration fee (£30 incl. shirt), group sizes and specialist skills |
+| `src/data/launch.ts` | Key dates (registrations open/close, priority booking, trial week, decision deadline) and booking rules (48-hour priority, 24-hour trial cancellation) |
+| `src/data/coaches.ts` | Coaching team. **Leave empty until each coach has signed**, and the site shows "Coaching team announced soon". Add an entry per coach with factual credentials. |
+| `src/data/site.ts` | Contact email, phone and welfare email (all unset; anything unset is hidden rather than shown as a placeholder), venue, navigation, canonical URL |
+| `src/data/faqs.ts` | FAQ page |
+| `src/data/camps.ts` | Holiday camps (details TBC; register-interest only) |
+| `src/lib/interest-options.ts` | Every option on the interest form and the coach form, shared by the form, server validation, emails, admin and CSV |
+| `src/data/sessions.ts` | Bookable sessions for the booking engine. Currently only Little Cricketers. Add sessions here when the timetable is published. |
 
-**Photography.** Each image slot uses `<Photo src? alt />`. Until a `src` is given, it shows a branded placeholder labelled with the intended shot. Put images in `public/images/` and set `src` (for example, `image: { src: "/images/batting.jpg", alt: "…" }` in `academies.ts`).
+**Copy rules (from the brief):**
+- UK English.
+- Be honest that HillRisers is a start-up.
+- No superlatives that need evidence.
+- No invented testimonials, numbers or results.
+- No coach names until they've signed.
+- No fixed times except Little Cricketers.
+- Describe the bowling machine and video analysis as "planned" until they're bought.
 
-## Booking architecture
+## Register-your-interest form (`/register`)
 
-The parent journey runs: **Player profile → recommended academy → choose session → confirm details → Stripe Checkout → welcome**. Parents check out as guests and don't need an account.
+- **What it collects:** one parent or guardian with one or more children. Each child has level, main role, wants, preferred format and session length, availability, frequency, other interests and payment preference. Contact consent is required, news and offers are optional, and there's no medical information.
+- **How it's handled:** a serverless function (`POST /api/register-interest`) validates submissions server-side with zod and stores them in Postgres (`interest_registrations`, one row per family with a `jsonb` list of children). No secrets reach the browser.
+- **Confirmation:** an on-screen thank-you, plus a confirmation email explaining priority booking and next steps.
+- **Analysis:** `/admin/bookings` shows demand by availability, age band, level, format, session length and girls-only interest. **Export registrations** downloads a CSV with **one row per child**, with yes/no columns for each availability, format and session-length option, ready for a spreadsheet pivot.
 
-**While the weekly programme is unassigned** (no slot has a `discipline`), the same journey ends in a **trial request** instead. The parent picks the recommended academy and their preferred days, gives full player and welfare details, and chooses either:
+The **Coach with us** form (`/coach-with-us`, `POST /api/coach-interest`) works the same way, with its own admin list and CSV export.
 
-- **a refundable holding deposit**, equal to the first session fee (£25, or £15 for Little Cricketers), paid through Stripe Checkout. It secures the place, covers the trial session once a day and time are confirmed, and is refunded in full if no suitable session can be offered; or
-- **no deposit**, in which case the request is saved but the place isn't held.
+## Setting up storage and email on Vercel
 
-In the admin dashboard you then confirm a day with the family, add the session with "Add manual booking" and click "Mark deposit credited". Deposit refunds are issued in Stripe, and the webhook updates the status automatically.
+Without a database, submissions go to temporary storage and **are lost**. The admin page shows a red warning until one is connected.
 
-The academy database is the source of truth for players, sessions, capacity, bookings and attendance. Stripe is a replaceable payment layer (`src/lib/payments`) and is the source of truth only for payment and refunds.
+1. **Database.** In the Vercel project, go to **Storage → Create Database → Neon (Postgres)** and connect it. This sets `DATABASE_URL` automatically. A Supabase connection string also works. Tables are created on first use (`db/schema.sql`). Redeploy afterwards.
+2. **Admin.** Set `ADMIN_PASSWORD`, then go to `/admin/bookings` (username `admin`).
+3. **Email (optional but recommended).** Set `RESEND_API_KEY`, `EMAIL_FROM` (a sender on a domain verified in Resend) and `ACADEMY_NOTIFY_EMAIL` (where new registrations and coach applications are sent). Without these, emails are logged instead of sent.
+4. **Site URL.** Canonical URLs use `NEXT_PUBLIC_SITE_URL`, then Vercel's production URL, then `https://hillriserscricketacademytest.vercel.app`.
 
-| Route | Purpose |
-| --- | --- |
-| `POST /api/player/create` | Saves the parent and player profile and returns a pathway recommendation |
-| `GET /api/booking/check-capacity` | Live availability |
-| `POST /api/booking/create` | Checks capacity and creates a `pending_payment` booking in one atomic step, holding the place |
-| `POST /api/stripe/create-checkout-session` | Creates a Stripe Checkout Session (booking metadata, promo codes, Apple/Google Pay) |
-| `POST /api/stripe/webhook` | `checkout.session.completed` confirms a booking or deposit and sends the email; `checkout.session.expired` releases the place (or reverts an unpaid deposit); `charge.refunded` records a booking or deposit refund |
-| `POST /api/trial-request` | Trial request with preferred days; with `withDeposit` it starts Stripe Checkout for the holding deposit |
-| `POST /api/trial-request/deposit` | Retry the deposit payment, or continue without one (from `/book/deposit`) |
-| `POST /api/waitlist/join` | Waiting list / register interest (no payment) |
-| `POST /api/camps/interest` | Holiday camp register-interest form (no payment) |
-| `POST /api/enquiry` | "I'd rather speak to someone" |
+## Booking engine (switched off until trial booking opens)
 
-**Capacity protection.** Reserving a place locks the session row (`SELECT … FOR UPDATE` in Postgres, or a serialised queue in the file store), so a group can never exceed its capacity. A test fires 25 simultaneous requests at an 18-place group and checks that exactly 18 succeed.
+The site still contains a session booking engine for the next phase, trial booking in late October:
+- capacity-checked places held while a parent pays
+- Stripe Checkout
+- webhook confirmation
+- refunds
+- a waiting list
+- manual bookings in the admin dashboard
 
-**How long places are held.** A place is held for 10 minutes while the parent reaches payment. Once a Stripe Checkout page is opened, the hold extends to match that page's expiry, because Stripe's minimum is 30 minutes. This means a late payment can never push a group over capacity.
+`/book` currently redirects to `/register`. To open trial booking:
+1. Add the published sessions to `src/data/sessions.ts`.
+2. Set the Stripe keys (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`).
+3. Build the trial-booking page on top of `/api/player/create`, `/api/booking/create` and `/api/stripe/create-checkout-session`.
 
-**Payment confirmation.** Only the webhook confirms a payment. The success page waits until the database shows the booking as confirmed; the browser redirect alone doesn't count.
+The deposit equals one session fee, per `/terms`.
 
-**Availability labels.** "Places available", "N places left" and "Full · Waiting list" are always calculated from real bookings.
+## Still needed from the owner
 
-The data model already includes `paymentType` (`single | term | subscription | manual`), so term blocks and memberships can be added later.
-
-## Going live
-
-1. **Database.** Create a Postgres database (Supabase works) and set `DATABASE_URL`. Tables are created automatically on first use (see `db/schema.sql`), and session config from `sessions.ts` is synced into `academy_sessions`.
-2. **Stripe.**
-   - Set `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
-   - Optionally create one product, "HillRisers Cricket Academy Session", with a £25 price, and set `STRIPE_ACADEMY_PRICE_ID`.
-   - Add a webhook endpoint at `https://<domain>/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired` and `charge.refunded`, then set `STRIPE_WEBHOOK_SECRET`.
-   - Set your logo, navy brand colour and support email under Stripe → Settings → Branding.
-3. **Email.** Set `RESEND_API_KEY` and `EMAIL_FROM` (on a verified domain).
-4. **Admin and site URL.** Set `ADMIN_PASSWORD` and `NEXT_PUBLIC_SITE_URL`.
-5. **Before launch.** Replace everything marked `TODO` or *sample*:
-   - phone number, emails and welfare officer
-   - coach details and qualifications
-   - testimonials (sample ones show a red "Sample — replace" badge outside production)
-   - refund, safeguarding and venue/parking wording
-   - Saturday and Sunday session times (then set `confirmed: true`)
-   - the full Terms and Conditions (`/terms`), which should be reviewed by a solicitor, with the academy's legal entity details added
-
-## Admin dashboard (`/admin/bookings`)
-
-The dashboard lets you:
-
-- work the trial requests: preferred days, deposit status, family details, status tracking, "Email family" and "Mark deposit credited"
-- see capacity per session (booked, held and waiting)
-- filter bookings by session
-- view player profiles, including medical notes, emergency contact and photo consent
-- see payment status (paid, awaiting payment, refunded, part refunded, cancelled)
-- mark attendance
-- move a player to another session (capacity-checked)
-- cancel a booking
-- add a manual booking
-- view the waiting list, with a "send booking link" action
-- read enquiries
-- view holiday camp registrations
-- export bookings, trial requests and camp interest to CSV
-
-## Not yet built (phases 2–3)
-
-Online payment of **term fees** isn't built yet. Term fees are already calculated per slot (`termFee()` in `src/data/term.ts`) and the data model supports `paymentType: "term"`, so the remaining work is a term checkout once slots are assigned to academies. Single sessions, trials and holding deposits can already be paid online.
-
-Sibling booking in a single checkout, automatic waiting-list invitations, term rebooking, progress reports, a parent portal, camps and 1-to-1 coaching. The data model and payment layer are structured so these can be added without rebuilding.
+- [ ] A contact email and phone number (set in `src/data/site.ts`). These are currently hidden.
+- [ ] A welfare/safeguarding contact (`site.welfareEmail`).
+- [ ] A contact email for coach applications, if you want one alongside the form.
+- [ ] Coaches' names and credentials once signed (`src/data/coaches.ts`).
+- [ ] Confirmed wording for the Terms & Conditions, which are marked "Draft – to be reviewed".
+- [ ] Real photography. Image slots show labelled placeholders; pass `src` to `<Photo>` to replace them.
+- [ ] A database and email set up on Vercel (see above) before registrations open on 8 October.

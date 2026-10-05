@@ -1,51 +1,43 @@
 /**
- * Global academy details. Placeholder contact values are marked TODO —
- * replace before launch.
+ * Global academy details.
+ *
+ * Contact details are deliberately left unset until they are real — the site
+ * hides anything that is `undefined` rather than showing a placeholder.
  */
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined;
+
 export const site = {
   name: "HillRisers Cricket Academy",
   shortName: "HillRisers",
-  tagline: "Better coaching. More touches. Clearer development. More confident cricketers.",
   description:
-    "Specialist junior cricket coaching in Harrow for players aged 4–14. Batting, seam, spin, power hitting, performance and a dedicated Girls Academy at John Lyon School.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  email: "hello@hillriserscricket.co.uk", // TODO: confirm
-  phone: "07000 000000", // TODO: confirm
-  phoneHref: "tel:+447000000000", // TODO: confirm
-  welfareOfficer: {
-    name: "Academy Welfare Officer", // TODO: name the welfare lead
-    email: "welfare@hillriserscricket.co.uk", // TODO: confirm
-  },
+    "Specialist junior cricket coaching at John Lyon School, Harrow on the Hill. Small groups with up to six players per net, a girls-only pathway, and a timetable built around the families who register.",
+  /** Used for canonical URLs, metadata and links in emails */
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? vercelUrl ?? "https://hillriserscricketacademytest.vercel.app").replace(/\/$/, ""),
+  /** Public contact email — TODO: add when confirmed */
+  email: undefined as string | undefined,
+  /** Public phone number, e.g. "07123 456789" — TODO: add when confirmed */
+  phone: undefined as string | undefined,
+  /** Safeguarding / welfare contact — TODO: add before sessions start */
+  welfareEmail: undefined as string | undefined,
   venue: {
     name: "John Lyon School",
     addressLines: ["Middle Road", "Harrow on the Hill", "HA2 0HN"],
     mapQuery: "John Lyon School, Middle Road, Harrow HA2 0HN",
   },
-  social: {
-    instagram: "https://instagram.com/", // TODO
-    facebook: "https://facebook.com/", // TODO
-  },
-  standardSession: {
-    minutes: 90,
-    pricePence: 2500,
-    capacity: 18,
-    team: "1 lead coach, 1 assistant coach and 2 junior helpers",
-  },
-  /** Little Cricketers (ages 4–7) — shorter sessions */
-  littleCricketers: {
-    minutes: 60,
-    pricePence: 1500,
-  },
+  ages: "4–15",
 } as const;
 
+export function phoneHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "").replace(/^0/, "+44")}`;
+}
+
 export const nav = [
-  { href: "/academy", label: "Academy" },
-  { href: "/sessions", label: "Sessions" },
-  { href: "/girls", label: "Girls Cricket" },
+  { href: "/programmes", label: "Programmes" },
+  { href: "/how-booking-works", label: "How It Works" },
+  { href: "/girls", label: "Girls" },
   { href: "/little-cricketers", label: "Little Cricketers" },
-  { href: "/camps", label: "Camps" },
-  { href: "/coaches", label: "Coaches" },
   { href: "/venue", label: "Venue" },
+  { href: "/coaches", label: "Coaches" },
   { href: "/faq", label: "FAQs" },
 ] as const;
 

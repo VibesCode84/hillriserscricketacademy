@@ -82,39 +82,69 @@ export type WaitlistEntry = {
   createdAt: string;
 };
 
-/**
- * A request for a trial while the weekly programme (which academy runs on
- * which day) is still being finalised. No payment is taken; the academy
- * confirms a day and time and sends a booking link.
- */
-export type TrialRequestStatus = "new" | "contacted" | "booked" | "closed";
+/* ── Register your interest (launch enquiry form) ─────────────────────── */
 
-/**
- * none: request sent without a deposit · pending: sent to checkout ·
- * paid: deposit received (place secured) · applied: credited to a booked
- * session · refunded: returned to the family
- */
-export type DepositStatus = "none" | "pending" | "paid" | "applied" | "refunded";
+export type CricketLevel = "new" | "plays-a-little" | "junior-club" | "regular-club-or-rep";
+export type MainRole = "batter" | "seam" | "spin" | "all-rounder" | "wicket-keeper" | "not-sure";
+export type GirlsOnlyPreference = "yes" | "no" | "not-applicable";
 
-export type TrialRequest = {
+export type ChildInterest = {
+  firstName: string;
+  dateOfBirth: string; // YYYY-MM-DD
+  school?: string;
+  club?: string;
+  girlsOnly: GirlsOnlyPreference;
+  level: CricketLevel;
+  mainRole: MainRole;
+  /** What they want from sessions (multi) */
+  wants: string[];
+  /** Larger group / small group / 1-to-1 (multi) */
+  formats: string[];
+  /** 1 hour / 90 minutes / 2 hours (multi) */
+  sessionLengths: string[];
+  /** Weekday evenings / Saturday / Sunday morning / Sunday afternoon (multi) */
+  availability: string[];
+  availabilityNotes?: string;
+  frequency: "once" | "twice" | "not-sure";
+  /** Holiday camps / 1-to-1 / Summer outdoor (multi) */
+  otherInterests: string[];
+  paymentPreference: "termly" | "monthly";
+};
+
+export type InterestRegistration = {
   id: string;
-  parentId: string;
-  playerId: string;
-  /** The academy the family chose (a DisciplineKey) */
-  academy: string;
-  /** Days the family can attend, e.g. ["Wednesday", "Sunday"] — empty means any */
-  preferredDays: string[];
-  notes?: string;
-  status: TrialRequestStatus;
-  depositStatus: DepositStatus;
-  depositPence?: number;
-  stripeCheckoutSessionId?: string;
-  stripePaymentIntentId?: string;
-  depositRefundedPence?: number;
+  parentName: string;
+  email: string;
+  mobile: string;
+  postcode: string;
+  heardAbout?: string;
+  children: ChildInterest[];
+  /** Required: permission to contact about HillRisers sessions */
+  contactConsent: true;
+  /** Optional: news and offers */
+  marketingConsent: boolean;
   createdAt: string;
 };
 
-export type TrialRequestView = TrialRequest & { player?: Player; parent?: Parent };
+/* ── Coach with us ───────────────────────────────────────────────────────── */
+
+export type CoachInterest = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  roles: string[];
+  specialism?: string;
+  qualifications: string;
+  playingBackground?: string;
+  availability: string;
+  summerAvailability?: string;
+  dbsStatus: string;
+  safeguardingStatus: string;
+  firstAid: boolean;
+  message?: string;
+  createdAt: string;
+};
 
 /** Register-interest record for a holiday camp (no payment). */
 export type CampInterest = {
@@ -204,25 +234,11 @@ export interface BookingStore {
   joinWaitlist(entry: Omit<WaitlistEntry, "id" | "status" | "createdAt">): Promise<WaitlistEntry>;
   listWaitlist(filter?: { sessionId?: string }): Promise<WaitlistEntry[]>;
 
-  createTrialRequest(
-    input: Pick<TrialRequest, "parentId" | "playerId" | "academy" | "preferredDays" | "notes"> & { depositPence?: number },
-  ): Promise<TrialRequest>;
-  getTrialRequest(id: string): Promise<TrialRequest | undefined>;
-  findTrialRequestByCheckoutId(checkoutSessionId: string): Promise<TrialRequest | undefined>;
-  findTrialRequestByPaymentIntent(paymentIntentId: string): Promise<TrialRequest | undefined>;
-  listTrialRequests(): Promise<TrialRequestView[]>;
-  setTrialRequestStatus(id: string, status: TrialRequestStatus): Promise<TrialRequest | undefined>;
-  attachDepositCheckout(id: string, checkoutSessionId: string): Promise<void>;
-  /** Idempotent. Returns the request and whether this call changed it. */
-  markDepositPaid(
-    id: string,
-    payment: { paymentIntentId?: string; amountPaidPence?: number },
-  ): Promise<{ request: TrialRequest | undefined; changed: boolean }>;
-  /** Checkout abandoned/expired: back to a request without a deposit. */
-  markDepositUnpaid(id: string): Promise<TrialRequest | undefined>;
-  recordDepositRefund(id: string, amountRefundedPence: number): Promise<TrialRequest | undefined>;
-  /** Admin: mark a paid deposit as credited to a booked session. */
-  setDepositStatus(id: string, status: DepositStatus): Promise<TrialRequest | undefined>;
+  createInterestRegistration(input: Omit<InterestRegistration, "id" | "createdAt">): Promise<InterestRegistration>;
+  listInterestRegistrations(): Promise<InterestRegistration[]>;
+
+  createCoachInterest(input: Omit<CoachInterest, "id" | "createdAt">): Promise<CoachInterest>;
+  listCoachInterests(): Promise<CoachInterest[]>;
 
   createCampInterest(input: Omit<CampInterest, "id" | "createdAt">): Promise<CampInterest>;
   listCampInterests(): Promise<CampInterest[]>;

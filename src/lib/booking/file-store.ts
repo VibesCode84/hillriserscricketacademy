@@ -13,10 +13,8 @@ import {
   type Player,
   type ReserveResult,
   type SessionCounts,
-  type TrialRequest,
-  type TrialRequestStatus,
-  type DepositStatus,
-  type TrialRequestView,
+  type CoachInterest,
+  type InterestRegistration,
   type WaitlistEntry,
 } from "./types";
 
@@ -25,12 +23,13 @@ type Data = {
   players: Player[];
   bookings: Booking[];
   waitlist: WaitlistEntry[];
-  trialRequests: TrialRequest[];
+  interestRegistrations: InterestRegistration[];
+  coachInterests: CoachInterest[];
   campInterests: CampInterest[];
   enquiries: Enquiry[];
 };
 
-const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], trialRequests: [], campInterests: [], enquiries: [] });
+const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], interestRegistrations: [], coachInterests: [], campInterests: [], enquiries: [] });
 
 /**
  * JSON-file store for local development and demos. All mutations run through
@@ -44,9 +43,7 @@ export class FileBookingStore implements BookingStore {
 
   private async read(): Promise<Data> {
     try {
-      const data: Data = { ...empty(), ...JSON.parse(await fs.readFile(this.file, "utf8")) };
-      for (const r of data.trialRequests) r.depositStatus ??= "none";
-      return data;
+      return { ...empty(), ...JSON.parse(await fs.readFile(this.file, "utf8")) };
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return empty();
       throw err;
@@ -276,97 +273,38 @@ export class FileBookingStore implements BookingStore {
     return (await this.snapshot()).waitlist.filter((w) => !filter?.sessionId || w.sessionId === filter.sessionId);
   }
 
-  createTrialRequest(input: Parameters<BookingStore["createTrialRequest"]>[0]) {
+  createInterestRegistration(input: Parameters<BookingStore["createInterestRegistration"]>[0]) {
     return this.tx((data) => {
-      const { depositPence, ...rest } = input;
-      const r: TrialRequest = {
-        ...rest,
+      const r: InterestRegistration = {
+        ...input,
+        email: input.email.trim().toLowerCase(),
         id: randomUUID(),
-        status: "new",
-        depositStatus: depositPence ? "pending" : "none",
-        depositPence,
         createdAt: new Date().toISOString(),
       };
-      data.trialRequests.push(r);
+      data.interestRegistrations.push(r);
       return r;
     });
   }
 
-  async listTrialRequests(): Promise<TrialRequestView[]> {
-    const data = await this.snapshot();
-    return [...data.trialRequests]
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .map((r) => ({
-        ...r,
-        player: data.players.find((p) => p.id === r.playerId),
-        parent: data.parents.find((p) => p.id === r.parentId),
-      }));
+  async listInterestRegistrations() {
+    return [...(await this.snapshot()).interestRegistrations].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
-  setTrialRequestStatus(id: string, status: TrialRequestStatus) {
-    return this.updateTrial(id, (r) => {
-      r.status = status;
-    });
-  }
-
-  private updateTrial(id: string, fn: (r: TrialRequest) => void) {
+  createCoachInterest(input: Parameters<BookingStore["createCoachInterest"]>[0]) {
     return this.tx((data) => {
-      const r = data.trialRequests.find((x) => x.id === id);
-      if (r) fn(r);
-      return r;
+      const c: CoachInterest = {
+        ...input,
+        email: input.email.trim().toLowerCase(),
+        id: randomUUID(),
+        createdAt: new Date().toISOString(),
+      };
+      data.coachInterests.push(c);
+      return c;
     });
   }
 
-  async getTrialRequest(id: string) {
-    return (await this.snapshot()).trialRequests.find((r) => r.id === id);
-  }
-
-  async findTrialRequestByCheckoutId(checkoutSessionId: string) {
-    return (await this.snapshot()).trialRequests.find((r) => r.stripeCheckoutSessionId === checkoutSessionId);
-  }
-
-  async findTrialRequestByPaymentIntent(paymentIntentId: string) {
-    return (await this.snapshot()).trialRequests.find((r) => r.stripePaymentIntentId === paymentIntentId);
-  }
-
-  async attachDepositCheckout(id: string, checkoutSessionId: string) {
-    await this.updateTrial(id, (r) => {
-      r.stripeCheckoutSessionId = checkoutSessionId;
-      if (r.depositStatus === "none") r.depositStatus = "pending";
-    });
-  }
-
-  markDepositPaid(id: string, payment: { paymentIntentId?: string; amountPaidPence?: number }) {
-    return this.tx((data) => {
-      const r = data.trialRequests.find((x) => x.id === id);
-      if (!r) return { request: undefined, changed: false };
-      if (r.depositStatus === "paid" || r.depositStatus === "applied" || r.depositStatus === "refunded") {
-        return { request: r, changed: false };
-      }
-      r.depositStatus = "paid";
-      r.stripePaymentIntentId = payment.paymentIntentId ?? r.stripePaymentIntentId;
-      r.depositPence = payment.amountPaidPence ?? r.depositPence;
-      return { request: r, changed: true };
-    });
-  }
-
-  markDepositUnpaid(id: string) {
-    return this.updateTrial(id, (r) => {
-      if (r.depositStatus === "pending") r.depositStatus = "none";
-    });
-  }
-
-  recordDepositRefund(id: string, amountRefundedPence: number) {
-    return this.updateTrial(id, (r) => {
-      r.depositRefundedPence = amountRefundedPence;
-      if (amountRefundedPence >= (r.depositPence ?? 0)) r.depositStatus = "refunded";
-    });
-  }
-
-  setDepositStatus(id: string, status: DepositStatus) {
-    return this.updateTrial(id, (r) => {
-      r.depositStatus = status;
-    });
+  async listCoachInterests() {
+    return [...(await this.snapshot()).coachInterests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   createCampInterest(input: Parameters<BookingStore["createCampInterest"]>[0]) {

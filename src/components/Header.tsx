@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { nav, site } from "@/data/site";
+import { nav, phoneHref, site } from "@/data/site";
 import { Logo } from "./Logo";
 import { ButtonLink } from "./Button";
 
@@ -34,7 +34,7 @@ export function Header() {
   if (pathname.startsWith("/admin")) return null;
 
   // Booking pages have light backgrounds, so the header is always solid there
-  const solid = scrolled || open || pathname.startsWith("/book");
+  const solid = scrolled || open || pathname.startsWith("/book") || pathname.startsWith("/register");
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
@@ -46,13 +46,13 @@ export function Header() {
       <div className="container-x flex h-[4.5rem] items-center justify-between gap-6 lg:h-20">
         <Logo />
 
-        <nav aria-label="Main" className="hidden items-center gap-7 xl:flex">
+        <nav aria-label="Main" className="hidden items-center gap-6 xl:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
-              className="link-underline text-[0.9rem] font-medium text-cream/85 hover:text-cream"
+              className="link-underline whitespace-nowrap text-[0.9rem] font-medium text-cream/85 hover:text-cream"
             >
               {item.label}
             </Link>
@@ -60,20 +60,22 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-4 xl:flex">
-          <Link href="/find-my-session" className="link-underline text-[0.9rem] font-medium text-gold-soft hover:text-gold">
-            Find My Session
+          <Link href="/coach-with-us" className="link-underline whitespace-nowrap text-[0.9rem] font-medium text-gold-soft hover:text-gold">
+            Coach with us
           </Link>
-          <ButtonLink href="/book" className="!px-5 !py-2.5">
-            Book a Trial
+          <ButtonLink href="/register" className="!px-5 !py-2.5">
+            Register Interest
           </ButtonLink>
         </div>
 
         <div className="flex items-center gap-2 xl:hidden">
-          <a href={site.phoneHref} className="rounded-full p-2.5 text-cream/80 hover:text-gold" aria-label={`Call us on ${site.phone}`}>
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-              <path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-          </a>
+          {site.phone && (
+            <a href={phoneHref(site.phone)} className="rounded-full p-2.5 text-cream/80 hover:text-gold" aria-label={`Call us on ${site.phone}`}>
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+                <path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              </svg>
+            </a>
+          )}
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -109,19 +111,21 @@ export function Header() {
             </Link>
           ))}
           <div className="mt-8 flex flex-col gap-3">
-            <ButtonLink href="/book" className="w-full">Book a Trial</ButtonLink>
-            <ButtonLink href="/find-my-session" variant="secondary" className="w-full">Find My Session</ButtonLink>
+            <ButtonLink href="/register" className="w-full">Register Interest</ButtonLink>
+            <ButtonLink href="/coach-with-us" variant="secondary" className="w-full">Coach with us</ButtonLink>
           </div>
-          <p className="mt-8 text-sm text-slate">
-            Questions? Call <a href={site.phoneHref} className="text-gold-soft underline underline-offset-4">{site.phone}</a>
-          </p>
+          {site.phone && (
+            <p className="mt-8 text-sm text-slate">
+              Questions? Call <a href={phoneHref(site.phone)} className="text-gold-soft underline underline-offset-4">{site.phone}</a>
+            </p>
+          )}
         </nav>
       </div>
     </header>
   );
 }
 
-/** Sticky "Book a Trial" bar for phones */
+/** Sticky "Register your interest" bar for phones */
 export function StickyMobileCTA() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
@@ -133,7 +137,7 @@ export function StickyMobileCTA() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (pathname.startsWith("/book") || pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/book") || pathname.startsWith("/register") || pathname.startsWith("/admin")) return null;
 
   return (
     <div
@@ -142,8 +146,7 @@ export function StickyMobileCTA() {
       }`}
     >
       <div className="flex items-center gap-3">
-        <ButtonLink href="/book" className="flex-1 !py-3">Book a Trial</ButtonLink>
-        <ButtonLink href="/find-my-session" variant="secondary" className="!px-4 !py-3">Find My Session</ButtonLink>
+        <ButtonLink href="/register" className="flex-1 !py-3">Register your interest</ButtonLink>
       </div>
     </div>
   );

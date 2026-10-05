@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 
-export function DevCheckoutButtons({ bookingId, trialRequestId }: { bookingId?: string; trialRequestId?: string }) {
+export function DevCheckoutButtons({ bookingId }: { bookingId: string }) {
   const [busy, setBusy] = useState(false);
   const act = async (outcome: "paid" | "cancel") => {
     setBusy(true);
     const res = await fetch("/api/dev/complete-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, trialRequestId, outcome }),
+      body: JSON.stringify({ bookingId, outcome }),
     });
     const json = await res.json();
     window.location.assign(json.redirect ?? "/");

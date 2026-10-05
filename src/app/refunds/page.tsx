@@ -1,36 +1,30 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { site } from "@/data/site";
+import Link from "next/link";
+import { launch } from "@/data/launch";
 import { LegalPage } from "@/components/LegalPage";
+import { ContactLink } from "@/components/ContactLink";
 
-export const metadata: Metadata = { title: "Refund Policy", alternates: { canonical: "/refunds" } };
+export const metadata: Metadata = { title: "Refunds", alternates: { canonical: "/refunds" } };
 
-// TODO: confirm refund terms with the academy before launch.
 export default function Page() {
   return (
-    <LegalPage eyebrow="Trust" title="Refund Policy">
-      <h2>Holding deposits</h2>
+    <LegalPage eyebrow="Policies" title="Refunds">
+      <h2>Trial deposits</h2>
       <p>
-        If you paid a refundable holding deposit with a trial request, we&rsquo;ll refund it in full if we can&rsquo;t offer a session that
-        suits you, or if you ask before your child&rsquo;s trial session is confirmed. Once the session is confirmed, the deposit pays for
-        it and the cancellation terms below apply.
+        If your child joins after their trial, the deposit is credited to their remaining sessions. If they don&rsquo;t join, we refund the
+        deposit, provided they attended the trial or you cancelled with at least {launch.trialCancellationHours} hours&rsquo; notice.
       </p>
-      <h2>Term fees</h2>
+      <h2>Online bookings</h2>
       <p>
-        Fees are paid termly and are due at least 10 days before the term&rsquo;s sessions start (see the{" "}
-        <Link href="/sessions#term-dates">term dates</Link>). If you withdraw before the due date, we&rsquo;ll
-        refund any term fee you&rsquo;ve paid in full. After that, term fees are non-refundable except where we cancel sessions, or at our
-        discretion in exceptional circumstances such as long-term injury or illness.
+        You have a 14-day cancellation period for online bookings. If coaching starts within that period at your request, we may charge a
+        proportionate amount for the coaching already provided.
       </p>
-      <h2>If you need to cancel a single session or trial</h2>
-      <p>Cancel more than 48 hours before the session and we&rsquo;ll refund you in full to your original payment method.</p>
-      <p>For cancellations within 48 hours we&rsquo;ll try to offer a transfer to another session where places allow.</p>
-      <h2>If we cancel</h2>
-      <p>If we have to cancel a session, for example because the venue is unavailable, you&rsquo;ll always be offered a full refund or a free transfer.</p>
-      <h2>How to cancel</h2>
+      <h2>Missed sessions</h2>
+      <p>Missed sessions are not refunded. Where possible, we may offer a make-up session.</p>
+      <h2>How refunds are paid</h2>
       <p>
-        Email <a href={`mailto:${site.email}`}>{site.email}</a> with your booking reference. Refunds are processed through Stripe and
-        usually reach your account within 5–10 working days.
+        Refunds go back to your original payment method. To ask about a refund, <ContactLink />. Full details are in our{" "}
+        <Link href="/terms">terms and conditions</Link>.
       </p>
     </LegalPage>
   );

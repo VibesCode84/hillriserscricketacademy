@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { coachRoles, interestOptions, valuesOf } from "./interest-options";
 
 const phone = z
   .string()
@@ -45,13 +46,6 @@ export const profileSchema = z.object({
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
 
-export const trialRequestSchema = profileSchema.extend({
-  academy: z.enum(["batting", "seam-bowling", "spin-bowling", "power", "performance", "girls", "little-cricketers"]),
-  preferredDays: z.array(z.enum(["Wednesday", "Saturday", "Sunday"])).max(3).default([]),
-  /** Pay a refundable holding deposit to secure the place */
-  withDeposit: z.boolean().default(false),
-});
-
 export const createBookingSchema = z.object({
   playerId: z.string().uuid(),
   parentId: z.string().uuid(),
@@ -74,11 +68,73 @@ export const campInterestSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   mobile: z.string().trim().max(20).optional(),
   childName: z.string().trim().min(2, "Please enter your child's name").max(100),
-  childAge: z.coerce.number({ invalid_type_error: "Please enter your child's age" }).int().min(4, "Camps are for ages 4–14").max(14, "Camps are for ages 4–14"),
+  childAge: z.coerce.number({ invalid_type_error: "Please enter your child's age" }).int().min(4, "Camps are for ages 4–15").max(15, "Camps are for ages 4–15"),
   interest: interestSchema,
   notes: z.string().trim().max(1000).optional(),
   contactConsent: z.literal(true, { errorMap: () => ({ message: "Please confirm we can email you about camps" }) }),
   // Honeypot
+  company: z.string().max(0).optional(),
+});
+
+const multi = (options: readonly string[]) => z.array(z.enum(options as unknown as [string, ...string[]])).max(options.length).default([]);
+const optionalText = (max: number) => z.string().trim().max(max).optional().transform((v) => v || undefined);
+
+const childSchema = z.object({
+  firstName: z.string().trim().min(1, "Please enter your child's first name").max(60),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Please enter a date of birth")
+    .refine((v) => {
+      const years = (Date.now() - new Date(v).getTime()) / (365.25 * 24 * 3600 * 1000);
+      return years >= 3 && years <= 17;
+    }, "Please check the date of birth"),
+  school: optionalText(120),
+  club: optionalText(120),
+  girlsOnly: z.enum(valuesOf("girlsOnly"), { errorMap: () => ({ message: "Please choose an option" }) }),
+  level: z.enum(valuesOf("level"), { errorMap: () => ({ message: "Please choose a level" }) }),
+  mainRole: z.enum(valuesOf("mainRole"), { errorMap: () => ({ message: "Please choose a role" }) }),
+  wants: multi(interestOptions.wants),
+  formats: multi(interestOptions.formats),
+  sessionLengths: multi(interestOptions.sessionLengths),
+  availability: multi(interestOptions.availability),
+  availabilityNotes: optionalText(500),
+  frequency: z.enum(valuesOf("frequency"), { errorMap: () => ({ message: "Please choose an option" }) }),
+  otherInterests: multi(interestOptions.otherInterests),
+  paymentPreference: z.enum(valuesOf("paymentPreference"), { errorMap: () => ({ message: "Please choose an option" }) }),
+});
+
+export const interestRegistrationSchema = z.object({
+  parentName: z.string().trim().min(2, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  mobile: phone,
+  postcode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/, "Please enter a valid UK postcode"),
+  heardAbout: z.enum(interestOptions.heardAbout as unknown as [string, ...string[]]).optional(),
+  children: z.array(childSchema).min(1, "Please add at least one child").max(8),
+  contactConsent: z.literal(true, { errorMap: () => ({ message: "Please confirm we can contact you about HillRisers sessions" }) }),
+  marketingConsent: z.boolean().default(false),
+  // Honeypot
+  company: z.string().max(0).optional(),
+});
+export type InterestRegistrationInput = z.infer<typeof interestRegistrationSchema>;
+
+export const coachInterestSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  phone,
+  roles: z.array(z.enum(coachRoles as unknown as [string, ...string[]])).min(1, "Please choose at least one role"),
+  specialism: optionalText(200),
+  qualifications: z.string().trim().min(2, "Please tell us your coaching qualifications").max(500),
+  playingBackground: optionalText(1000),
+  availability: z.string().trim().min(2, "Please tell us when you're available").max(500),
+  summerAvailability: optionalText(500),
+  dbsStatus: z.string().trim().min(2, "Please tell us your DBS status").max(200),
+  safeguardingStatus: z.string().trim().min(2, "Please tell us your safeguarding training status").max(200),
+  firstAid: z.boolean().default(false),
+  message: optionalText(2000),
   company: z.string().max(0).optional(),
 });
 

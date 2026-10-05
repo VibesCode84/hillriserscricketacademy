@@ -1,5 +1,6 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
-import { getAcademy } from "@/data/academies";
+import { labelFor } from "@/lib/interest-options";
+import { ageBand, ageOn } from "@/lib/age";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
 
@@ -35,16 +36,44 @@ export async function GET(req: Request) {
       ]),
     );
   }
-  if (params.get("type") === "trials") {
-    const trials = await getStore().listTrialRequests();
+  if (params.get("type") === "interest") {
+    // One row per child so demand can be analysed by availability, age band and level
+    const regs = await getStore().listInterestRegistrations();
+    const yes = (list: string[], v: string) => (list.includes(v) ? "Yes" : "");
     return csv(
-      "hillrisers-trial-requests",
-      ["Status", "Deposit", "Deposit (£)", "Academy", "Preferred days", "Player", "Date of birth", "Gender", "Experience", "Interest", "Club/school", "Parent", "Email", "Mobile", "Emergency contact", "Emergency phone", "Medical / additional needs", "Photo consent", "Heard via", "Requested at"],
-      trials.map((t) => [
-        t.status, t.depositStatus, t.depositPence !== undefined && t.depositStatus !== "none" ? (t.depositPence / 100).toFixed(2) : "", getAcademy(t.academy)?.name ?? t.academy, t.preferredDays.join(" / ") || "Any", t.player?.name, t.player?.dateOfBirth,
-        t.player?.gender, t.player?.experience, t.player?.interest, t.player?.clubOrSchool, t.parent?.name, t.parent?.email,
-        t.parent?.mobile, t.player?.emergencyContactName, t.player?.emergencyContactPhone, t.player?.medicalNotes,
-        t.player?.photoConsent ? "Yes" : "No", t.player?.heardAbout, t.createdAt,
+      "hillrisers-registrations",
+      [
+        "Registered at", "Parent", "Email", "Mobile", "Postcode", "Heard about us", "News & offers",
+        "Child first name", "Date of birth", "Age today", "Age band", "School", "Club", "Girls-only", "Level", "Main role",
+        "Weekday evenings", "Saturday", "Sunday morning", "Sunday afternoon", "Availability notes", "How often",
+        "Larger group", "Small group", "1-to-1", "1 hour", "90 minutes", "2 hours",
+        "Wants", "Other interests", "Payment preference",
+      ],
+      regs.flatMap((r) =>
+        r.children.map((c) => {
+          const age = ageOn(c.dateOfBirth);
+          return [
+            r.createdAt, r.parentName, r.email, r.mobile, r.postcode, r.heardAbout, r.marketingConsent ? "Yes" : "No",
+            c.firstName, c.dateOfBirth, age, ageBand(age), c.school, c.club, labelFor("girlsOnly", c.girlsOnly),
+            labelFor("level", c.level), labelFor("mainRole", c.mainRole),
+            yes(c.availability, "Weekday evenings"), yes(c.availability, "Saturday"), yes(c.availability, "Sunday morning"),
+            yes(c.availability, "Sunday afternoon"), c.availabilityNotes, labelFor("frequency", c.frequency),
+            yes(c.formats, "Larger group"), yes(c.formats, "Small group"), yes(c.formats, "1-to-1"),
+            yes(c.sessionLengths, "1 hour"), yes(c.sessionLengths, "90 minutes"), yes(c.sessionLengths, "2 hours"),
+            c.wants.join(" / "), c.otherInterests.join(" / "), labelFor("paymentPreference", c.paymentPreference),
+          ];
+        }),
+      ),
+    );
+  }
+  if (params.get("type") === "coaches") {
+    const rows = await getStore().listCoachInterests();
+    return csv(
+      "hillrisers-coach-interest",
+      ["Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Availability", "Summer availability", "DBS", "Safeguarding", "First aid", "Message"],
+      rows.map((c) => [
+        c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground,
+        c.availability, c.summerAvailability, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
       ]),
     );
   }

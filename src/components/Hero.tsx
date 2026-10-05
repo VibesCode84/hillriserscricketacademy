@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { ButtonLink } from "./Button";
 import { Photo } from "./Photo";
-import { TermDates } from "./TermDates";
 
 function HeroArtwork() {
   return (
@@ -24,38 +23,38 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
       <HeroArtwork />
       <div className="container-x relative grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="eyebrow">Junior cricket academy · Harrow</p>
-          <h1 className="mt-6 text-[3rem] leading-[0.98] text-cream sm:text-[4rem] lg:text-[5.25rem]">
-            Cricket coaching that makes a <em className="font-normal italic text-gold-soft">difference.</em>
+          <p className="eyebrow">HillRisers Cricket Academy · Launching 1 November</p>
+          <h1 className="mt-6 text-[2.75rem] leading-[1] text-cream sm:text-[3.75rem] lg:text-[4.5rem]">
+            Specialist cricket coaching at John Lyon, <em className="font-normal italic text-gold-soft">Harrow on the Hill.</em>
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate md:text-xl">
-            Specialist batting, bowling and performance coaching for junior cricketers aged 4–14 at John Lyon School.
+            Small-group coaching built around the needs of each cricket-loving child. Tell us when your child can attend and what they
+            want from cricket — we&rsquo;ll build the timetable around you.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/book" arrow className="group">Book a Trial</ButtonLink>
-            <ButtonLink href="/find-my-session" variant="secondary">Find My Session</ButtonLink>
+            <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
+            <ButtonLink href="/how-booking-works" variant="secondary">How booking works</ButtonLink>
           </div>
-          <p className="mt-4 text-sm italic text-slate">No need to know which group is right — we&rsquo;ll help you choose.</p>
-          <TermDates className="mt-6" />
+          <p className="mt-4 text-sm text-slate">Registered families get priority booking before places open to everyone.</p>
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 
         <div className="relative hidden h-[34rem] lg:block">
           <Photo
-            alt="Girls Academy batter playing a confident drive"
+            alt="Young batter playing a drive in an indoor net"
             className="absolute right-0 top-0 h-[26rem] w-[72%] rounded-[2rem]"
             priority
             sizes="40vw"
           />
           <Photo
-            alt="Coach giving one-to-one feedback to a young bowler"
+            alt="Coach giving feedback to a young bowler"
             className="absolute bottom-0 left-0 h-[17rem] w-[52%] rounded-[1.75rem] ring-8 ring-navy-950"
             tone="warm"
             sizes="25vw"
           />
           <div className="absolute bottom-10 right-4 max-w-[13rem] rounded-2xl border border-gold/25 bg-navy-900/90 p-5 backdrop-blur">
-            <p className="font-serif text-4xl text-gold">18</p>
-            <p className="mt-1 text-sm leading-snug text-slate">players maximum, with four coaches in every academy session</p>
+            <p className="font-serif text-4xl text-gold">6</p>
+            <p className="mt-1 text-sm leading-snug text-slate">players maximum per net, and each net has its own coach</p>
           </div>
         </div>
       </div>

@@ -1,40 +1,38 @@
 import Link from "next/link";
-import { site } from "@/data/site";
+import { phoneHref, site } from "@/data/site";
 import { Logo } from "./Logo";
 
 const groups = [
   {
     title: "Academy",
     links: [
-      { href: "/academy", label: "The Academy" },
-      { href: "/academy/batting", label: "Batting" },
-      { href: "/academy/seam-bowling", label: "Seam Bowling" },
-      { href: "/academy/spin-bowling", label: "Spin Bowling" },
-      { href: "/academy/power", label: "Power & Range" },
-      { href: "/academy/performance", label: "Performance" },
-    ],
-  },
-  {
-    title: "Families",
-    links: [
+      { href: "/programmes", label: "Programmes & Prices" },
+      { href: "/how-booking-works", label: "How Booking Works" },
       { href: "/girls", label: "Girls Cricket" },
       { href: "/little-cricketers", label: "Little Cricketers" },
       { href: "/camps", label: "Holiday Camps" },
-      { href: "/sessions", label: "Timetable & Price" },
-      { href: "/find-my-session", label: "Find My Session" },
-      { href: "/coaches", label: "Coaches" },
-      { href: "/refer", label: "Invite a Friend" },
+      { href: "/venue", label: "Venue" },
     ],
   },
   {
-    title: "Trust",
+    title: "Get involved",
     links: [
+      { href: "/register", label: "Register Your Interest" },
+      { href: "/coaches", label: "Coaching Team" },
+      { href: "/coach-with-us", label: "Coach with Us" },
+      { href: "/refer", label: "Invite a Friend" },
+      { href: "/faq", label: "FAQs" },
+      { href: "/contact", label: "Contact" },
+    ],
+  },
+  {
+    title: "Policies",
+    links: [
+      { href: "/terms", label: "Terms & Conditions" },
       { href: "/safeguarding", label: "Safeguarding" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms & Conditions" },
-      { href: "/refunds", label: "Refund Policy" },
+      { href: "/refunds", label: "Refunds" },
       { href: "/accessibility", label: "Accessibility" },
-      { href: "/contact", label: "Contact" },
     ],
   },
 ];
@@ -47,12 +45,15 @@ export function Footer() {
           <div className="max-w-sm">
             <Logo />
             <p className="mt-6 text-[0.95rem] leading-relaxed text-slate">
-              Specialist junior cricket coaching for players aged 4–14 at {site.venue.name}, Harrow.
+              Specialist junior cricket coaching for ages {site.ages} at {site.venue.name}, Harrow on the Hill. Launching{" "}
+              1 November.
             </p>
-            <div className="mt-6 space-y-1.5 text-[0.95rem]">
-              <a href={site.phoneHref} className="block text-cream hover:text-gold">{site.phone}</a>
-              <a href={`mailto:${site.email}`} className="block text-cream hover:text-gold">{site.email}</a>
-            </div>
+            {(site.phone || site.email) && (
+              <div className="mt-6 space-y-1.5 text-[0.95rem]">
+                {site.phone && <a href={phoneHref(site.phone)} className="block text-cream hover:text-gold">{site.phone}</a>}
+                {site.email && <a href={`mailto:${site.email}`} className="block text-cream hover:text-gold">{site.email}</a>}
+              </div>
+            )}
           </div>
           {groups.map((g) => (
             <div key={g.title}>
@@ -76,11 +77,14 @@ export function Footer() {
             <path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <p className="text-[0.95rem] leading-relaxed text-slate">
-            <span className="text-cream">Safeguarding comes first.</span> All coaches and helpers are DBS checked and follow our
-            safeguarding policy. Welfare contact:{" "}
-            <a href={`mailto:${site.welfareOfficer.email}`} className="text-gold-soft underline underline-offset-4">
-              {site.welfareOfficer.email}
-            </a>
+            <span className="text-cream">Safeguarding comes first.</span> Every HillRisers coach will hold an enhanced cricket DBS check and
+            safeguarding training.
+            {site.welfareEmail && (
+              <>
+                {" "}Welfare contact:{" "}
+                <a href={`mailto:${site.welfareEmail}`} className="text-gold-soft underline underline-offset-4">{site.welfareEmail}</a>
+              </>
+            )}
           </p>
           <Link href="/safeguarding" className="link-underline text-sm font-semibold text-gold">
             Our safeguarding approach
@@ -89,7 +93,7 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-cream/10 pt-8 text-sm text-slate md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-          <p>Junior cricket coaching in Harrow, Northwood, Ruislip and North West London.</p>
+          <p>Junior cricket coaching in Harrow on the Hill, North West London.</p>
         </div>
       </div>
     </footer>

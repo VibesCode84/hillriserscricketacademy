@@ -3,8 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { sessions, formatTimeRange, getSession, sessionLabel } from "@/data/sessions";
-import type { BookingStatus, DepositStatus, TrialRequestStatus, TrialRequestView, WaitlistEntry } from "@/lib/booking/types";
-import { formatPrice } from "@/data/site";
+import type { BookingStatus, WaitlistEntry } from "@/lib/booking/types";
 
 async function adminPost(body: unknown) {
   const res = await fetch("/api/admin/bookings", {
@@ -96,101 +95,6 @@ export function WaitlistRow({ entry, sessionLabel }: { entry: WaitlistEntry; ses
       <a href={`mailto:${entry.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`} className="rounded-full bg-navy-950 px-4 py-2 text-xs font-semibold text-cream">
         Send booking link
       </a>
-    </div>
-  );
-}
-
-const trialStatusLabel: Record<TrialRequestStatus, string> = {
-  new: "New",
-  contacted: "Contacted",
-  booked: "Booked",
-  closed: "Closed",
-};
-
-const depositBadge: Record<DepositStatus, { label: string; cls: string }> = {
-  none: { label: "No deposit", cls: "bg-[#eef0f3] text-[#4d5664]" },
-  pending: { label: "Deposit not completed", cls: "bg-[#fdf3dc] text-[#7a5600]" },
-  paid: { label: "Deposit paid", cls: "bg-[#e3f3ea] text-[#1d5b3a]" },
-  applied: { label: "Deposit credited", cls: "bg-[#e7eefb] text-[#1c3f6e]" },
-  refunded: { label: "Deposit refunded", cls: "bg-[#fbeae8] text-[#8c1d18]" },
-};
-
-export function TrialRequestRow({ request: t, academyName }: { request: TrialRequestView; academyName: string }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
-  const first = t.player?.name.split(" ")[0] ?? "your child";
-  const link = `${origin}/book?discipline=${t.academy}`;
-  const body = `Hi ${t.parent?.name.split(" ")[0] ?? ""},\n\nThank you for your trial request for ${first}. We'd love to see ${first} at ${academyName} on [DAY] at [TIME].\n\nYou can secure the place here: ${link}\n\nThe HillRisers coaching team`;
-
-  const setStatus = async (status: TrialRequestStatus) => {
-    setBusy(true);
-    await adminPost({ action: "trialStatus", requestId: t.id, status });
-    setBusy(false);
-    router.refresh();
-  };
-
-  const markCredited = async () => {
-    if (!window.confirm("Mark this deposit as credited to a booked session? Add the session with 'Add manual booking'.")) return;
-    setBusy(true);
-    await adminPost({ action: "depositStatus", requestId: t.id, status: "applied" });
-    setBusy(false);
-    router.refresh();
-  };
-  const badge = depositBadge[t.depositStatus ?? "none"];
-
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-4 p-5 text-sm">
-      <details className="min-w-0 flex-1">
-        <summary className="cursor-pointer">
-          <span className="font-semibold">{t.player?.name ?? "—"}</span>
-          <span className="text-ink-muted"> · {academyName} · {t.preferredDays.length ? t.preferredDays.join(", ") : "Any day"}</span>
-          <span className={`ml-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.cls}`}>
-            {badge.label}
-            {(t.depositStatus === "paid" || t.depositStatus === "applied") && t.depositPence ? ` · ${formatPrice(t.depositPence)}` : ""}
-          </span>
-        </summary>
-        <dl className="mt-2 space-y-1 text-xs text-ink-muted">
-          <div>DOB: {t.player?.dateOfBirth} · {t.player?.gender} · {t.player?.experience} · interest: {t.player?.interest}</div>
-          {t.player?.recommendedPathway && <div>Pathway: {t.player.recommendedPathway}</div>}
-          {t.player?.clubOrSchool && <div>Club/school: {t.player.clubOrSchool}</div>}
-          {t.player?.playingProfile && <div>Profile: {t.player.playingProfile}</div>}
-          <div>Parent: {t.parent?.name} · {t.parent?.email} · {t.parent?.mobile}</div>
-          <div>Emergency: {t.player?.emergencyContactName} · {t.player?.emergencyContactPhone}</div>
-          {t.player?.medicalNotes && <div className="font-semibold text-[#8c1d18]">Medical: {t.player.medicalNotes}</div>}
-          <div>Photo consent: {t.player?.photoConsent ? "Yes" : "No"}</div>
-          {t.player?.heardAbout && <div>Heard via: {t.player.heardAbout}</div>}
-          <div>Requested {new Date(t.createdAt).toLocaleString("en-GB")}</div>
-          {t.depositStatus === "paid" && <div>Refunds are issued in Stripe; the status updates automatically.</div>}
-        </dl>
-      </details>
-      <div className="flex items-center gap-2">
-        <select
-          aria-label="Trial request status"
-          disabled={busy}
-          value={t.status}
-          onChange={(e) => setStatus(e.target.value as TrialRequestStatus)}
-          className="rounded-lg border border-navy-950/15 bg-white px-2 py-1.5 text-xs"
-        >
-          {(Object.keys(trialStatusLabel) as TrialRequestStatus[]).map((k) => (
-            <option key={k} value={k}>{trialStatusLabel[k]}</option>
-          ))}
-        </select>
-        {t.depositStatus === "paid" && (
-          <button type="button" disabled={busy} onClick={markCredited} className="rounded-full border border-navy-950/20 px-3 py-2 text-xs font-semibold">
-            Mark deposit credited
-          </button>
-        )}
-        {t.parent && (
-          <a
-            href={`mailto:${t.parent.email}?subject=${encodeURIComponent(`${first}'s HillRisers trial`)}&body=${encodeURIComponent(body)}`}
-            className="rounded-full bg-navy-950 px-4 py-2 text-xs font-semibold text-cream"
-          >
-            Email family
-          </a>
-        )}
-      </div>
     </div>
   );
 }
