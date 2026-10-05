@@ -27,8 +27,8 @@ const whereWeAre = [
 
 const reasons = [
   {
-    t: "Properly paid",
-    b: "Lead coaches earn £40 an hour and specialist coaches £30 an hour. Good coaching deserves to be paid like it.",
+    t: "Market-leading pay",
+    b: "Healthy, market-leading pay that reflects your skills, experience and profile. Good coaching deserves to be paid like it.",
   },
   {
     t: "Longer blocks, not odd hours",
@@ -53,11 +53,11 @@ const reasons = [
 ];
 
 const roles = [
-  { role: "Lead coach", rate: "£40/hr", detail: "Leads sessions and the coaching team on the day." },
-  { role: "Specialist coach", rate: "£30/hr", detail: "Batting (including power hitting, sweeps and ramps), seam or spin." },
-  { role: "Girls Academy lead", rate: "£40/hr", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
-  { role: "Early-years coach", rate: "£30/hr", detail: "Little Cricketers (ages 4–7), Sundays 9:00–9:50am." },
-  { role: "Helpers", rate: "Aged 16–18", detail: "Support coaches in sessions — a great first step into coaching." },
+  { role: "Lead coach", detail: "Leads sessions and the coaching team on the day." },
+  { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam or spin." },
+  { role: "Girls Academy lead", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
+  { role: "Early-years coach", detail: "Little Cricketers (ages 4–7), Sundays 9:00–9:50am." },
+  { role: "Helpers (aged 16–18)", detail: "Support coaches in sessions — a great first step into coaching." },
 ];
 
 const requirements = ["ECB coaching qualification", "Enhanced cricket DBS check", "Safeguarding training", "First aid — an advantage"];
@@ -113,17 +113,15 @@ export default function CoachWithUsPage() {
             <SectionHeader eyebrow="Roles" title="Who we're looking for." className="mb-8" />
             <ul className="divide-y divide-cream/10 border-y border-cream/10">
               {roles.map((r) => (
-                <li key={r.role} className="grid gap-1 py-5 sm:grid-cols-[1fr_auto] sm:gap-6">
-                  <div>
-                    <p className="font-serif text-2xl text-cream">{r.role}</p>
-                    <p className="mt-1 text-slate">{r.detail}</p>
-                  </div>
-                  <p className="font-semibold text-gold sm:text-right">{r.rate}</p>
+                <li key={r.role} className="py-5">
+                  <p className="font-serif text-2xl text-cream">{r.role}</p>
+                  <p className="mt-1 text-slate">{r.detail}</p>
                 </li>
               ))}
             </ul>
             <p className="mt-6 text-sm leading-relaxed text-slate">
-              Session times will be set from parent feedback and coach availability. The only fixed time so far is Little Cricketers, Sundays
+              Pay for every role is market-leading and reflects your skills, experience and profile — we&rsquo;ll discuss it with you
+              directly. Session times will be set from parent feedback and coach availability. The only fixed time so far is Little Cricketers, Sundays
               9:00–9:50am.
             </p>
           </div>
