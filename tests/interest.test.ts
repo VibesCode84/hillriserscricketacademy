@@ -18,7 +18,7 @@ const child = (overrides = {}) => ({
   level: "junior-club",
   mainRole: "spin",
   wants: ["Spin bowling", "Fielding"],
-  formats: ["Larger group"],
+  formats: ["Small group (up to 6 per net)"],
   sessionLengths: ["90 minutes"],
   availability: ["Saturday", "Sunday morning"],
   frequency: "once",

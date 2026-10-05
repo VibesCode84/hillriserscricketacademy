@@ -12,8 +12,8 @@ export default function Page() {
       <p>HillRisers Cricket Academy is committed to safeguarding and promoting the welfare of every child who takes part.</p>
       <h2>Our coaches</h2>
       <ul>
-        <li>Every HillRisers coach will hold an ECB coaching qualification, an enhanced cricket DBS check and safeguarding training.</li>
-        <li>Helpers aged 16–18 will always work under the supervision of a qualified coach.</li>
+        <li>Every HillRisers coach holds an ECB coaching qualification, an enhanced cricket DBS check and safeguarding training.</li>
+        <li>Junior helpers always work under the supervision of a qualified coach.</li>
         <li>Photographs will only be used publicly where a parent has given consent.</li>
       </ul>
       <h2>Welfare contact</h2>

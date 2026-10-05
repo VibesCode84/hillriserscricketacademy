@@ -37,7 +37,7 @@ export const nav = [
   { href: "/girls", label: "Girls" },
   { href: "/little-cricketers", label: "Little Cricketers" },
   { href: "/venue", label: "Venue" },
-  { href: "/coaches", label: "Coaches" },
+  { href: "/coaches", label: "Coaching" },
   { href: "/faq", label: "FAQs" },
 ] as const;
 

@@ -1,6 +1,7 @@
 /**
- * Coaching team. Leave empty until each coach has signed — the Coaches page
- * then shows "Coaching team announced soon". To add a coach, append an entry;
+ * Coaching team. Leave empty until each coach has signed — the Coaching page
+ * shows the coaching philosophy and the standard every coach meets, and adds
+ * profile cards automatically once entries exist. To add a coach, append an entry;
  * describe credentials factually (e.g. "ECB Level 2, former county player").
  */
 export type Coach = {

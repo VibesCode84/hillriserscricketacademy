@@ -39,7 +39,7 @@ export const interestOptions = {
     "Girls-only environment",
     "Playing matches",
   ],
-  formats: ["Larger group", "Small group", "1-to-1"],
+  formats: ["Small group (up to 6 per net)", "Group of 3", "1-to-1"],
   sessionLengths: ["1 hour", "90 minutes", "2 hours"],
   availability: ["Weekday evenings", "Saturday", "Sunday morning", "Sunday afternoon"],
   frequency: [
@@ -70,5 +70,5 @@ export const coachRoles = [
   "Specialist coach",
   "Girls Academy lead",
   "Early-years coach (Little Cricketers)",
-  "Helper (aged 16–18)",
+  "Junior helper",
 ];

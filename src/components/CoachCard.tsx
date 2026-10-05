@@ -35,18 +35,3 @@ export function CoachCard({ coach, tone = "dark" }: { coach: Coach; tone?: "dark
     </article>
   );
 }
-
-/** Shown until coaches have signed — swap for CoachCards by adding entries to src/data/coaches.ts */
-export function CoachesComingSoon({ tone = "light" }: { tone?: "dark" | "light" }) {
-  const light = tone === "light";
-  return (
-    <div className={`rounded-3xl border p-8 md:p-10 ${light ? "border-navy-950/10 bg-white" : "border-cream/10 bg-navy-900"}`}>
-      <p className={`eyebrow ${light ? "!text-gold-deep" : ""}`}>Coaching team</p>
-      <p className={`mt-4 font-serif text-3xl ${light ? "text-navy-950" : "text-cream"}`}>Coaching team announced soon.</p>
-      <p className={`mt-3 max-w-2xl leading-relaxed ${light ? "text-ink-muted" : "text-slate"}`}>
-        We&rsquo;re bringing together the very best coaches from the area. Every HillRisers coach holds an ECB coaching qualification, an
-        enhanced cricket DBS check and safeguarding training — and we can&rsquo;t wait to introduce them.
-      </p>
-    </div>
-  );
-}

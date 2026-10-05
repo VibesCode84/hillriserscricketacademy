@@ -46,7 +46,7 @@ export async function GET(req: Request) {
         "Registered at", "Parent", "Email", "Mobile", "Postcode", "Heard about us", "News & offers",
         "Child first name", "Date of birth", "Age today", "Age band", "School", "Club", "Girls-only", "Level", "Main role",
         "Weekday evenings", "Saturday", "Sunday morning", "Sunday afternoon", "Availability notes", "How often",
-        "Larger group", "Small group", "1-to-1", "1 hour", "90 minutes", "2 hours",
+        "Small group (up to 6 per net)", "Group of 3", "1-to-1", "1 hour", "90 minutes", "2 hours",
         "Wants", "Other interests", "Payment preference",
       ],
       regs.flatMap((r) =>
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
             labelFor("level", c.level), labelFor("mainRole", c.mainRole),
             yes(c.availability, "Weekday evenings"), yes(c.availability, "Saturday"), yes(c.availability, "Sunday morning"),
             yes(c.availability, "Sunday afternoon"), c.availabilityNotes, labelFor("frequency", c.frequency),
-            yes(c.formats, "Larger group"), yes(c.formats, "Small group"), yes(c.formats, "1-to-1"),
+            yes(c.formats, "Small group (up to 6 per net)"), yes(c.formats, "Group of 3"), yes(c.formats, "1-to-1"),
             yes(c.sessionLengths, "1 hour"), yes(c.sessionLengths, "90 minutes"), yes(c.sessionLengths, "2 hours"),
             c.wants.join(" / "), c.otherInterests.join(" / "), labelFor("paymentPreference", c.paymentPreference),
           ];

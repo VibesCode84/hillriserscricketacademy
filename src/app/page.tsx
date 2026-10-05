@@ -7,7 +7,8 @@ import { Section, SectionHeader } from "@/components/Section";
 import { ButtonLink } from "@/components/Button";
 import { Reveal } from "@/components/Reveal";
 import { Photo } from "@/components/Photo";
-import { CoachCard, CoachesComingSoon } from "@/components/CoachCard";
+import { CoachCard } from "@/components/CoachCard";
+import { CoachingPhilosophy } from "@/components/Coaching";
 import { ProgrammeTable } from "@/components/ProgrammeTable";
 import { BookingSteps } from "@/components/BookingSteps";
 import { KeyDates } from "@/components/KeyDates";
@@ -32,7 +33,7 @@ const pillars = [
   },
   {
     title: "Specialist skills",
-    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")} — with fielding in every session, and larger groups, small groups or 1-to-1.`,
+    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")} — with fielding in every session, in small groups, groups of three or 1-to-1.`,
     icon: "M4 20 18 6m-4 0h4v4M6 14l4 4",
   },
 ];
@@ -134,22 +135,28 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Coaching team */}
+      {/* Coaching */}
       <Section tone="cream">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <SectionHeader eyebrow="The coaching team" title="The very best coaches from the area." />
+          <SectionHeader
+            eyebrow="Our coaching"
+            title="The very best coaches from the area."
+            intro={<p className="text-ink-muted">Expert coaches, and a philosophy built around every individual child.</p>}
+          />
+          <Reveal>
+            <Link href="/coaches" className="link-underline shrink-0 text-sm font-semibold text-navy-950">Our coaching philosophy →</Link>
+          </Reveal>
         </div>
         <div className="mt-12">
-          {coaches.length ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {coaches.map((c) => (
-                <CoachCard key={c.id} coach={c} tone="light" />
-              ))}
-            </div>
-          ) : (
-            <CoachesComingSoon />
-          )}
+          <CoachingPhilosophy limit={3} />
         </div>
+        {coaches.length > 0 && (
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {coaches.map((c) => (
+              <CoachCard key={c.id} coach={c} tone="light" />
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* Venue */}

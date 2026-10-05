@@ -112,7 +112,7 @@ export default function TermsPage() {
       <h2 id="safeguarding">10. Safeguarding and photography</h2>
       <ul>
         <li>
-          Every HillRisers coach will hold an enhanced cricket DBS check and safeguarding training. See our{" "}
+          Every HillRisers coach holds an enhanced cricket DBS check and safeguarding training. See our{" "}
           <Link href="/safeguarding">safeguarding page</Link>.
         </li>
         <li>We will only use photographs or video of your child publicly with your consent, which you can withdraw at any time.</li>

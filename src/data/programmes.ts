@@ -130,7 +130,6 @@ export const specialistSkills = ["Batting", "Power hitting", "Sweeps and ramps",
 export const groupSizes = {
   littleCricketers: 24,
   perNet: 6,
-  perSession: 18,
 };
 
 export function getProgramme(key: string) {

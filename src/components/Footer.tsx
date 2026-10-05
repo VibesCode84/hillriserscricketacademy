@@ -22,7 +22,7 @@ const groups = [
     title: "Get involved",
     links: [
       { href: "/register", label: "Register Your Interest" },
-      { href: "/coaches", label: "Coaching Team" },
+      { href: "/coaches", label: "Our Coaching" },
       { href: "/refer", label: "Invite a Friend" },
       { href: "/faq", label: "FAQs" },
       { href: "/contact", label: "Contact" },
@@ -83,7 +83,7 @@ export function Footer() {
             <path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <p className="text-[0.95rem] leading-relaxed text-slate">
-            <span className="text-cream">Safeguarding comes first.</span> Every HillRisers coach will hold an enhanced cricket DBS check and
+            <span className="text-cream">Safeguarding comes first.</span> Every HillRisers coach holds an enhanced cricket DBS check and
             safeguarding training.
             {site.welfareEmail && (
               <>

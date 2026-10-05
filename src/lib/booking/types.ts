@@ -98,7 +98,7 @@ export type ChildInterest = {
   mainRole: MainRole;
   /** What they want from sessions (multi) */
   wants: string[];
-  /** Larger group / small group / 1-to-1 (multi) */
+  /** Small group (up to 6 per net) / group of 3 / 1-to-1 (multi) */
   formats: string[];
   /** 1 hour / 90 minutes / 2 hours (multi) */
   sessionLengths: string[];

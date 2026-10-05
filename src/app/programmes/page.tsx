@@ -18,7 +18,7 @@ const notes = [
   { t: "Placed by ability", b: "Players are placed by ability, not just age, and move up when they're ready." },
   {
     t: "Small groups",
-    b: `Net-based groups have a maximum of ${groupSizes.perNet} players per net — up to ${groupSizes.perSession} per session — and each net has its own coach. Little Cricketers has a maximum of ${groupSizes.littleCricketers}.`,
+    b: `Every programme is coached in small groups: a maximum of ${groupSizes.perNet} players per net, each with its own coach. Little Cricketers is our only larger group (maximum ${groupSizes.littleCricketers}).`,
   },
   { t: "Fielding every session", b: "Every session includes fielding, whatever the programme." },
   { t: "Session length", b: "Sessions may run for 1 hour, 90 minutes or 2 hours — we'll decide using what families tell us." },
@@ -30,7 +30,7 @@ export default function ProgrammesPage() {
       <PageHero
         eyebrow="Programmes and prices"
         title="Outstanding coaching at every stage."
-        intro={<p>From first steps with a soft ball to elite hard-ball specialist nets — expertly coached in larger groups, small groups or 1-to-1.</p>}
+        intro={<p>From first steps with a soft ball to elite hard-ball specialist nets — expertly coached in small groups, groups of three or 1-to-1.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
       />
       <Section tone="light" className="!pt-14">

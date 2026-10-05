@@ -50,7 +50,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How big are the groups?",
-        a: "Net-based groups have a maximum of six players per net (up to 18 per session), and each net has its own coach. Little Cricketers has a maximum of 24.",
+        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Little Cricketers is our only larger group, with a maximum of 24.",
       },
     ],
   },
@@ -67,7 +67,11 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "Who are the coaches?",
-        a: "We're bringing together the very best coaches from the area, and we'll introduce the team soon. Every HillRisers coach holds an ECB coaching qualification, an enhanced cricket DBS check and safeguarding training.",
+        a: "The very best coaches from the area: strong playing backgrounds, ECB coaching qualifications, specialist expertise and experience coaching juniors at every stage. Every HillRisers coach also holds an enhanced cricket DBS check and safeguarding training.",
+      },
+      {
+        q: "What is your coaching philosophy?",
+        a: "We coach every child as an individual, so they understand their own game rather than copying someone else's. Skills are practised and then tested under pressure, groups are small so players get more feedback, enjoyment comes first, and every player leaves knowing what to work on next.",
       },
     ],
   },

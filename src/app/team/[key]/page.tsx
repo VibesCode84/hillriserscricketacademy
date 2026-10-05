@@ -13,7 +13,7 @@ import { CoachInterestForm } from "@/components/CoachInterestForm";
 export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
   description:
-    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, on 1 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and helpers aged 16–18.",
+    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, on 1 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and junior helpers.",
   // Private page: shared directly with prospective coaches; never linked from the parent-facing site
   robots: { index: false, follow: false, nocache: true },
 };
@@ -57,7 +57,7 @@ const reasons = [
   },
   {
     t: "Support in the net",
-    b: "Helpers aged 16–18 support sessions where groups need it, leaving you free to coach.",
+    b: "Junior helpers support sessions where groups need it, leaving you free to coach.",
   },
 ];
 
@@ -66,7 +66,7 @@ const roles = [
   { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam or spin." },
   { role: "Girls Academy lead", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
   { role: "Early-years coach", detail: "Little Cricketers (ages 4–7), Sundays 9:00–9:50am." },
-  { role: "Helpers (aged 16–18)", detail: "Support coaches in sessions — a great first step into coaching." },
+  { role: "Junior helpers", detail: "Support coaches in sessions — a great first step into coaching." },
 ];
 
 const requirements = ["ECB coaching qualification", "Enhanced cricket DBS check", "Safeguarding training", "First aid — an advantage"];
