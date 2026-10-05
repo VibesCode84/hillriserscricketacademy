@@ -3,6 +3,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { Pool, type PoolClient } from "pg";
 import { sessions } from "../../data/sessions";
+import { summariseCoachAvailability } from "../interest-options";
 import type {
   Booking,
   BookingStore,
@@ -108,8 +109,7 @@ const toCoachInterest = (r: any): CoachInterest => ({
   coachingPhilosophy: r.coaching_philosophy ?? "",
   strengths: r.strengths ?? "",
   weaknesses: r.weaknesses ?? "",
-  availability: r.availability,
-  summerAvailability: opt(r.summer_availability),
+  availability: r.availability_slots ?? { saturday: [], sunday: [], weekdayBlocks: [], summer: [], notes: r.availability },
   dbsStatus: r.dbs_status,
   safeguardingStatus: r.safeguarding_status,
   firstAid: r.first_aid,
@@ -427,12 +427,14 @@ export class PgBookingStore implements BookingStore {
   async createCoachInterest(c: Parameters<BookingStore["createCoachInterest"]>[0]) {
     const { rows } = await this.q(
       `insert into coach_interests (id, name, email, phone, roles, specialism, qualifications, playing_background, availability,
-         summer_availability, dbs_status, safeguarding_status, first_aid, message, coaching_experience, coaching_philosophy, strengths, weaknesses)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning *`,
+         summer_availability, dbs_status, safeguarding_status, first_aid, message, coaching_experience, coaching_philosophy, strengths, weaknesses,
+         availability_slots)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) returning *`,
       [
         randomUUID(), c.name, c.email.trim().toLowerCase(), c.phone, c.roles, c.specialism ?? null, c.qualifications,
-        c.playingBackground ?? null, c.availability, c.summerAvailability ?? null, c.dbsStatus, c.safeguardingStatus, c.firstAid,
-        c.message ?? null, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses,
+        c.playingBackground ?? null, summariseCoachAvailability(c.availability), c.availability.summer.join(", ") || null,
+        c.dbsStatus, c.safeguardingStatus, c.firstAid,
+        c.message ?? null, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses, JSON.stringify(c.availability),
       ],
     );
     return toCoachInterest(rows[0]);

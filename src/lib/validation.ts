@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { coachRoles, interestOptions, valuesOf } from "./interest-options";
+import { coachAvailabilityOptions, coachRoles, interestOptions, valuesOf } from "./interest-options";
 
 const phone = z
   .string()
@@ -133,8 +133,20 @@ export const coachInterestSchema = z.object({
   coachingPhilosophy: z.string().trim().min(10, "Please tell us about your coaching philosophy").max(2000),
   strengths: z.string().trim().min(5, "Please tell us your strengths as a coach").max(2000),
   weaknesses: z.string().trim().min(5, "Please tell us what you're working on as a coach").max(2000),
-  availability: z.string().trim().min(2, "Please tell us when you're available").max(500),
-  summerAvailability: optionalText(500),
+  availability: z
+    .object({
+      saturday: multi(coachAvailabilityOptions.weekendHours),
+      sunday: multi(coachAvailabilityOptions.weekendHours),
+      weekdayBlocks: multi(coachAvailabilityOptions.weekdayBlocks),
+      summer: multi(coachAvailabilityOptions.summer),
+      notes: optionalText(500),
+      summerNotes: optionalText(500),
+    })
+    .refine((a) => a.saturday.length + a.sunday.length + a.weekdayBlocks.length > 0, {
+      message: "Please tick when you could coach in autumn and spring",
+      path: ["termTime"],
+    })
+    .refine((a) => a.summer.length > 0, { message: "Please tick your summer availability (or 'Not available')", path: ["summer"] }),
   dbsStatus: z.string().trim().min(2, "Please tell us your DBS status").max(200),
   safeguardingStatus: z.string().trim().min(2, "Please tell us your safeguarding training status").max(200),
   firstAid: z.boolean().default(false),

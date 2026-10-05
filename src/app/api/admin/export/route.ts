@@ -1,5 +1,5 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
-import { labelFor } from "@/lib/interest-options";
+import { coachAvailabilityOptions, labelFor } from "@/lib/interest-options";
 import { ageBand, ageOn } from "@/lib/age";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
@@ -70,10 +70,24 @@ export async function GET(req: Request) {
     const rows = await getStore().listCoachInterests();
     return csv(
       "hillrisers-coach-interest",
-      ["Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Coaching experience", "Coaching philosophy", "Strengths", "Weaknesses / working on", "Availability", "Summer availability", "DBS", "Safeguarding", "First aid", "Message"],
+      [
+        "Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Coaching experience",
+        "Coaching philosophy", "Strengths", "Weaknesses / working on",
+        ...coachAvailabilityOptions.weekendHours.map((h) => `Sat ${h}`),
+        ...coachAvailabilityOptions.weekendHours.map((h) => `Sun ${h}`),
+        ...coachAvailabilityOptions.weekdayBlocks,
+        "Availability notes",
+        ...coachAvailabilityOptions.summer.map((s) => `Summer: ${s}`),
+        "Summer notes", "DBS", "Safeguarding", "First aid", "Message",
+      ],
       rows.map((c) => [
         c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses,
-        c.availability, c.summerAvailability, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
+        ...coachAvailabilityOptions.weekendHours.map((h) => (c.availability.saturday.includes(h) ? "Yes" : "")),
+        ...coachAvailabilityOptions.weekendHours.map((h) => (c.availability.sunday.includes(h) ? "Yes" : "")),
+        ...coachAvailabilityOptions.weekdayBlocks.map((b) => (c.availability.weekdayBlocks.includes(b) ? "Yes" : "")),
+        c.availability.notes,
+        ...coachAvailabilityOptions.summer.map((s) => (c.availability.summer.includes(s) ? "Yes" : "")),
+        c.availability.summerNotes, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
       ]),
     );
   }

@@ -148,3 +148,4 @@ alter table coach_interests add column if not exists coaching_experience text;
 alter table coach_interests add column if not exists coaching_philosophy text;
 alter table coach_interests add column if not exists strengths text;
 alter table coach_interests add column if not exists weaknesses text;
+alter table coach_interests add column if not exists availability_slots jsonb;

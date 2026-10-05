@@ -3,7 +3,7 @@ import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sess
 import { launch } from "../data/launch";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
 import type { Booking, CampInterest, CoachInterest, InterestRegistration, Parent, Player } from "./booking/types";
-import { labelFor } from "./interest-options";
+import { labelFor, summariseCoachAvailability } from "./interest-options";
 
 type Email = { to: string; subject: string; text: string };
 
@@ -100,7 +100,7 @@ ${signOff}
   });
   await notifyAcademy(
     `Coach interest: ${c.name} — ${c.roles.join(", ")}`,
-    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nCoaching experience: ${c.coachingExperience}\nCoaching philosophy: ${c.coachingPhilosophy}\nStrengths: ${c.strengths}\nWeaknesses / working on: ${c.weaknesses}\nAvailability: ${c.availability}\nSummer: ${c.summerAvailability ?? "—"}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
+    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nCoaching experience: ${c.coachingExperience}\nCoaching philosophy: ${c.coachingPhilosophy}\nStrengths: ${c.strengths}\nWeaknesses / working on: ${c.weaknesses}\nAutumn/spring: ${summariseCoachAvailability(c.availability)}${c.availability.notes ? ` (${c.availability.notes})` : ""}\nSummer: ${c.availability.summer.join(", ") || "—"}${c.availability.summerNotes ? ` (${c.availability.summerNotes})` : ""}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
   );
 }
 

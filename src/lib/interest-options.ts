@@ -72,3 +72,52 @@ export const coachRoles = [
   "Early-years coach (Little Cricketers)",
   "Junior helper",
 ];
+
+/* ── Coach availability ─────────────────────────────────────────────────── */
+
+const hourLabel = (h: number) => {
+  const fmt = (x: number) => (x % 12 === 0 ? 12 : x % 12);
+  const suffix = (x: number) => (x < 12 ? "am" : "pm");
+  return suffix(h) === suffix(h + 1) ? `${fmt(h)}–${fmt(h + 1)}${suffix(h + 1)}` : `${fmt(h)}${suffix(h)}–${fmt(h + 1)}${suffix(h + 1)}`;
+};
+
+/** First and last start hour for weekend hourly slots (8am–6pm). Adjust to the hall's hours. */
+const WEEKEND_FIRST_HOUR = 8;
+const WEEKEND_LAST_HOUR = 17;
+
+export const coachAvailabilityOptions = {
+  /** Autumn & spring: hourly slots on Saturdays and Sundays */
+  weekendHours: Array.from({ length: WEEKEND_LAST_HOUR - WEEKEND_FIRST_HOUR + 1 }, (_, i) => hourLabel(WEEKEND_FIRST_HOUR + i)),
+  /** Autumn & spring: one 3-hour evening block on Wednesdays and Thursdays */
+  weekdayBlocks: ["Wednesday evening (3-hour block)", "Thursday evening (3-hour block)"],
+  /** Summer (cricket season, outdoors) */
+  summer: [
+    "Monday evening",
+    "Tuesday evening",
+    "Wednesday evening",
+    "Thursday evening",
+    "Friday evening",
+    "Saturday morning",
+    "Sunday morning",
+    "Not available in summer",
+  ],
+};
+
+export type CoachAvailability = {
+  saturday: string[];
+  sunday: string[];
+  weekdayBlocks: string[];
+  summer: string[];
+  notes?: string;
+  summerNotes?: string;
+};
+
+/** One-line summary for emails, admin and CSV */
+export function summariseCoachAvailability(a: CoachAvailability) {
+  const parts = [
+    a.saturday.length && `Sat ${a.saturday.join(", ")}`,
+    a.sunday.length && `Sun ${a.sunday.join(", ")}`,
+    ...a.weekdayBlocks,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "—";
+}

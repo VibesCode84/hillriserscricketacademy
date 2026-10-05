@@ -1,3 +1,5 @@
+import type { CoachAvailability } from "../interest-options";
+
 /**
  * Academy booking domain. The academy database is the source of truth for
  * players, sessions, capacity, bookings, attendance and pathway
@@ -145,8 +147,8 @@ export type CoachInterest = {
   strengths: string;
   /** Weaknesses / areas they're working on */
   weaknesses: string;
-  availability: string;
-  summerAvailability?: string;
+  /** Autumn/spring weekend hours, Wed/Thu evening blocks, summer sessions and notes */
+  availability: CoachAvailability;
   dbsStatus: string;
   safeguardingStatus: string;
   firstAid: boolean;

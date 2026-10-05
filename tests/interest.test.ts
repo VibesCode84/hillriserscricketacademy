@@ -8,6 +8,7 @@ import { coachInterestSchema, interestRegistrationSchema } from "../src/lib/vali
 import { programmes, REGISTRATION_FEE_PENCE, formatOfferPrice, formatProgrammePrice, getProgramme } from "../src/data/programmes";
 import { sessions } from "../src/data/sessions";
 import { ageBand } from "../src/lib/age";
+import { coachAvailabilityOptions, summariseCoachAvailability } from "../src/lib/interest-options";
 
 const freshStore = () => new FileBookingStore(path.join(mkdtempSync(path.join(tmpdir(), "hillrisers-")), "store.json"));
 
@@ -85,7 +86,12 @@ test("coach expressions of interest validate and store", async () => {
     coachingPhilosophy: "Keep it simple, keep it fun, keep players thinking.",
     strengths: "Batting technique and spin",
     weaknesses: "Building my seam coaching knowledge",
-    availability: "Weekday evenings",
+    availability: {
+      saturday: ["9–10am", "10–11am"],
+      sunday: [],
+      weekdayBlocks: ["Wednesday evening (3-hour block)"],
+      summer: ["Tuesday evening", "Sunday morning"],
+    },
     dbsStatus: "Enhanced cricket DBS 2025",
     safeguardingStatus: "Completed 2025",
     firstAid: true,
@@ -98,6 +104,27 @@ test("coach expressions of interest validate and store", async () => {
   assert.equal(c.strengths, "Batting technique and spin");
   assert.ok(!coachInterestSchema.safeParse({ ...input, roles: [] }).success);
   assert.ok(!coachInterestSchema.safeParse({ ...input, coachingPhilosophy: "", strengths: "", weaknesses: "" }).success);
+  assert.deepEqual(c.availability.saturday, ["9–10am", "10–11am"]);
+});
+
+test("coach availability: weekend hours 8am–6pm, Wed/Thu 3-hour blocks, summer required", () => {
+  const base = {
+    name: "Alex Coach", email: "a@example.com", phone: "07000 111222", roles: ["Lead coach"], qualifications: "ECB L2",
+    coachingExperience: "Ten seasons of junior coaching", coachingPhilosophy: "Players first, always.", strengths: "Batting",
+    weaknesses: "Admin", dbsStatus: "Enhanced 2025", safeguardingStatus: "2025",
+  };
+  assert.equal(coachAvailabilityOptions.weekendHours[0], "8–9am");
+  assert.equal(coachAvailabilityOptions.weekendHours.at(-1), "5–6pm");
+  assert.ok(coachAvailabilityOptions.weekendHours.includes("11am–12pm"));
+  const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [], summer: [] } });
+  assert.ok(!none.success);
+  const paths = none.error.issues.map((i) => i.path.join("."));
+  assert.ok(paths.includes("availability.termTime") && paths.includes("availability.summer"));
+  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["7–8pm"], sunday: [], weekdayBlocks: [], summer: ["Sunday morning"] } });
+  assert.ok(!bad.success);
+  const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], summer: ["Not available in summer"] } });
+  assert.ok(ok.success);
+  assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
 });
 
 test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Little Cricketers £18", () => {
