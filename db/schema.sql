@@ -142,3 +142,9 @@ create table if not exists camp_interests (
   notes text,
   created_at timestamptz not null default now()
 );
+
+-- Added when the coach form started asking about experience, philosophy, strengths and weaknesses
+alter table coach_interests add column if not exists coaching_experience text;
+alter table coach_interests add column if not exists coaching_philosophy text;
+alter table coach_interests add column if not exists strengths text;
+alter table coach_interests add column if not exists weaknesses text;

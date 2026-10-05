@@ -100,7 +100,7 @@ ${signOff}
   });
   await notifyAcademy(
     `Coach interest: ${c.name} — ${c.roles.join(", ")}`,
-    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nAvailability: ${c.availability}\nSummer: ${c.summerAvailability ?? "—"}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
+    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nCoaching experience: ${c.coachingExperience}\nCoaching philosophy: ${c.coachingPhilosophy}\nStrengths: ${c.strengths}\nWeaknesses / working on: ${c.weaknesses}\nAvailability: ${c.availability}\nSummer: ${c.summerAvailability ?? "—"}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
   );
 }
 

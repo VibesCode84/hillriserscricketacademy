@@ -184,6 +184,10 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                 {c.specialism && <div>Specialism: {c.specialism}</div>}
                 <div>Qualifications: {c.qualifications}</div>
                 {c.playingBackground && <div>Playing background: {c.playingBackground}</div>}
+                {c.coachingExperience && <div className="whitespace-pre-line">Coaching experience: {c.coachingExperience}</div>}
+                {c.coachingPhilosophy && <div className="whitespace-pre-line">Coaching philosophy: {c.coachingPhilosophy}</div>}
+                {c.strengths && <div className="whitespace-pre-line">Strengths: {c.strengths}</div>}
+                {c.weaknesses && <div className="whitespace-pre-line">Weaknesses / working on: {c.weaknesses}</div>}
                 <div>Availability: {c.availability}</div>
                 {c.summerAvailability && <div>Summer: {c.summerAvailability}</div>}
                 <div>DBS: {c.dbsStatus} · Safeguarding: {c.safeguardingStatus} · First aid: {c.firstAid ? "Yes" : "No"}</div>

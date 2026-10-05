@@ -166,8 +166,8 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
             title="Tell us about you."
             intro={
               <p className="text-ink-muted">
-                Your qualifications and playing background, the role(s) you&rsquo;re interested in, your availability (including summer),
-                and your DBS and safeguarding status.
+                Your qualifications, playing background and coaching experience; your coaching philosophy, strengths and weaknesses; the
+                role(s) you&rsquo;re interested in; your availability (including summer); and your DBS and safeguarding status.
                 {site.email && (
                   <>
                     {" "}Prefer email? Write to <a href={`mailto:${site.email}`} className="underline underline-offset-4">{site.email}</a>.

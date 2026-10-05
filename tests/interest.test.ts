@@ -81,6 +81,10 @@ test("coach expressions of interest validate and store", async () => {
     roles: ["Specialist coach"],
     specialism: "Spin",
     qualifications: "ECB Level 2",
+    coachingExperience: "Club juniors U9 to U15 for five seasons",
+    coachingPhilosophy: "Keep it simple, keep it fun, keep players thinking.",
+    strengths: "Batting technique and spin",
+    weaknesses: "Building my seam coaching knowledge",
     availability: "Weekday evenings",
     dbsStatus: "Enhanced cricket DBS 2025",
     safeguardingStatus: "Completed 2025",
@@ -91,7 +95,9 @@ test("coach expressions of interest validate and store", async () => {
   const [c] = await store.listCoachInterests();
   assert.equal(c.name, "Sam Coach");
   assert.deepEqual(c.roles, ["Specialist coach"]);
+  assert.equal(c.strengths, "Batting technique and spin");
   assert.ok(!coachInterestSchema.safeParse({ ...input, roles: [] }).success);
+  assert.ok(!coachInterestSchema.safeParse({ ...input, coachingPhilosophy: "", strengths: "", weaknesses: "" }).success);
 });
 
 test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Little Cricketers £18", () => {

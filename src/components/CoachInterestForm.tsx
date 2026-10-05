@@ -91,7 +91,11 @@ export function CoachInterestForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         {text("specialism", "Specialism", { optional: true, placeholder: "e.g. batting incl. sweeps and ramps, seam, spin" })}
         {text("qualifications", "Coaching qualifications", { placeholder: "e.g. ECB Level 2" })}
-        {text("playingBackground", "Playing background", { optional: true, area: true })}
+        {text("playingBackground", "Playing background", { optional: true, area: true, placeholder: "e.g. club 1st XI, county age-group, league cricket" })}
+        {text("coachingExperience", "Your coaching experience", { area: true, placeholder: "Who you've coached, where and at what level — e.g. club juniors U9–U15, school cricket, county age-group" })}
+        {text("coachingPhilosophy", "Your coaching philosophy", { area: true, placeholder: "In a few sentences, how do you like to coach — and why?" })}
+        {text("strengths", "Your strengths as a coach", { area: true, placeholder: "What do you do especially well?" })}
+        {text("weaknesses", "Your weaknesses, or areas you're working on", { area: true, placeholder: "What are you working to improve as a coach?" })}
         {text("availability", "Availability (days and times)", { area: true, placeholder: "e.g. weekday evenings after 6pm, Sunday mornings" })}
         {text("summerAvailability", "Summer availability", { optional: true })}
         {text("dbsStatus", "DBS status", { placeholder: "e.g. enhanced cricket DBS, issued 2025" })}

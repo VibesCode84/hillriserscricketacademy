@@ -137,6 +137,14 @@ export type CoachInterest = {
   specialism?: string;
   qualifications: string;
   playingBackground?: string;
+  /** Who, where and at what level they have coached */
+  coachingExperience: string;
+  /** Their coaching philosophy, in their own words */
+  coachingPhilosophy: string;
+  /** Strengths as a coach */
+  strengths: string;
+  /** Weaknesses / areas they're working on */
+  weaknesses: string;
   availability: string;
   summerAvailability?: string;
   dbsStatus: string;

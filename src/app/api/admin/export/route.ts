@@ -70,9 +70,9 @@ export async function GET(req: Request) {
     const rows = await getStore().listCoachInterests();
     return csv(
       "hillrisers-coach-interest",
-      ["Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Availability", "Summer availability", "DBS", "Safeguarding", "First aid", "Message"],
+      ["Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Coaching experience", "Coaching philosophy", "Strengths", "Weaknesses / working on", "Availability", "Summer availability", "DBS", "Safeguarding", "First aid", "Message"],
       rows.map((c) => [
-        c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground,
+        c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses,
         c.availability, c.summerAvailability, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
       ]),
     );
