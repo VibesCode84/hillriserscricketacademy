@@ -1,6 +1,6 @@
 import { site } from "@/data/site";
 
-const items = [`Ages ${site.ages}`, "Max six per net", "Girls-only pathway", "John Lyon School"];
+const items = ["The area's best coaches", "Max six per net", "Girls-only pathway", "John Lyon School"];
 
 export function TrustStrip({ className = "" }: { className?: string }) {
   return (

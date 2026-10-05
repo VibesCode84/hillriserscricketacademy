@@ -10,7 +10,7 @@ export const site = {
   name: "HillRisers Cricket Academy",
   shortName: "HillRisers",
   description:
-    "Specialist junior cricket coaching at John Lyon School, Harrow on the Hill. Small groups with up to six players per net, a girls-only pathway, and a timetable built around the families who register.",
+    "The very best junior cricket coaching in Harrow. Elite coaches from the area, small groups of up to six per net, a girls-only pathway and coaching built around every child — at John Lyon School, Harrow on the Hill.",
   /** Used for canonical URLs, metadata and links in emails */
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? vercelUrl ?? "https://hillriserscricketacademytest.vercel.app").replace(/\/$/, ""),
   /** Public contact email — TODO: add when confirmed */

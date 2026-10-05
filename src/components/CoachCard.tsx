@@ -44,9 +44,8 @@ export function CoachesComingSoon({ tone = "light" }: { tone?: "dark" | "light" 
       <p className={`eyebrow ${light ? "!text-gold-deep" : ""}`}>Coaching team</p>
       <p className={`mt-4 font-serif text-3xl ${light ? "text-navy-950" : "text-cream"}`}>Coaching team announced soon.</p>
       <p className={`mt-3 max-w-2xl leading-relaxed ${light ? "text-ink-muted" : "text-slate"}`}>
-        We&rsquo;re recruiting now. Every HillRisers coach will hold an ECB coaching qualification, an enhanced cricket DBS check and
-        safeguarding training. We&rsquo;ll introduce each coach — with their qualifications and playing background — once they&rsquo;ve
-        signed.
+        We&rsquo;re bringing together the very best coaches from the area. Every HillRisers coach holds an ECB coaching qualification, an
+        enhanced cricket DBS check and safeguarding training — and we can&rsquo;t wait to introduce them.
       </p>
     </div>
   );

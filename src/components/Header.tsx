@@ -60,9 +60,6 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-4 xl:flex">
-          <Link href="/coach-with-us" className="link-underline whitespace-nowrap text-[0.9rem] font-medium text-gold-soft hover:text-gold">
-            Coach with us
-          </Link>
           <ButtonLink href="/register" className="!px-5 !py-2.5">
             Register Interest
           </ButtonLink>
@@ -112,7 +109,7 @@ export function Header() {
           ))}
           <div className="mt-8 flex flex-col gap-3">
             <ButtonLink href="/register" className="w-full">Register Interest</ButtonLink>
-            <ButtonLink href="/coach-with-us" variant="secondary" className="w-full">Coach with us</ButtonLink>
+            <ButtonLink href="/how-booking-works" variant="secondary" className="w-full">How it works</ButtonLink>
           </div>
           {site.phone && (
             <p className="mt-8 text-sm text-slate">

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { coaches } from "@/data/coaches";
 import { groupSizes } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
@@ -11,7 +10,7 @@ import { CTASection } from "@/components/CTASection";
 
 export const metadata: Metadata = {
   title: "Coaching Team",
-  description: "The HillRisers coaching team will be announced soon. Every coach will hold an ECB qualification, an enhanced cricket DBS check and safeguarding training.",
+  description: "The very best junior cricket coaches from the Harrow area. Every HillRisers coach holds an ECB qualification, an enhanced cricket DBS check and safeguarding training.",
   alternates: { canonical: "/coaches" },
 };
 
@@ -20,14 +19,14 @@ export default function CoachesPage() {
     <>
       <PageHero
         eyebrow="The coaching team"
-        title="Coaches who know every player."
+        title="The very best coaches from the area."
         intro={
           <p>
-            With a maximum of {groupSizes.perNet} players per net and each net with its own coach, every player gets proper attention — and a
-            coach who knows their game.
+            Expert, experienced and passionate about young cricketers. With a maximum of {groupSizes.perNet} players per net and each net with
+            its own coach, every player gets outstanding attention — and a coach who knows their game.
           </p>
         }
-        actions={<ButtonLink href="/coach-with-us" variant="secondary">Coach with us</ButtonLink>}
+        actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
       />
       <Section tone="light">
         {coaches.length ? (
@@ -41,9 +40,6 @@ export default function CoachesPage() {
         ) : (
           <CoachesComingSoon />
         )}
-        <p className="mt-8 text-ink-muted">
-          Are you a qualified cricket coach? <Link href="/coach-with-us" className="font-semibold text-navy-950 underline underline-offset-4">Find out about coaching with us</Link>.
-        </p>
       </Section>
       <CTASection />
     </>

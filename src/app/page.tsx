@@ -16,8 +16,13 @@ import { VenueFeature } from "@/components/VenueFeature";
 
 const pillars = [
   {
+    title: "The area's best coaches",
+    body: "We're bringing together the very best coaches from the area — experienced, qualified and passionate about developing young players.",
+    icon: "M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z",
+  },
+  {
     title: "Small groups, own coach",
-    body: "A maximum of six players per net, and each net has its own coach — so every player gets plenty of turns and feedback.",
+    body: "A maximum of six players per net, and each net has its own coach — so every player gets plenty of turns and expert feedback.",
     icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0",
   },
   {
@@ -27,13 +32,8 @@ const pillars = [
   },
   {
     title: "Specialist skills",
-    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")} — with fielding in every session.`,
+    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")} — with fielding in every session, and larger groups, small groups or 1-to-1.`,
     icon: "M4 20 18 6m-4 0h4v4M6 14l4 4",
-  },
-  {
-    title: "Every format",
-    body: "Larger groups, small groups of three, and 1-to-1 coaching — plus a girls-only pathway.",
-    icon: "M4 6h16M4 12h16M4 18h10",
   },
 ];
 
@@ -48,13 +48,13 @@ export default function HomePage() {
         <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
             <SectionHeader
-              eyebrow="A new academy, built with you"
-              title="Specialist coaching, shaped by the families who join."
+              eyebrow="Why HillRisers"
+              title="The finest junior cricket coaching in Harrow."
               intro={
                 <p className="text-ink-muted">
-                  HillRisers is a new cricket academy launching at John Lyon School on 1 November. Rather than fix a timetable and hope it
-                  suits you, we&rsquo;re asking families first — when children can attend, how long sessions should be, and what they want
-                  from cricket — and building the timetable around the answers.
+                  HillRisers brings the very best coaches from the area to John Lyon School, Harrow on the Hill, from 1 November. Every
+                  child gets outstanding, individual coaching in small groups — and because we build the timetable around the families who
+                  register, it fits around your life too.
                 </p>
               }
             />
@@ -81,8 +81,8 @@ export default function HomePage() {
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <SectionHeader
             eyebrow="Programmes and price guide"
-            title="Something for every young cricketer."
-            intro={<p className="text-ink-muted">From first steps with a soft ball to hard-ball specialist nets.</p>}
+            title="World-class coaching at every stage."
+            intro={<p className="text-ink-muted">From first steps with a soft ball to hard-ball specialist nets — exceptional coaching for every young cricketer.</p>}
           />
           <Reveal>
             <Link href="/programmes" className="link-underline shrink-0 text-sm font-semibold text-navy-950">More about the programmes →</Link>
@@ -100,10 +100,10 @@ export default function HomePage() {
           <div className="flex items-center py-20 md:py-28">
             <Reveal className="container-x max-w-2xl lg:px-16">
               <p className="eyebrow">Girls cricket</p>
-              <h2 className="mt-5 text-[2.5rem] leading-[1.05] text-cream md:text-[3.5rem]">A girls-only pathway.</h2>
+              <h2 className="mt-5 text-[2.5rem] leading-[1.05] text-cream md:text-[3.5rem]">The best place for girls to play cricket.</h2>
               <p className="mt-6 text-lg leading-relaxed text-slate">
-                Girls Development (8–11) and Girls Performance (11–15) run in the same formats as our mixed groups, girls only. Girls are
-                also welcome in every mixed group.
+                A first-class girls-only pathway: Girls Development (8–11) and Girls Performance (11–15), with the same outstanding coaching
+                as our mixed groups. Girls are welcome in every mixed group too.
               </p>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href="/girls" arrow className="group">Girls cricket</ButtonLink>
@@ -137,10 +137,7 @@ export default function HomePage() {
       {/* Coaching team */}
       <Section tone="cream">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <SectionHeader eyebrow="The coaching team" title="Qualified, checked and announced soon." />
-          <Reveal>
-            <ButtonLink href="/coach-with-us" variant="dark">Coach with us</ButtonLink>
-          </Reveal>
+          <SectionHeader eyebrow="The coaching team" title="The very best coaches from the area." />
         </div>
         <div className="mt-12">
           {coaches.length ? (

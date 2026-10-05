@@ -11,7 +11,19 @@ export const metadata: Metadata = {
   description:
     "HillRisers Cricket Academy is a start-up launching at John Lyon School, Harrow on the Hill, on 1 November. We're looking for lead, specialist, girls and early-years coaches, and helpers aged 16–18.",
   alternates: { canonical: "/coach-with-us" },
+  // Private page: shared directly with prospective coaches, not linked from the public site
+  robots: { index: false, follow: false },
 };
+
+// Candid status for prospective coaches (this page is private)
+const whereWeAre = [
+  { t: "Launching 1 November", b: "Sessions start at John Lyon School with a trial week on 1–7 November, and regular sessions from 8 November." },
+  { t: "No players yet", b: "Families are registering their interest now. We'll know how many players — and how many coaching hours — once registrations close on 19 October." },
+  { t: "Hours follow demand", b: "We can't promise a set number of hours until the timetable is built. It will be set from parent feedback and coach availability." },
+  { t: "Indoors in autumn and spring", b: "Three indoor nets in the John Lyon sports hall, with an 11-yard run-up — so indoor seam work focuses on action, accuracy and variations. Outdoors in summer." },
+  { t: "Equipment is planned", b: "A bowling machine and video analysis are planned, not yet bought." },
+  { t: "Small and hands-on", b: "It's a start-up. You'll be part of a small team, and your input will shape how we coach from day one." },
+];
 
 const reasons = [
   {
@@ -20,7 +32,7 @@ const reasons = [
   },
   {
     t: "Longer blocks, not odd hours",
-    b: "We plan coaching in longer blocks rather than scattered single hours, so your time — and the journey — is worth it.",
+    b: "We aim to plan coaching in longer blocks rather than scattered single hours, so your time — and the journey — is worth it.",
   },
   {
     t: "Freedom to coach your way",
@@ -65,6 +77,23 @@ export default function CoachWithUsPage() {
         actions={<ButtonLink href="#apply" arrow className="group">Express your interest</ButtonLink>}
         image={{ alt: "Coach working with a young batter in an indoor net" }}
       />
+
+      <Section tone="cream">
+        <SectionHeader
+          eyebrow="Where we are now"
+          title="An honest picture."
+          intro={<p className="text-ink-muted">We&rsquo;d rather you joined knowing exactly where things stand.</p>}
+          className="mb-12"
+        />
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          {whereWeAre.map((r, i) => (
+            <Reveal key={r.t} delay={(i % 3) * 80} className="border-t border-navy-950/10 pt-5">
+              <h3 className="text-2xl text-navy-950">{r.t}</h3>
+              <p className="mt-2 leading-relaxed text-ink-muted">{r.b}</p>
+            </Reveal>
+          ))}
+        </div>
+      </Section>
 
       <Section tone="light">
         <SectionHeader eyebrow="Why coach with HillRisers" title="Good pay, good players, and the freedom to coach." className="mb-12" />

@@ -23,19 +23,19 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
       <HeroArtwork />
       <div className="container-x relative grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="eyebrow">HillRisers Cricket Academy · Launching 1 November</p>
+          <p className="eyebrow">HillRisers Cricket Academy · John Lyon, Harrow on the Hill</p>
           <h1 className="mt-6 text-[2.75rem] leading-[1] text-cream sm:text-[3.75rem] lg:text-[4.5rem]">
-            Specialist cricket coaching at John Lyon, <em className="font-normal italic text-gold-soft">Harrow on the Hill.</em>
+            Elite cricket coaching, built around <em className="font-normal italic text-gold-soft">your child.</em>
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate md:text-xl">
-            Small-group coaching built around the needs of each cricket-loving child. Tell us when your child can attend and what they
-            want from cricket — we&rsquo;ll build the timetable around you.
+            The very best coaches from the area, in small groups, with coaching shaped around the needs of every cricket-loving child.
+            Tell us when your child can attend and what they want from cricket — we&rsquo;ll build the timetable around you.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
             <ButtonLink href="/how-booking-works" variant="secondary">How booking works</ButtonLink>
           </div>
-          <p className="mt-4 text-sm text-slate">Registered families get priority booking before places open to everyone.</p>
+          <p className="mt-4 text-sm text-slate">Launching 1 November. Registered families get priority booking before places open to everyone.</p>
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 

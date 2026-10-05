@@ -67,7 +67,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "Who are the coaches?",
-        a: "We'll introduce the coaching team once each coach has signed. Every HillRisers coach will hold an ECB coaching qualification, an enhanced cricket DBS check and safeguarding training.",
+        a: "We're bringing together the very best coaches from the area, and we'll introduce the team soon. Every HillRisers coach holds an ECB coaching qualification, an enhanced cricket DBS check and safeguarding training.",
       },
     ],
   },

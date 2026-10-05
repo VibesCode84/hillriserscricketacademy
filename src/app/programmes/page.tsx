@@ -29,8 +29,8 @@ export default function ProgrammesPage() {
     <>
       <PageHero
         eyebrow="Programmes and price guide"
-        title="Programmes for every stage."
-        intro={<p>From first steps with a soft ball to hard-ball specialist nets — in larger groups, small groups or 1-to-1.</p>}
+        title="Outstanding coaching at every stage."
+        intro={<p>From first steps with a soft ball to elite hard-ball specialist nets — expertly coached in larger groups, small groups or 1-to-1.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
       />
       <Section tone="light" className="!pt-14">

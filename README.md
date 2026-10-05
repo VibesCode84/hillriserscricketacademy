@@ -30,14 +30,10 @@ npm run build
 | `src/lib/interest-options.ts` | Every option on the interest form and the coach form, shared by the form, server validation, emails, admin and CSV |
 | `src/data/sessions.ts` | Bookable sessions for the booking engine. Currently only Little Cricketers. Add sessions here when the timetable is published. |
 
-**Copy rules (from the brief):**
-- UK English.
-- Be honest that HillRisers is a start-up.
-- No superlatives that need evidence.
-- No invented testimonials, numbers or results.
-- No coach names until they've signed.
-- No fixed times except Little Cricketers.
-- Describe the bowling machine and video analysis as "planned" until they're bought.
+**Copy rules:**
+- **Public site:** a confident, big-sell tone is fine ("the very best coaches from the area"). Never invent facts: no fake testimonials, player numbers or results, and no coach names until they've signed.
+- **Coach with us** (`/coach-with-us`): a **private page**, not linked from the public site and hidden from search engines. Share the link directly with coaches. It's candid about where HillRisers is: a start-up with no players yet, hours depending on demand, equipment planned.
+- No fixed times anywhere except Little Cricketers.
 
 ## Register-your-interest form (`/register`)
 

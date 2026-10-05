@@ -38,7 +38,7 @@ export default function LittleCricketersPage() {
       <PageHero
         eyebrow="Little Cricketers · Ages 4–7"
         title="Their first cricket session should make them want another one."
-        intro={<p>Soft ball, movement, fun and confidence — a first taste of cricket for children aged 4–7.</p>}
+        intro={<p>The perfect first step into cricket: soft ball, movement, fun and confidence for children aged 4–7, with brilliant coaches who love working with young children.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
         image={{ alt: "Young children playing a soft-ball cricket game" }}
       >

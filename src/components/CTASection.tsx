@@ -3,8 +3,8 @@ import { ButtonLink } from "./Button";
 import { Reveal } from "./Reveal";
 
 export function CTASection({
-  title = "Help us build the timetable around your child.",
-  body = "Tell us when your child can attend and what they want from cricket. Registered families get priority booking.",
+  title = "Give your child the very best start in cricket.",
+  body = "Register your interest today. Tell us when your child can attend and what they want from cricket — registered families get priority booking.",
   primary = { href: "/register", label: "Register your interest" },
   secondary = { href: "/how-booking-works", label: "How booking works" },
   children,

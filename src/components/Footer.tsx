@@ -19,7 +19,6 @@ const groups = [
     links: [
       { href: "/register", label: "Register Your Interest" },
       { href: "/coaches", label: "Coaching Team" },
-      { href: "/coach-with-us", label: "Coach with Us" },
       { href: "/refer", label: "Invite a Friend" },
       { href: "/faq", label: "FAQs" },
       { href: "/contact", label: "Contact" },
@@ -45,7 +44,7 @@ export function Footer() {
           <div className="max-w-sm">
             <Logo />
             <p className="mt-6 text-[0.95rem] leading-relaxed text-slate">
-              Specialist junior cricket coaching for ages {site.ages} at {site.venue.name}, Harrow on the Hill. Launching{" "}
+              The very best junior cricket coaching for ages {site.ages}, at {site.venue.name}, Harrow on the Hill. Launching{" "}
               1 November.
             </p>
             {(site.phone || site.email) && (

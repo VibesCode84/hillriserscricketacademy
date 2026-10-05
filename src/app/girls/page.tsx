@@ -44,8 +44,8 @@ export default function GirlsPage() {
     <>
       <PageHero
         eyebrow="Girls cricket"
-        title="A girls-only pathway."
-        intro={<p>Specialist coaching in a girls-only environment, from first steps with a hard ball to performance nets.</p>}
+        title="The best place for girls to play cricket."
+        intro={<p>Outstanding specialist coaching in a girls-only environment — from first steps with a hard ball to performance nets.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
         image={{ alt: "Girls playing cricket in an indoor net" }}
       />
