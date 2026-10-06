@@ -1,5 +1,5 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
-import { coachAvailabilityOptions, labelFor } from "@/lib/interest-options";
+import { coachAvailabilityOptions, interestOptions, labelFor } from "@/lib/interest-options";
 import { ageBand, ageOn } from "@/lib/age";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       [
         "Registered at", "Parent", "Email", "Mobile", "Postcode", "Heard about us", "News & offers",
         "Child first name", "Date of birth", "Age today", "Age band", "School", "Club", "Girls-only", "Level", "Main role",
-        "Weekday evenings", "Saturday", "Sunday morning", "Sunday afternoon", "Availability notes", "How often",
+        ...interestOptions.availability, "Availability notes", "How often",
         "Small group (up to 6 per net)", "Group of 3", "1-to-1", "1 hour", "90 minutes", "2 hours",
         "Wants", "Other interests", "Payment preference",
       ],
@@ -56,8 +56,7 @@ export async function GET(req: Request) {
             r.createdAt, r.parentName, r.email, r.mobile, r.postcode, r.heardAbout, r.marketingConsent ? "Yes" : "No",
             c.firstName, c.dateOfBirth, age, ageBand(age), c.school, c.club, labelFor("girlsOnly", c.girlsOnly),
             labelFor("level", c.level), labelFor("mainRole", c.mainRole),
-            yes(c.availability, "Weekday evenings"), yes(c.availability, "Saturday"), yes(c.availability, "Sunday morning"),
-            yes(c.availability, "Sunday afternoon"), c.availabilityNotes, labelFor("frequency", c.frequency),
+            ...interestOptions.availability.map((o) => yes(c.availability, o)), c.availabilityNotes, labelFor("frequency", c.frequency),
             yes(c.formats, "Small group (up to 6 per net)"), yes(c.formats, "Group of 3"), yes(c.formats, "1-to-1"),
             yes(c.sessionLengths, "1 hour"), yes(c.sessionLengths, "90 minutes"), yes(c.sessionLengths, "2 hours"),
             c.wants.join(" / "), c.otherInterests.join(" / "), labelFor("paymentPreference", c.paymentPreference),
@@ -73,16 +72,16 @@ export async function GET(req: Request) {
       [
         "Received", "Name", "Email", "Phone", "Roles", "Specialism", "Qualifications", "Playing background", "Coaching experience",
         "Coaching philosophy", "Strengths", "Weaknesses / working on",
-        ...coachAvailabilityOptions.weekendHours.map((h) => `Sat ${h}`),
-        ...coachAvailabilityOptions.weekendHours.map((h) => `Sun ${h}`),
+        ...coachAvailabilityOptions.saturdayHours.map((h) => `Sat ${h}`),
+        ...coachAvailabilityOptions.sundayHours.map((h) => `Sun ${h}`),
         ...coachAvailabilityOptions.weekdayBlocks,
         "Availability notes",
         "Summer notes", "DBS", "Safeguarding", "First aid", "Message",
       ],
       rows.map((c) => [
         c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses,
-        ...coachAvailabilityOptions.weekendHours.map((h) => (c.availability.saturday.includes(h) ? "Yes" : "")),
-        ...coachAvailabilityOptions.weekendHours.map((h) => (c.availability.sunday.includes(h) ? "Yes" : "")),
+        ...coachAvailabilityOptions.saturdayHours.map((h) => (c.availability.saturday.includes(h) ? "Yes" : "")),
+        ...coachAvailabilityOptions.sundayHours.map((h) => (c.availability.sunday.includes(h) ? "Yes" : "")),
         ...coachAvailabilityOptions.weekdayBlocks.map((b) => (c.availability.weekdayBlocks.includes(b) ? "Yes" : "")),
         c.availability.notes,
         c.availability.summerNotes, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,

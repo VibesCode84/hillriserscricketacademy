@@ -13,7 +13,7 @@ import { CoachInterestForm } from "@/components/CoachInterestForm";
 export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
   description:
-    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, on 1 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and junior helpers.",
+    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, in the week commencing 2 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and junior helpers.",
   // Private page: shared directly with prospective coaches; never linked from the parent-facing site
   robots: { index: false, follow: false, nocache: true },
 };
@@ -26,11 +26,11 @@ export function generateStaticParams() {
 
 // The opportunity, for prospective coaches (this page is private)
 const opportunity = [
-  { t: "Launching 1 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 1–7 November and regular sessions from 8 November." },
+  { t: "Launching w/c 2 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 4–7 November and regular sessions from 8 November." },
   { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
   { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
-  { t: "Indoors and out", b: "Three indoor nets at John Lyon through autumn and spring. In summer the sports hall is used for exams, and we expect to coach outdoors with outdoor nets." },
-  { t: "Kit on the way", b: "A bowling machine and video analysis are coming, so you can show players exactly what you see." },
+  { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall, with outdoor nets expected in summer." },
+  { t: "Bowling machines", b: "Bowling machines are available through autumn and spring, with video analysis on the way." },
   { t: "A founding team", b: "Be one of the coaches who shapes HillRisers from the very first session — your ideas will define how we coach." },
 ];
 
@@ -53,7 +53,7 @@ const reasons = [
   },
   {
     t: "Technology to help",
-    b: "Bowling machines and video analysis will help you give players more quality balls and show them exactly what you see.",
+    b: "Bowling machines give players more quality balls, and video analysis is on the way so you can show them exactly what you see.",
   },
   {
     t: "Support in the net",
@@ -90,7 +90,7 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
         title="Join the founding coaching team."
         intro={
           <p>
-            HillRisers launches at {site.venue.name}, Harrow on the Hill, on 1 November — and we want the very best coaches in the area to
+            HillRisers launches at {site.venue.name}, Harrow on the Hill, in the week commencing 2 November — and we want the very best coaches in the area to
             help us build something special. Market-leading pay, small groups, great facilities and the freedom to coach your way.
           </p>
         }

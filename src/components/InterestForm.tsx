@@ -281,7 +281,7 @@ export function InterestForm() {
                   id={`ri-c${i}-avail`}
                   rows={2}
                   className="field"
-                  placeholder="e.g. Wednesdays after 6pm; not before 10am on Saturdays"
+                  placeholder="e.g. alternate Sundays only; can’t do Thursdays before Christmas"
                   value={c.availabilityNotes}
                   onChange={(ev) => setChild(i, { availabilityNotes: ev.target.value })}
                 />

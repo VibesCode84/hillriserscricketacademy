@@ -153,12 +153,30 @@ function Tick({ label, checked, onChange, compact = false }: { label: string; ch
   );
 }
 
-function HourGrid({ day, value, onChange }: { day: string; value: string[]; onChange: (v: string[]) => void }) {
-  const hours = opts.weekendHours;
+function HourGrid({
+  day,
+  hours,
+  value,
+  onChange,
+  split = false,
+}: {
+  day: string;
+  hours: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  /** Offer morning / afternoon shortcuts */
+  split?: boolean;
+}) {
+  // A slot is a morning slot if it starts before noon ("9–10am", "11am–12pm")
+  const isMorning = (h: string) => h.endsWith("am") || h.split("–")[0].endsWith("am");
   const quick = [
-    { label: "All day", set: hours },
-    { label: "Mornings", set: hours.filter((h) => h.endsWith("am") || h === "11am–12pm") },
-    { label: "Afternoons", set: hours.filter((h) => h.endsWith("pm") && h !== "11am–12pm") },
+    { label: "All", set: hours },
+    ...(split
+      ? [
+          { label: "Mornings", set: hours.filter(isMorning) },
+          { label: "Afternoons", set: hours.filter((h) => !isMorning(h)) },
+        ]
+      : []),
     { label: "Clear", set: [] as string[] },
   ];
   return (
@@ -173,7 +191,7 @@ function HourGrid({ day, value, onChange }: { day: string; value: string[]; onCh
           ))}
         </div>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {hours.map((h) => (
           <Tick key={h} label={h} compact checked={value.includes(h)} onChange={() => onChange(toggleIn(value, h))} />
         ))}
@@ -197,11 +215,12 @@ function AvailabilityPicker(props: {
       <section className="rounded-2xl bg-cream p-5 md:p-6">
         <h3 className="font-serif text-2xl text-navy-950">Autumn and spring availability</h3>
         <p className="mt-1 text-sm text-ink-muted">
-          Indoors at John Lyon. Tick every hour you could coach at weekends, and whether you could take a 3-hour evening block midweek.
+          Indoors at John Lyon, with bowling machines available. Tick every hour you could coach at weekends, and whether you could take
+          the 3-hour evening block on Wednesdays or Thursdays.
         </p>
         <div className="mt-5 space-y-5">
-          <HourGrid day="Saturdays" value={props.saturday} onChange={props.setSaturday} />
-          <HourGrid day="Sundays" value={props.sunday} onChange={props.setSunday} />
+          <HourGrid day="Saturdays (2:30–5:30pm)" hours={opts.saturdayHours} value={props.saturday} onChange={props.setSaturday} />
+          <HourGrid day="Sundays (9am–5pm)" hours={opts.sundayHours} value={props.sunday} onChange={props.setSunday} split />
           <fieldset>
             <legend className="label">Midweek evenings</legend>
             <div className="mt-1 grid gap-2 sm:grid-cols-2">
@@ -221,8 +240,8 @@ function AvailabilityPicker(props: {
       <section className="rounded-2xl bg-navy-950 p-5 text-cream md:p-6">
         <h3 className="font-serif text-2xl">Summer: to be confirmed</h3>
         <p className="mt-1 text-sm leading-relaxed text-slate">
-          The summer timetable is still to be confirmed. The John Lyon sports hall isn&rsquo;t available during exam season, so we expect to
-          coach outdoors, with outdoor nets available. We&rsquo;ll talk to you about summer sessions nearer the time.
+          The summer timetable is still to be confirmed. The sports hall is unavailable on a small number of dates during exam season, and
+          we&rsquo;re expecting to have outdoor nets available too. We&rsquo;ll talk to you about summer sessions nearer the time.
         </p>
         <label htmlFor="co-summerNotes" className="label mt-5 !text-cream">Any summer commitments we should know about? <span className="font-normal text-slate">(optional)</span></label>
         <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play club cricket on Saturdays" />

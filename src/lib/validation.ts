@@ -135,8 +135,8 @@ export const coachInterestSchema = z.object({
   weaknesses: z.string().trim().min(5, "Please tell us what you're working on as a coach").max(2000),
   availability: z
     .object({
-      saturday: multi(coachAvailabilityOptions.weekendHours),
-      sunday: multi(coachAvailabilityOptions.weekendHours),
+      saturday: multi(coachAvailabilityOptions.saturdayHours),
+      sunday: multi(coachAvailabilityOptions.sundayHours),
       weekdayBlocks: multi(coachAvailabilityOptions.weekdayBlocks),
       notes: optionalText(500),
       summerNotes: optionalText(500),

@@ -104,7 +104,7 @@ export type ChildInterest = {
   formats: string[];
   /** 1 hour / 90 minutes / 2 hours (multi) */
   sessionLengths: string[];
-  /** Weekday evenings / Saturday / Sunday morning / Sunday afternoon (multi) */
+  /** Wednesday evening / Thursday evening / Saturday afternoon / Sunday morning / Sunday afternoon (multi) */
   availability: string[];
   availabilityNotes?: string;
   frequency: "once" | "twice" | "not-sure";

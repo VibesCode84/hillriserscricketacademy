@@ -7,14 +7,15 @@ export const keyDates: { date: string; label: string; detail?: string }[] = [
   { date: "19 October", label: "Registrations close" },
   { date: "21 October", label: "Priority booking for registered families", detail: "48 hours before booking opens to everyone" },
   { date: "23 October", label: "Trial booking opens to everyone" },
-  { date: "1–7 November", label: "Trial week" },
+  { date: "4–7 November", label: "Trial week" },
   { date: "9 November", label: "Decision deadline", detail: "Autumn + spring balance, or first monthly payment, due" },
 ];
 
 export const launch = {
-  /** Launch at John Lyon */
-  launchDate: "1 November",
-  trialWeek: "1–7 November",
+  /** Launch at John Lyon (Licence to Occupy starts Monday 2 November 2026) */
+  launchDate: "week commencing 2 November",
+  /** First hall slots: Wednesday 4, Thursday 5, Saturday 7 November */
+  trialWeek: "4–7 November",
   regularSessionsFrom: "8 November",
   decisionDeadline: "9 November",
   priorityBookingHours: 48,

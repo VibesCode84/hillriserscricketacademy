@@ -53,7 +53,7 @@ export default function HomePage() {
               title="The finest junior cricket coaching in Harrow."
               intro={
                 <p className="text-ink-muted">
-                  HillRisers brings the very best coaches from the area to John Lyon School, Harrow on the Hill, from 1 November. Every
+                  HillRisers brings the very best coaches from the area to John Lyon School, Harrow on the Hill, from the week commencing 2 November. Every
                   child gets outstanding, individual coaching in small groups — and because we build the timetable around the families who
                   register, it fits around your life too.
                 </p>

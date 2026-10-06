@@ -21,7 +21,7 @@ const child = (overrides = {}) => ({
   wants: ["Spin bowling", "Fielding"],
   formats: ["Small group (up to 6 per net)"],
   sessionLengths: ["90 minutes"],
-  availability: ["Saturday", "Sunday morning"],
+  availability: ["Saturday afternoon", "Sunday morning"],
   frequency: "once",
   otherInterests: ["Holiday camps"],
   paymentPreference: "monthly",
@@ -71,7 +71,7 @@ test("interest registrations are stored with every child", async () => {
   const [saved] = await store.listInterestRegistrations();
   assert.equal(saved.email, "ravi@example.com");
   assert.deepEqual(saved.children.map((c) => c.firstName), ["Aria", "Dev"]);
-  assert.deepEqual(saved.children[0].availability, ["Saturday", "Sunday morning"]);
+  assert.deepEqual(saved.children[0].availability, ["Saturday afternoon", "Sunday morning"]);
 });
 
 test("coach expressions of interest validate and store", async () => {
@@ -87,9 +87,9 @@ test("coach expressions of interest validate and store", async () => {
     strengths: "Batting technique and spin",
     weaknesses: "Building my seam coaching knowledge",
     availability: {
-      saturday: ["9–10am", "10–11am"],
+      saturday: ["2:30–3:30pm", "3:30–4:30pm"],
       sunday: [],
-      weekdayBlocks: ["Wednesday evening (3-hour block)"],
+      weekdayBlocks: ["Wednesday 6–9pm (3-hour block)"],
     },
     dbsStatus: "Enhanced cricket DBS 2025",
     safeguardingStatus: "Completed 2025",
@@ -103,22 +103,25 @@ test("coach expressions of interest validate and store", async () => {
   assert.equal(c.strengths, "Batting technique and spin");
   assert.ok(!coachInterestSchema.safeParse({ ...input, roles: [] }).success);
   assert.ok(!coachInterestSchema.safeParse({ ...input, coachingPhilosophy: "", strengths: "", weaknesses: "" }).success);
-  assert.deepEqual(c.availability.saturday, ["9–10am", "10–11am"]);
+  assert.deepEqual(c.availability.saturday, ["2:30–3:30pm", "3:30–4:30pm"]);
 });
 
-test("coach availability: weekend hours 8am–6pm and Wed/Thu 3-hour blocks; summer TBC", () => {
+test("coach availability matches the John Lyon hall slots; summer TBC", () => {
   const base = {
     name: "Alex Coach", email: "a@example.com", phone: "07000 111222", roles: ["Lead coach"], qualifications: "ECB L2",
     coachingExperience: "Ten seasons of junior coaching", coachingPhilosophy: "Players first, always.", strengths: "Batting",
     weaknesses: "Admin", dbsStatus: "Enhanced 2025", safeguardingStatus: "2025",
   };
-  assert.equal(coachAvailabilityOptions.weekendHours[0], "8–9am");
-  assert.equal(coachAvailabilityOptions.weekendHours.at(-1), "5–6pm");
-  assert.ok(coachAvailabilityOptions.weekendHours.includes("11am–12pm"));
+  // John Lyon hall slots: Sat 2:30–5:30pm, Sun 9am–5pm, Wed/Thu 6–9pm
+  assert.deepEqual(coachAvailabilityOptions.saturdayHours, ["2:30–3:30pm", "3:30–4:30pm", "4:30–5:30pm"]);
+  assert.equal(coachAvailabilityOptions.sundayHours.length, 8);
+  assert.equal(coachAvailabilityOptions.sundayHours[0], "9–10am");
+  assert.ok(coachAvailabilityOptions.sundayHours.includes("11am–12pm"));
+  assert.equal(coachAvailabilityOptions.sundayHours.at(-1), "4–5pm");
   const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [] } });
   assert.ok(!none.success);
   assert.ok(none.error.issues.map((i) => i.path.join(".")).includes("availability.termTime"));
-  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["7–8pm"], sunday: [], weekdayBlocks: [] } });
+  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["9–10am"], sunday: [], weekdayBlocks: [] } });
   assert.ok(!bad.success);
   const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], summerNotes: "Club cricket Saturdays" } });
   assert.ok(ok.success);

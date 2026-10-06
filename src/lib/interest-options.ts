@@ -41,7 +41,7 @@ export const interestOptions = {
   ],
   formats: ["Small group (up to 6 per net)", "Group of 3", "1-to-1"],
   sessionLengths: ["1 hour", "90 minutes", "2 hours"],
-  availability: ["Weekday evenings", "Saturday", "Sunday morning", "Sunday afternoon"],
+  availability: ["Wednesday evening", "Thursday evening", "Saturday afternoon", "Sunday morning", "Sunday afternoon"],
   frequency: [
     { value: "once", label: "Once a week" },
     { value: "twice", label: "Twice a week" },
@@ -75,21 +75,36 @@ export const coachRoles = [
 
 /* ── Coach availability ─────────────────────────────────────────────────── */
 
-const hourLabel = (h: number) => {
-  const fmt = (x: number) => (x % 12 === 0 ? 12 : x % 12);
-  const suffix = (x: number) => (x < 12 ? "am" : "pm");
-  return suffix(h) === suffix(h + 1) ? `${fmt(h)}–${fmt(h + 1)}${suffix(h + 1)}` : `${fmt(h)}${suffix(h)}–${fmt(h + 1)}${suffix(h + 1)}`;
+/**
+ * John Lyon sports hall slots for cricket (Licence to Occupy, from 2 Nov 2026):
+ * Wednesday 6–9pm, Thursday 6–9pm, Saturday 2:30–5:30pm, Sunday 9am–5pm.
+ * Shown only on the private coach page — never on the parent-facing site.
+ */
+const minutesLabel = (m: number) => {
+  const h = Math.floor(m / 60);
+  const min = m % 60;
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return { text: min ? `${hour}:${String(min).padStart(2, "0")}` : `${hour}`, suffix: h < 12 ? "am" : "pm" };
 };
 
-/** First and last start hour for weekend hourly slots (8am–6pm). Adjust to the hall's hours. */
-const WEEKEND_FIRST_HOUR = 8;
-const WEEKEND_LAST_HOUR = 17;
+/** Hourly slot labels between two times, e.g. hourlySlots("14:30", "17:30") → ["2:30–3:30pm", …] */
+export function hourlySlots(from: string, to: string) {
+  const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
+  const slots: string[] = [];
+  for (let m = toMin(from); m + 60 <= toMin(to); m += 60) {
+    const a = minutesLabel(m);
+    const b = minutesLabel(m + 60);
+    slots.push(a.suffix === b.suffix ? `${a.text}–${b.text}${b.suffix}` : `${a.text}${a.suffix}–${b.text}${b.suffix}`);
+  }
+  return slots;
+}
 
 export const coachAvailabilityOptions = {
-  /** Autumn & spring: hourly slots on Saturdays and Sundays */
-  weekendHours: Array.from({ length: WEEKEND_LAST_HOUR - WEEKEND_FIRST_HOUR + 1 }, (_, i) => hourLabel(WEEKEND_FIRST_HOUR + i)),
-  /** Autumn & spring: one 3-hour evening block on Wednesdays and Thursdays */
-  weekdayBlocks: ["Wednesday evening (3-hour block)", "Thursday evening (3-hour block)"],
+  /** Autumn & spring: hourly slots */
+  saturdayHours: hourlySlots("14:30", "17:30"),
+  sundayHours: hourlySlots("09:00", "17:00"),
+  /** Autumn & spring: one 3-hour evening block */
+  weekdayBlocks: ["Wednesday 6–9pm (3-hour block)", "Thursday 6–9pm (3-hour block)"],
 };
 
 export type CoachAvailability = {

@@ -9,7 +9,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "When does HillRisers start?",
-        a: `HillRisers launches at John Lyon School on ${launch.launchDate}. Trial week is ${launch.trialWeek}, and regular sessions start from ${launch.regularSessionsFrom}.`,
+        a: `HillRisers launches at John Lyon School in the ${launch.launchDate}. Trial week is ${launch.trialWeek}, and regular sessions start from ${launch.regularSessionsFrom}.`,
       },
       {
         q: "Why isn't there a timetable yet?",
@@ -59,11 +59,11 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "Where are sessions held?",
-        a: "Indoors in the John Lyon School sports hall, Harrow on the Hill, in autumn and spring, and outdoors in summer.",
+        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and bowling machines. Summer arrangements are to be confirmed, and we're expecting outdoor nets.",
       },
       {
         q: "Can seam bowlers bowl off a full run-up indoors?",
-        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Full run-ups return outdoors in summer.",
+        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Full run-ups return outdoors.",
       },
       {
         q: "Who are the coaches?",

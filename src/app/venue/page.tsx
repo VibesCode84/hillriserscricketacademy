@@ -10,7 +10,7 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Venue — John Lyon School, Harrow on the Hill",
   description:
-    "HillRisers coaches indoors in the John Lyon School sports hall, Harrow on the Hill, in autumn and spring — three indoor nets — and outdoors in summer.",
+    "HillRisers coaches in the John Lyon School sports hall, Harrow on the Hill — three indoor nets and bowling machines — with outdoor nets expected in summer.",
   alternates: { canonical: "/venue" },
 };
 
@@ -21,11 +21,15 @@ const info = [
   },
   {
     t: "About the run-up",
-    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected, and full run-ups return outdoors in summer.",
+    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected, and full run-ups return outdoors.",
   },
   {
-    t: "Summer: outdoors",
-    b: "In summer, coaching moves outdoors, with a multi-use games area (MUGA) for fielding.",
+    t: "Bowling machines",
+    b: "Bowling machines are available through autumn and spring, so players get more quality balls in every session.",
+  },
+  {
+    t: "Summer",
+    b: "Summer arrangements are to be confirmed. We're expecting outdoor nets, with a multi-use games area (MUGA) for fielding.",
   },
   {
     t: "Arrival and collection",
@@ -44,7 +48,7 @@ export default function VenuePage() {
       <PageHero
         eyebrow="The venue"
         title="John Lyon School, Harrow on the Hill."
-        intro={<p>Indoors in the sports hall in autumn and spring. Outdoors in summer.</p>}
+        intro={<p>Three indoor nets and bowling machines in the sports hall, with outdoor nets expected in summer.</p>}
         actions={
           <>
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
