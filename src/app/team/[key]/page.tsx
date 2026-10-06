@@ -26,7 +26,7 @@ export function generateStaticParams() {
 
 // The opportunity, for prospective coaches (this page is private)
 const opportunity = [
-  { t: "Launching w/c 2 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 4–7 November and regular sessions from 8 November." },
+  { t: "Launching w/c 2 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 4–8 November and regular sessions from 11 November." },
   { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
   { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
   { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall, with outdoor nets expected in summer." },
