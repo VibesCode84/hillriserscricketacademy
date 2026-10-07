@@ -76,7 +76,8 @@ export default function TermsPage() {
         <li>After the trial, players join for the autumn and spring terms together.</li>
         <li>You can pay in full, or monthly.</li>
         <li>
-          The decision deadline is {launch.decisionDeadline}, when the autumn and spring balance (or the first monthly payment) is due.
+          The decision deadline is {launch.decisionDeadline}, when the autumn and spring balance (or the first monthly payment) is due. Payment
+          is always due at least {launch.paymentNoticeHours} hours before your child&rsquo;s first regular (non-trial) session.
         </li>
         <li>Prices are shown on our <Link href="/programmes">programmes page</Link> and confirmed when you book.</li>
       </ul>
