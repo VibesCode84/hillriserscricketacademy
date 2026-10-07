@@ -19,7 +19,7 @@ type Child = {
   sessionLengths: string[];
   availability: string[];
   availabilityNotes: string;
-  littleCricketersSlots: string[];
+  earlyRisersSlots: string[];
   frequency: string;
   holidays: Record<string, string[]>;
   holidayNotes: string;
@@ -40,7 +40,7 @@ const newChild = (): Child => ({
   sessionLengths: [],
   availability: [],
   availabilityNotes: "",
-  littleCricketersSlots: [],
+  earlyRisersSlots: [],
   frequency: "",
   holidays: {},
   holidayNotes: "",
@@ -48,8 +48,8 @@ const newChild = (): Child => ({
   paymentPreference: "",
 });
 
-/** Show the Little Cricketers question for children aged 3–7 today (4–6 during the season) */
-const isLittleCricketerAge = (dob: string) => {
+/** Show the Early Risers question for children aged 3–7 today (4–6 during the season) */
+const isEarlyRiserAge = (dob: string) => {
   const years = (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000);
   return years >= 3 && years < 8;
 };
@@ -298,13 +298,13 @@ export function InterestForm() {
                   value={c.availabilityNotes}
                   onChange={(ev) => setChild(i, { availabilityNotes: ev.target.value })}
                 />
-                {isLittleCricketerAge(c.dateOfBirth) && (
+                {isEarlyRiserAge(c.dateOfBirth) && (
                   <div className="mt-5">
                     <MultiChoice
-                      legend="Little Cricketers: which Sunday sessions could they do?"
-                      options={interestOptions.littleCricketersSlots}
-                      value={c.littleCricketersSlots}
-                      onChange={(v) => setChild(i, { littleCricketersSlots: v })}
+                      legend="Early Risers: which Sunday sessions could they do?"
+                      options={interestOptions.earlyRisersSlots}
+                      value={c.earlyRisersSlots}
+                      onChange={(v) => setChild(i, { earlyRisersSlots: v })}
                     />
                   </div>
                 )}

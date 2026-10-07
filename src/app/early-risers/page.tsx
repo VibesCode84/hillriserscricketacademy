@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { formatProgrammePrice, getProgramme, groupSizes, littleCricketersSlots } from "@/data/programmes";
+import { formatProgrammePrice, getProgramme, groupSizes, earlyRisersSlots } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -8,12 +8,12 @@ import { Photo } from "@/components/Photo";
 import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 
-const programme = getProgramme("little-cricketers")!;
+const programme = getProgramme("early-risers")!;
 
 export const metadata: Metadata = {
-  title: "Little Cricketers — Cricket for Ages 4–6 in Harrow",
-  description: `Little Cricketers at John Lyon School, Harrow on the Hill: soft-ball cricket for ages 4–6, ${programme.fixedTime}. ${formatProgrammePrice(programme)}.`,
-  alternates: { canonical: "/little-cricketers" },
+  title: "Early Risers — Cricket for Ages 4–6 in Harrow",
+  description: `Early Risers at John Lyon School, Harrow on the Hill: soft-ball cricket for ages 4–6, ${programme.fixedTime}. ${formatProgrammePrice(programme)}.`,
+  alternates: { canonical: "/early-risers" },
 };
 
 const focus = [
@@ -24,7 +24,7 @@ const focus = [
 ];
 
 const faqs = [
-  { q: "My child has never played cricket. Is that OK?", a: "Completely. Little Cricketers is designed for children who are new to the game." },
+  { q: "My child has never played cricket. Is that OK?", a: "Completely. Early Risers is designed for children who are new to the game." },
   { q: "Do they need any kit?", a: "No. Comfortable clothes, trainers and a water bottle are all they need. We use soft balls and child-sized bats." },
   {
     q: "What happens when they're older?",
@@ -32,20 +32,20 @@ const faqs = [
   },
 ];
 
-export default function LittleCricketersPage() {
+export default function EarlyRisersPage() {
   return (
     <>
       <PageHero
-        eyebrow="Little Cricketers · Ages 4–6"
+        eyebrow="Early Risers · Ages 4–6"
         title="Their first cricket session should make them want another one."
         intro={<p>The perfect first step into cricket: soft ball, movement, fun and confidence for children aged 4–6, with brilliant coaches who love working with young children.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
         image={{ alt: "Young children playing a soft-ball cricket game" }}
       >
         <div className="mt-8 inline-flex flex-wrap gap-x-6 gap-y-2 rounded-2xl border border-gold/25 bg-navy-900/70 px-5 py-4 text-cream">
-          <span><strong className="text-gold">When:</strong> Sundays, 40-minute sessions at {littleCricketersSlots.join(", ").replace(/, ([^,]*)$/, " or $1")}</span>
+          <span><strong className="text-gold">When:</strong> Sundays, 40-minute sessions at {earlyRisersSlots.join(", ").replace(/, ([^,]*)$/, " or $1")}</span>
           <span><strong className="text-gold">Price:</strong> {formatProgrammePrice(programme)}</span>
-          <span><strong className="text-gold">Group size:</strong> max {groupSizes.littleCricketers}</span>
+          <span><strong className="text-gold">Group size:</strong> max {groupSizes.earlyRisers}</span>
         </div>
       </PageHero>
 
@@ -79,7 +79,7 @@ export default function LittleCricketersPage() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
       </Section>
 
-      <CTASection title="Save your Little Cricketer a place." body="Register your interest and you'll get priority booking when places open." />
+      <CTASection title="Save your Early Riser a place." body="Register your interest and you'll get priority booking when places open." />
     </>
   );
 }

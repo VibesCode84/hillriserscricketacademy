@@ -1,4 +1,4 @@
-import type { ProgrammeKey } from "./programmes";
+import { groupSizes, type ProgrammeKey } from "./programmes";
 
 export type Day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 export const DAYS: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -6,7 +6,7 @@ export const DAYS: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Frida
 /**
  * Bookable sessions, used by the booking engine (capacity, Stripe checkout).
  *
- * The public site shows NO fixed times except Little Cricketers on Sundays
+ * The public site shows NO fixed times except Early Risers on Sundays
  * (three 40-minute sessions, 9:00–11:00am) — the timetable will be built from parent feedback. Add sessions
  * here when the timetable is published, then open trial booking.
  *
@@ -37,26 +37,26 @@ export type AcademySession = {
   girlsOnly?: boolean;
 };
 
-const littleCricketers = (startTime: string, endTime: string): AcademySession => ({
-  id: `sun-${startTime.replace(":", "")}-little-cricketers`,
-  title: "Little Cricketers",
-  discipline: "little-cricketers",
+const earlyRisers = (startTime: string, endTime: string): AcademySession => ({
+  id: `sun-${startTime.replace(":", "")}-early-risers`,
+  title: "Early Risers",
+  discipline: "early-risers",
   day: "Sunday",
   block: "John Lyon School sports hall",
   startTime,
   endTime,
   ageMin: 4,
   ageMax: 6,
-  capacity: 24,
-  pricePence: 1800,
+  capacity: groupSizes.earlyRisers,
+  pricePence: 1500,
   active: true,
   confirmed: true,
 });
 
 export const sessions: AcademySession[] = [
-  littleCricketers("09:00", "09:40"),
-  littleCricketers("09:40", "10:20"),
-  littleCricketers("10:20", "11:00"),
+  earlyRisers("09:00", "09:40"),
+  earlyRisers("09:40", "10:20"),
+  earlyRisers("10:20", "11:00"),
 ];
 
 export function getSession(id: string) {

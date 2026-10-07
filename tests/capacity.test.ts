@@ -7,7 +7,7 @@ import { FileBookingStore } from "../src/lib/booking/file-store";
 import { availabilityFor } from "../src/lib/booking";
 import { getSession } from "../src/data/sessions";
 
-const SESSION = "sun-0900-little-cricketers"; // capacity 24
+const SESSION = "sun-0900-early-risers"; // capacity 16
 
 async function freshStore() {
   const dir = mkdtempSync(path.join(tmpdir(), "hillrisers-"));
@@ -38,10 +38,10 @@ test("never books more than capacity, even with simultaneous requests", async ()
       store.reservePlace({ sessionId: SESSION, parentId: parent.id, playerId: player.id, holdMinutes: 10, isTrial: true }),
     ),
   );
-  assert.equal(results.filter((r) => r.ok).length, 24);
+  assert.equal(results.filter((r) => r.ok).length, 16);
   assert.ok(results.filter((r) => !r.ok).every((r) => !r.ok && r.reason === "full"));
   const counts = await store.sessionCounts();
-  assert.equal(counts[SESSION].held, 24);
+  assert.equal(counts[SESSION].held, 16);
   assert.equal(availabilityFor(getSession(SESSION)!, counts[SESSION]).status, "full");
 });
 

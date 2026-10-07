@@ -35,7 +35,7 @@ export const nav = [
   { href: "/programmes", label: "Programmes" },
   { href: "/how-booking-works", label: "How It Works" },
   { href: "/girls", label: "Girls" },
-  { href: "/little-cricketers", label: "Little Cricketers" },
+  { href: "/early-risers", label: "Early Risers" },
   { href: "/venue", label: "Venue" },
   { href: "/coaches", label: "Coaching" },
   { href: "/faq", label: "FAQs" },

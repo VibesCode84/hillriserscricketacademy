@@ -10,7 +10,7 @@ import { CTASection, NotSureBanner } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Programmes & Prices — Junior Cricket Coaching in Harrow",
   description:
-    "HillRisers programmes at John Lyon School: Little Cricketers (4–6), Development (7–11), Performance (10–15), girls-only groups, small groups and 1-to-1 coaching. Group programmes £30 per hour, with a 2026/27 offer of £25 per hour.",
+    "HillRisers programmes at John Lyon School: Early Risers (4–6), Development (7–11), Performance (10–15), girls-only groups, small groups and 1-to-1 coaching. Group programmes £30 per hour, with a 2026/27 offer of £25 per hour.",
   alternates: { canonical: "/programmes" },
 };
 
@@ -18,7 +18,7 @@ const notes = [
   { t: "Placed by ability", b: "Players are placed by ability, not just age, and move up when they're ready." },
   {
     t: "Small groups",
-    b: `Every programme is coached in small groups: a maximum of ${groupSizes.perNet} players per net, each with its own coach. Little Cricketers is our only larger group (maximum ${groupSizes.littleCricketers}).`,
+    b: `Every programme is coached in small groups: a maximum of ${groupSizes.perNet} players per net, each with its own coach. Early Risers is our only larger group (maximum ${groupSizes.earlyRisers}).`,
   },
   { t: "Fielding every session", b: "Every session includes fielding, whatever the programme." },
   { t: "Session length", b: "Sessions may run for 1 hour, 90 minutes or 2 hours — we'll decide using what families tell us." },

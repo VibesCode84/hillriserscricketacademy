@@ -2,10 +2,10 @@
  * Programmes and price guide. Group programmes share one standard rate
  * (£30 per hour) with a 2026/27 offer of £25 per hour. Prices are per hour —
  * sessions may run for 1 hour, 90 minutes or 2 hours depending on parent
- * feedback. Little Cricketers is the only programme with a fixed time.
+ * feedback. Early Risers is the only programme with a fixed time.
  */
 export type ProgrammeKey =
-  | "little-cricketers"
+  | "early-risers"
   | "development"
   | "girls-development"
   | "performance"
@@ -30,16 +30,16 @@ export type Programme = {
   /** "from £75" */
   priceFrom?: boolean;
   girlsOnly?: boolean;
-  /** Fixed time — only Little Cricketers has one */
+  /** Fixed time — only Early Risers has one */
   fixedTime?: string;
   href?: string;
 };
 
-/** Standard hourly rate for all group programmes (everything bar Little Cricketers) */
+/** Standard hourly rate for all group programmes (everything bar Early Risers) */
 export const STANDARD_HOURLY_PENCE = 3000;
-/** Little Cricketers: three 40-minute sessions every Sunday morning */
-export const littleCricketersSlots = ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"] as const;
-export const LITTLE_CRICKETERS_TIME = "Sundays 9:00–11:00am · three 40-minute sessions";
+/** Early Risers: three 40-minute sessions every Sunday morning */
+export const earlyRisersSlots = ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"] as const;
+export const EARLY_RISERS_TIME = "Sundays 9:00–11:00am · three 40-minute sessions";
 
 /** 2026/27 special offer */
 export const OFFER_HOURLY_PENCE = 2500;
@@ -47,16 +47,16 @@ export const OFFER_LABEL = "2026/27 offer";
 
 export const programmes: Programme[] = [
   {
-    key: "little-cricketers",
-    name: "Little Cricketers",
+    key: "early-risers",
+    name: "Early Risers",
     ages: "4–6",
     ageMin: 4,
     ageMax: 6,
     summary: "Soft ball, movement, fun and confidence.",
-    pricePence: 1800,
+    pricePence: 1500,
     priceUnit: "per session",
-    fixedTime: LITTLE_CRICKETERS_TIME,
-    href: "/little-cricketers",
+    fixedTime: EARLY_RISERS_TIME,
+    href: "/early-risers",
   },
   {
     key: "development",
@@ -132,7 +132,7 @@ export const REGISTRATION_FEE_PENCE = 3000;
 export const specialistSkills = ["Batting", "Power hitting", "Sweeps and ramps", "Seam bowling", "Spin bowling"];
 
 export const groupSizes = {
-  littleCricketers: 24,
+  earlyRisers: 16,
   perNet: 6,
 };
 

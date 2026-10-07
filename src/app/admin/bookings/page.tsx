@@ -49,7 +49,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
     options.map((o) => ({ label: o, n: values.filter((v) => v === o).length }));
   const demand = [
     { title: "When they can attend", rows: tally(children.flatMap((c) => c.availability), interestOptions.availability) },
-    { title: "Little Cricketers session", rows: tally(children.flatMap((c) => c.littleCricketersSlots ?? []), interestOptions.littleCricketersSlots) },
+    { title: "Early Risers session", rows: tally(children.flatMap((c) => c.earlyRisersSlots ?? []), interestOptions.earlyRisersSlots) },
     { title: "Age band (today)", rows: tally(children.map((c) => ageBand(ageOn(c.dateOfBirth))), ["4–6", "7–11", "12–15", "Other"]) },
     { title: "Level", rows: tally(children.map((c) => labelFor("level", c.level)), interestOptions.level.map((o) => o.label)) },
     { title: "Preferred format", rows: tally(children.flatMap((c) => c.formats), interestOptions.formats) },
@@ -153,7 +153,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                   <div>Girls-only: {labelFor("girlsOnly", c.girlsOnly)}</div>
                   <div>Available: {c.availability.join(", ") || "—"}{c.availabilityNotes ? ` — ${c.availabilityNotes}` : ""}</div>
                   <div>How often: {labelFor("frequency", c.frequency)}</div>
-                  {!!c.littleCricketersSlots?.length && <div>Little Cricketers: {c.littleCricketersSlots.join(", ")}</div>}
+                  {!!c.earlyRisersSlots?.length && <div>Early Risers: {c.earlyRisersSlots.join(", ")}</div>}
                   <div>Formats: {c.formats.join(", ") || "—"}</div>
                   <div>Lengths: {c.sessionLengths.join(", ") || "—"}</div>
                   <div className="sm:col-span-2">Wants: {c.wants.join(", ") || "—"}</div>

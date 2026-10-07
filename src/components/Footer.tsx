@@ -14,7 +14,7 @@ const groups = [
       { href: "/how-booking-works", label: "How Booking Works" },
       { href: "/calendar", label: "2026/27 Calendar" },
       { href: "/girls", label: "Girls Cricket" },
-      { href: "/little-cricketers", label: "Little Cricketers" },
+      { href: "/early-risers", label: "Early Risers" },
       { href: "/camps", label: "Holiday Camps" },
       { href: "/venue", label: "Venue" },
     ],

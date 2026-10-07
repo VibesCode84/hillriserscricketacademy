@@ -49,8 +49,8 @@ export const interestOptions = {
     { value: "twice", label: "Twice a week" },
     { value: "not-sure", label: "Not sure" },
   ],
-  /** Little Cricketers session preference (ages 4–6) */
-  littleCricketersSlots: ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"],
+  /** Early Risers session preference (ages 4–6) */
+  earlyRisersSlots: ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"],
   otherInterests: ["1-to-1 coaching", "Summer outdoor coaching"],
   paymentPreference: [
     { value: "termly", label: "Termly" },
@@ -73,7 +73,7 @@ export const coachRoles = [
   "Lead coach",
   "Specialist coach",
   "Girls Academy lead",
-  "Early-years coach (Little Cricketers)",
+  "Early-years coach (Early Risers)",
   "Junior helper",
 ];
 

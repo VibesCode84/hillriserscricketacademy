@@ -78,7 +78,7 @@ ${signOff}
           (c) =>
             `${c.firstName} (DOB ${c.dateOfBirth}) — ${labelFor("level", c.level)}, ${labelFor("mainRole", c.mainRole)}\n` +
             `  Available: ${c.availability.join(", ") || "—"}${c.availabilityNotes ? ` (${c.availabilityNotes})` : ""}\n` +
-            (c.littleCricketersSlots?.length ? `  Little Cricketers: ${c.littleCricketersSlots.join(", ")}\n` : "") +
+            (c.earlyRisersSlots?.length ? `  Early Risers: ${c.earlyRisersSlots.join(", ")}\n` : "") +
             `  Holidays: ${summariseHolidays(c.holidays) || "—"}${c.holidayNotes ? ` (${c.holidayNotes})` : ""}\n` +
             `  Wants: ${c.wants.join(", ") || "—"}\n  Formats: ${c.formats.join(", ") || "—"} · Lengths: ${c.sessionLengths.join(", ") || "—"}`,
         )

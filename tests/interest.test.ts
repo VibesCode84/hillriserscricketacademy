@@ -129,11 +129,11 @@ test("coach availability matches the John Lyon hall slots; summer TBC", () => {
   assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
 });
 
-test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Little Cricketers £18", () => {
+test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Early Risers £15", () => {
   const price = (k: string) => getProgramme(k)!.pricePence;
   const offer = (k: string) => getProgramme(k)!.offerPricePence;
-  assert.equal(price("little-cricketers"), 1800);
-  assert.equal(offer("little-cricketers"), undefined);
+  assert.equal(price("early-risers"), 1500);
+  assert.equal(offer("early-risers"), undefined);
   for (const k of ["development", "girls-development", "performance", "girls-performance"]) {
     assert.equal(price(k), 3000, k);
     assert.equal(offer(k), 2500, k);
@@ -145,10 +145,10 @@ test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer
   assert.equal(programmes.length, 7);
 });
 
-test("the only fixed times are Little Cricketers, three 40-minute Sunday sessions", () => {
+test("the only fixed times are Early Risers, three 40-minute Sunday sessions", () => {
   assert.deepEqual(
     programmes.filter((p) => p.fixedTime).map((p) => [p.key, p.fixedTime]),
-    [["little-cricketers", "Sundays 9:00–11:00am · three 40-minute sessions"]],
+    [["early-risers", "Sundays 9:00–11:00am · three 40-minute sessions"]],
   );
   assert.deepEqual(
     sessions.map((s) => [s.day, s.startTime, s.endTime]),

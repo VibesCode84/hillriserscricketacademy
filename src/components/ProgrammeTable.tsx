@@ -88,7 +88,7 @@ export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) 
         <p className="font-semibold">Registration {formatPrice(REGISTRATION_FEE_PENCE)} for new players, including a HillRisers playing shirt.</p>
         <p className={`mt-2 text-sm leading-relaxed ${light ? "text-ink-muted" : "text-slate"}`}>
           Group programmes are priced per hour of coaching. Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families
-          tell us they want. Little Cricketers is priced per session.
+          tell us they want. Early Risers is priced per session.
         </p>
       </div>
     </div>

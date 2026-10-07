@@ -46,15 +46,15 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How much does it cost?",
-        a: "Our standard rate for all group programmes — Development, Performance and the girls-only groups — is £30 per hour, and for 2026/27 we're offering it at £25 per hour. Small groups of three are £45 per player per hour, and 1-to-1 coaching is from £75 per hour. Little Cricketers is £18 per session. New players pay a £30 registration fee, which includes a HillRisers playing shirt.",
+        a: "Our standard rate for all group programmes — Development, Performance and the girls-only groups — is £30 per hour, and for 2026/27 we're offering it at £25 per hour. Small groups of three are £45 per player per hour, and 1-to-1 coaching is from £75 per hour. Early Risers is £15 per session. New players pay a £30 registration fee, which includes a HillRisers playing shirt.",
       },
       {
         q: "How long are sessions?",
-        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Little Cricketers runs on Sunday mornings as three 40-minute sessions: 9:00–9:40am, 9:40–10:20am and 10:20–11:00am.",
+        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Early Risers runs on Sunday mornings as three 40-minute sessions: 9:00–9:40am, 9:40–10:20am and 10:20–11:00am.",
       },
       {
         q: "How big are the groups?",
-        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Little Cricketers is our only larger group, with a maximum of 24.",
+        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Early Risers is our only larger group, with a maximum of 24.",
       },
     ],
   },

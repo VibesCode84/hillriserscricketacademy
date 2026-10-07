@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       { source: "/academy/:slug", destination: "/programmes", permanent: true },
       { source: "/sessions", destination: "/how-booking-works", permanent: true },
       { source: "/find-my-session", destination: "/register", permanent: true },
+      { source: "/little-cricketers", destination: "/early-risers", permanent: true },
     ];
   },
 };
