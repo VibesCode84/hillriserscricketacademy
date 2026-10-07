@@ -53,7 +53,7 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
     term: "Autumn term 2026",
     entries: [
       { id: "launch", kind: "launch", dates: "Week commencing 2 November", title: "HillRisers launches", detail: "Our first weeks at John Lyon School, Harrow on the Hill." },
-      { id: "trial", kind: "launch", dates: "4–8 November", title: "Trial week", detail: "Book a trial session. The deposit is credited to your sessions if you join." },
+      { id: "trial", kind: "launch", dates: "4–8 November", title: "Trial week", detail: "Book a trial on the day your child plans to train. The deposit is credited to your sessions if you join." },
       {
         id: "deadline",
         kind: "launch",

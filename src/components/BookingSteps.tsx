@@ -13,7 +13,7 @@ export const bookingSteps = [
   },
   {
     t: "Book a trial session",
-    b: `Trials run in the first week of term (${launch.trialWeek}). You pay a deposit equal to one session fee.`,
+    b: `Trials run in the first week of term (${launch.trialWeek}), on the day your child plans to train. You pay a deposit equal to one session fee.`,
   },
   {
     t: "After the trial",

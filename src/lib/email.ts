@@ -60,7 +60,7 @@ Thank you for registering your interest in HillRisers Cricket Academy for ${who}
 WHAT HAPPENS NEXT
 1. We're using every family's answers — availability, level and what each child wants from cricket — to build the timetable.
 2. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking before places open to everyone.
-3. You then book a trial session in trial week (${launch.trialWeek}), paying a deposit equal to one session fee.
+3. You then book a trial session in trial week (${launch.trialWeek}), on the day your child plans to train, paying a deposit equal to one session fee.
 4. After the trial, the deposit is credited if your child joins, or refunded if they don't (provided they attended or cancelled with at least ${launch.trialCancellationHours} hours' notice).
 
 Regular sessions start from ${launch.regularSessionsFrom}. How booking works: ${site.url}/how-booking-works

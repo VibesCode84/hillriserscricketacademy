@@ -7,7 +7,7 @@ export const keyDates: { date: string; label: string; detail?: string }[] = [
   { date: "19 October", label: "Registrations close" },
   { date: "21 October", label: "Priority booking for registered families", detail: "48 hours before booking opens to everyone" },
   { date: "23 October", label: "Trial booking opens to everyone" },
-  { date: "4–8 November", label: "Trial week" },
+  { date: "4–8 November", label: "Trial week", detail: "Trial on the day your child plans to train" },
   { date: "7–11 November", label: "Decision and payment deadline", detail: "Autumn + spring balance, or first monthly payment, due by 9am, 4 days before your child's first regular session: Wednesday groups 7 Nov, Thursday 8 Nov, Saturday 10 Nov, Sunday 11 Nov" },
 ];
 

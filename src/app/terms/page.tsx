@@ -61,7 +61,7 @@ export default function TermsPage() {
 
       <h2 id="trial">3. Trial sessions and deposits</h2>
       <ul>
-        <li>Trial sessions run in trial week ({launch.trialWeek}).</li>
+        <li>Trial sessions run in trial week ({launch.trialWeek}). Your child&rsquo;s trial is on the same day of the week as the group they plan to join.</li>
         <li>To book a trial, you pay a deposit equal to one session fee.</li>
         <li>If your child joins after the trial, the deposit is credited to their remaining sessions.</li>
         <li>

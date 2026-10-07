@@ -38,7 +38,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "How does booking work?",
-        a: `Register your interest. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking. You then book a trial in trial week (${launch.trialWeek}), paying a deposit equal to one session fee.`,
+        a: `Register your interest. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking. You then book a trial in trial week (${launch.trialWeek}), on the day your child plans to train, paying a deposit equal to one session fee.`,
       },
       {
         q: "What happens after the trial?",
