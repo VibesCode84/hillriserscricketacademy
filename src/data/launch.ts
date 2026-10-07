@@ -8,7 +8,7 @@ export const keyDates: { date: string; label: string; detail?: string }[] = [
   { date: "21 October", label: "Priority booking for registered families", detail: "48 hours before booking opens to everyone" },
   { date: "23 October", label: "Trial booking opens to everyone" },
   { date: "4–8 November", label: "Trial week" },
-  { date: "9 November", label: "Decision and payment deadline", detail: "Autumn + spring balance, or first monthly payment, due by 12 noon" },
+  { date: "7–11 November", label: "Decision and payment deadline", detail: "Autumn + spring balance, or first monthly payment, due by 9am, 4 days before your child's first regular session: Wednesday groups 7 Nov, Thursday 8 Nov, Saturday 10 Nov, Sunday 11 Nov" },
 ];
 
 export const launch = {
@@ -17,9 +17,16 @@ export const launch = {
   /** First hall slots: Wednesday 4, Thursday 5, Saturday 7 and Sunday 8 November */
   trialWeek: "4–8 November",
   regularSessionsFrom: "11 November",
-  /** Must be at least 48 hours before the first regular session (Wednesday 11 November, 6pm) */
-  decisionDeadline: "12 noon on Monday 9 November",
-  paymentNoticeHours: 48,
+  /** Decision and payment deadline: 9am, at least 4 days before the child's first regular session */
+  paymentNoticeDays: 4,
+  decisionDeadline: "9am, 4 days before your child's first regular session",
+  /** First regular session for each weekly day, and its payment deadline */
+  paymentDeadlines: [
+    { firstSession: "Wednesday 11 November", due: "Saturday 7 November" },
+    { firstSession: "Thursday 12 November", due: "Sunday 8 November" },
+    { firstSession: "Saturday 14 November", due: "Tuesday 10 November" },
+    { firstSession: "Sunday 15 November", due: "Wednesday 11 November" },
+  ],
   priorityBookingHours: 48,
   /** Notice needed to cancel a trial and still get the deposit back */
   trialCancellationHours: 24,

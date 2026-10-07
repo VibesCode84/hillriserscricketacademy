@@ -7,6 +7,8 @@
  * are described as "likely" and marked TBC.
  */
 
+import { launch } from "./launch";
+
 export type CalendarKind = "launch" | "term" | "holiday" | "shutdown" | "affected";
 
 export type CalendarEntry = {
@@ -52,7 +54,13 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
     entries: [
       { id: "launch", kind: "launch", dates: "Week commencing 2 November", title: "HillRisers launches", detail: "Our first weeks at John Lyon School, Harrow on the Hill." },
       { id: "trial", kind: "launch", dates: "4–8 November", title: "Trial week", detail: "Book a trial session. The deposit is credited to your sessions if you join." },
-      { id: "deadline", kind: "launch", dates: "Monday 9 November, 12 noon", title: "Decision and payment deadline", detail: "Autumn and spring balance, or first monthly payment, due." },
+      {
+        id: "deadline",
+        kind: "launch",
+        dates: "7–11 November, by 9am",
+        title: "Decision and payment deadline",
+        detail: `Autumn and spring balance, or first monthly payment, due 4 days before your child's first regular session: ${launch.paymentDeadlines.map((d) => `${d.due} for ${d.firstSession.split(" ")[0]} groups`).join(", ")}.`,
+      },
       { id: "regular", kind: "term", dates: "From Wednesday 11 November", title: "Regular sessions start", detail: "Weekly sessions run through to the Christmas holidays." },
       { id: "christmas", kind: "holiday", dates: holiday("christmas-2026").dates, title: "Christmas holidays (first week)", detail: holidayDetail },
       { id: "shutdown", kind: "shutdown", dates: shutdown.dates, title: shutdown.label, detail: "The venue is closed. No sessions or camps." },
