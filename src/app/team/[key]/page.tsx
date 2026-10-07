@@ -65,7 +65,7 @@ const roles = [
   { role: "Lead coach", detail: "Leads sessions and the coaching team on the day." },
   { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam or spin." },
   { role: "Girls Academy lead", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
-  { role: "Early-years coach", detail: "Little Cricketers (ages 4–7), Sundays 9:00–9:50am." },
+  { role: "Early-years coach", detail: "Little Cricketers (ages 4–6): three 40-minute sessions on Sunday mornings, 9:00–11:00am." },
   { role: "Junior helpers", detail: "Support coaches in sessions — a great first step into coaching." },
 ];
 
@@ -141,8 +141,8 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
             </ul>
             <p className="mt-6 text-sm leading-relaxed text-slate">
               Pay for every role is market-leading and reflects your skills, experience and profile — we&rsquo;ll discuss it with you
-              directly. Session times will be set from parent feedback and coach availability. The only fixed time so far is Little Cricketers, Sundays
-              9:00–9:50am.
+              directly. Session times will be set from parent feedback and coach availability. The only fixed times so far are Little Cricketers, Sundays
+              9:00–11:00am.
             </p>
           </div>
           <div className="self-start rounded-3xl border border-gold/25 bg-navy-900 p-7 md:p-9">

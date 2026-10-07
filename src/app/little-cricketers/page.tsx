@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { formatProgrammePrice, getProgramme, groupSizes } from "@/data/programmes";
+import { formatProgrammePrice, getProgramme, groupSizes, littleCricketersSlots } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -11,8 +11,8 @@ import { CTASection } from "@/components/CTASection";
 const programme = getProgramme("little-cricketers")!;
 
 export const metadata: Metadata = {
-  title: "Little Cricketers — Cricket for Ages 4–7 in Harrow",
-  description: `Little Cricketers at John Lyon School, Harrow on the Hill: soft-ball cricket for ages 4–7, ${programme.fixedTime}. ${formatProgrammePrice(programme)}.`,
+  title: "Little Cricketers — Cricket for Ages 4–6 in Harrow",
+  description: `Little Cricketers at John Lyon School, Harrow on the Hill: soft-ball cricket for ages 4–6, ${programme.fixedTime}. ${formatProgrammePrice(programme)}.`,
   alternates: { canonical: "/little-cricketers" },
 };
 
@@ -36,14 +36,14 @@ export default function LittleCricketersPage() {
   return (
     <>
       <PageHero
-        eyebrow="Little Cricketers · Ages 4–7"
+        eyebrow="Little Cricketers · Ages 4–6"
         title="Their first cricket session should make them want another one."
-        intro={<p>The perfect first step into cricket: soft ball, movement, fun and confidence for children aged 4–7, with brilliant coaches who love working with young children.</p>}
+        intro={<p>The perfect first step into cricket: soft ball, movement, fun and confidence for children aged 4–6, with brilliant coaches who love working with young children.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
         image={{ alt: "Young children playing a soft-ball cricket game" }}
       >
         <div className="mt-8 inline-flex flex-wrap gap-x-6 gap-y-2 rounded-2xl border border-gold/25 bg-navy-900/70 px-5 py-4 text-cream">
-          <span><strong className="text-gold">When:</strong> {programme.fixedTime}</span>
+          <span><strong className="text-gold">When:</strong> Sundays, 40-minute sessions at {littleCricketersSlots.join(", ").replace(/, ([^,]*)$/, " or $1")}</span>
           <span><strong className="text-gold">Price:</strong> {formatProgrammePrice(programme)}</span>
           <span><strong className="text-gold">Group size:</strong> max {groupSizes.littleCricketers}</span>
         </div>

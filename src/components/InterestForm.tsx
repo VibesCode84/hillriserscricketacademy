@@ -19,6 +19,7 @@ type Child = {
   sessionLengths: string[];
   availability: string[];
   availabilityNotes: string;
+  littleCricketersSlots: string[];
   frequency: string;
   holidays: Record<string, string[]>;
   holidayNotes: string;
@@ -39,12 +40,19 @@ const newChild = (): Child => ({
   sessionLengths: [],
   availability: [],
   availabilityNotes: "",
+  littleCricketersSlots: [],
   frequency: "",
   holidays: {},
   holidayNotes: "",
   otherInterests: [],
   paymentPreference: "",
 });
+
+/** Show the Little Cricketers question for children aged 3–7 today (4–6 during the season) */
+const isLittleCricketerAge = (dob: string) => {
+  const years = (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000);
+  return years >= 3 && years < 8;
+};
 
 const chip = (on: boolean) =>
   `cursor-pointer rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
@@ -290,6 +298,16 @@ export function InterestForm() {
                   value={c.availabilityNotes}
                   onChange={(ev) => setChild(i, { availabilityNotes: ev.target.value })}
                 />
+                {isLittleCricketerAge(c.dateOfBirth) && (
+                  <div className="mt-5">
+                    <MultiChoice
+                      legend="Little Cricketers: which Sunday sessions could they do?"
+                      options={interestOptions.littleCricketersSlots}
+                      value={c.littleCricketersSlots}
+                      onChange={(v) => setChild(i, { littleCricketersSlots: v })}
+                    />
+                  </div>
+                )}
                 <div className="mt-5">
                   <SingleChoice name={`c${i}-freq`} legend="How often?" options={interestOptions.frequency} value={c.frequency} onChange={(v) => setChild(i, { frequency: v })} error={e("frequency")} />
                 </div>

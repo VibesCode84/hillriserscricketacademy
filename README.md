@@ -2,7 +2,7 @@
 
 The website for HillRisers Cricket Academy: specialist junior cricket coaching (ages 4–15) at John Lyon School, Harrow on the Hill.
 
-**Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed time is **Little Cricketers, Sundays 9:00–9:50am**.
+**Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed times are **Little Cricketers, Sundays: three 40-minute sessions, 9:00–9:40am, 9:40–10:20am and 10:20–11:00am (ages 4–6)**.
 
 Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Vercel.
 

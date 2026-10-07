@@ -7,7 +7,7 @@ export const DAYS: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Frida
  * Bookable sessions, used by the booking engine (capacity, Stripe checkout).
  *
  * The public site shows NO fixed times except Little Cricketers on Sundays
- * 9:00–9:50am — the timetable will be built from parent feedback. Add sessions
+ * (three 40-minute sessions, 9:00–11:00am) — the timetable will be built from parent feedback. Add sessions
  * here when the timetable is published, then open trial booking.
  *
  * - `confirmed` means the slot's day and time are agreed.
@@ -25,7 +25,7 @@ export type AcademySession = {
   /** Short note about the venue block */
   block: string;
   startTime?: string; // "09:00"
-  endTime?: string; // "09:50"
+  endTime?: string; // "09:40"
   ageMin?: number;
   ageMax?: number;
   capacity: number;
@@ -37,22 +37,26 @@ export type AcademySession = {
   girlsOnly?: boolean;
 };
 
+const littleCricketers = (startTime: string, endTime: string): AcademySession => ({
+  id: `sun-${startTime.replace(":", "")}-little-cricketers`,
+  title: "Little Cricketers",
+  discipline: "little-cricketers",
+  day: "Sunday",
+  block: "John Lyon School sports hall",
+  startTime,
+  endTime,
+  ageMin: 4,
+  ageMax: 6,
+  capacity: 24,
+  pricePence: 1800,
+  active: true,
+  confirmed: true,
+});
+
 export const sessions: AcademySession[] = [
-  {
-    id: "sun-0900-little-cricketers",
-    title: "Little Cricketers",
-    discipline: "little-cricketers",
-    day: "Sunday",
-    block: "John Lyon School sports hall",
-    startTime: "09:00",
-    endTime: "09:50",
-    ageMin: 4,
-    ageMax: 7,
-    capacity: 24,
-    pricePence: 1800,
-    active: true,
-    confirmed: true,
-  },
+  littleCricketers("09:00", "09:40"),
+  littleCricketers("09:40", "10:20"),
+  littleCricketers("10:20", "11:00"),
 ];
 
 export function getSession(id: string) {

@@ -9,8 +9,8 @@ export function ageOn(dob: string, on = new Date()) {
 
 /** Age bands used for demand analysis */
 export function ageBand(age: number) {
-  if (age >= 4 && age <= 7) return "4–7";
-  if (age >= 8 && age <= 11) return "8–11";
+  if (age >= 4 && age <= 6) return "4–6";
+  if (age >= 7 && age <= 11) return "7–11";
   if (age >= 12 && age <= 15) return "12–15";
   return "Other";
 }

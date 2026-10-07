@@ -50,7 +50,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How long are sessions?",
-        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Little Cricketers runs on Sundays, 9:00–9:50am.",
+        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Little Cricketers runs on Sunday mornings as three 40-minute sessions: 9:00–9:40am, 9:40–10:20am and 10:20–11:00am.",
       },
       {
         q: "How big are the groups?",

@@ -145,20 +145,21 @@ test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer
   assert.equal(programmes.length, 7);
 });
 
-test("the only fixed time is Little Cricketers, Sundays 9:00–9:50am", () => {
+test("the only fixed times are Little Cricketers, three 40-minute Sunday sessions", () => {
   assert.deepEqual(
     programmes.filter((p) => p.fixedTime).map((p) => [p.key, p.fixedTime]),
-    [["little-cricketers", "Sundays 9:00–9:50am"]],
+    [["little-cricketers", "Sundays 9:00–11:00am · three 40-minute sessions"]],
   );
   assert.deepEqual(
     sessions.map((s) => [s.day, s.startTime, s.endTime]),
-    [["Sunday", "09:00", "09:50"]],
+    [["Sunday", "09:00", "09:40"], ["Sunday", "09:40", "10:20"], ["Sunday", "10:20", "11:00"]],
   );
 });
 
 test("age bands for demand analysis", () => {
-  assert.equal(ageBand(5), "4–7");
-  assert.equal(ageBand(10), "8–11");
+  assert.equal(ageBand(5), "4–6");
+  assert.equal(ageBand(7), "7–11");
+  assert.equal(ageBand(10), "7–11");
   assert.equal(ageBand(14), "12–15");
   assert.equal(ageBand(17), "Other");
 });

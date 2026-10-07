@@ -37,6 +37,10 @@ export type Programme = {
 
 /** Standard hourly rate for all group programmes (everything bar Little Cricketers) */
 export const STANDARD_HOURLY_PENCE = 3000;
+/** Little Cricketers: three 40-minute sessions every Sunday morning */
+export const littleCricketersSlots = ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"] as const;
+export const LITTLE_CRICKETERS_TIME = "Sundays 9:00–11:00am · three 40-minute sessions";
+
 /** 2026/27 special offer */
 export const OFFER_HOURLY_PENCE = 2500;
 export const OFFER_LABEL = "2026/27 offer";
@@ -45,13 +49,13 @@ export const programmes: Programme[] = [
   {
     key: "little-cricketers",
     name: "Little Cricketers",
-    ages: "4–7",
+    ages: "4–6",
     ageMin: 4,
-    ageMax: 7,
+    ageMax: 6,
     summary: "Soft ball, movement, fun and confidence.",
     pricePence: 1800,
     priceUnit: "per session",
-    fixedTime: "Sundays 9:00–9:50am",
+    fixedTime: LITTLE_CRICKETERS_TIME,
     href: "/little-cricketers",
   },
   {

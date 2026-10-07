@@ -107,6 +107,8 @@ export type ChildInterest = {
   /** Wednesday evening / Thursday evening / Saturday afternoon / Sunday morning / Sunday afternoon (multi) */
   availability: string[];
   availabilityNotes?: string;
+  /** Little Cricketers (ages 4–6): preferred Sunday 40-minute sessions (multi). Missing on older registrations. */
+  littleCricketersSlots?: string[];
   frequency: "once" | "twice" | "not-sure";
   /**
    * Holiday wishes per period (ids from holidayPeriods in data/calendar):

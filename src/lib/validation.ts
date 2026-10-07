@@ -99,6 +99,7 @@ const childSchema = z.object({
   sessionLengths: multi(interestOptions.sessionLengths),
   availability: multi(interestOptions.availability),
   availabilityNotes: optionalText(500),
+  littleCricketersSlots: multi(interestOptions.littleCricketersSlots),
   frequency: z.enum(valuesOf("frequency"), { errorMap: () => ({ message: "Please choose an option" }) }),
   holidays: z
     .object(Object.fromEntries(holidayPeriods.map((p) => [p.id, multi(holidayOptions).optional()])))
