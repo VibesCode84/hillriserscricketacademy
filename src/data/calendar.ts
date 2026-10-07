@@ -84,3 +84,48 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
     ],
   },
 ];
+
+/* ── Coach recruitment (private page only) ──────────────────────────────── */
+
+/** Weekly session terms for 2026/27, shown on the private coach page */
+export const sessionTerms = [
+  {
+    id: "autumn-2026",
+    label: "Autumn term",
+    dates: "Wednesday 4 November – Sunday 13 December 2026",
+    weeks: 6,
+    note: "Starts with trial week, 4–8 November.",
+  },
+  {
+    id: "spring-2027",
+    label: "Spring term",
+    dates: "Wednesday 6 January – Sunday 28 March 2027",
+    weeks: 11,
+    note: "Half term 15–21 February: weekly sessions or camps, to be confirmed.",
+  },
+  {
+    id: "summer-2027",
+    label: "Summer term",
+    dates: "Wednesday 14 April – Sunday 11 July 2027",
+    weeks: 12,
+    note: "Half term 31 May – 6 June: weekly sessions or camps, to be confirmed. The sports hall is unavailable on 20 May, 26 May and 10 June (exams), and we're expecting outdoor nets, so summer times may change.",
+  },
+] as const;
+
+/** Potential holiday camp weeks (Monday–Friday), excluding the Christmas shutdown. To be confirmed. */
+export const campWeeks = [
+  { id: "2026-12-14", period: "Christmas holidays", dates: "14–18 December 2026" },
+  { id: "2027-02-15", period: "Spring half term", dates: "15–19 February 2027" },
+  { id: "2027-03-30", period: "Easter holidays", dates: "30 March – 2 April 2027 (after Easter Monday)" },
+  { id: "2027-04-05", period: "Easter holidays", dates: "5–9 April 2027" },
+  { id: "2027-06-01", period: "Summer half term", dates: "1–4 June 2027 (after the bank holiday)" },
+  { id: "2027-07-12", period: "Summer holidays", dates: "12–16 July 2027" },
+  { id: "2027-07-19", period: "Summer holidays", dates: "19–23 July 2027" },
+  { id: "2027-07-26", period: "Summer holidays", dates: "26–30 July 2027" },
+  { id: "2027-08-02", period: "Summer holidays", dates: "2–6 August 2027" },
+  { id: "2027-08-09", period: "Summer holidays", dates: "9–13 August 2027" },
+  { id: "2027-08-16", period: "Summer holidays", dates: "16–20 August 2027" },
+  { id: "2027-08-23", period: "Summer holidays", dates: "23–27 August 2027" },
+] as const;
+
+export const campDayOptions = ["Full days", "Part days"] as const;

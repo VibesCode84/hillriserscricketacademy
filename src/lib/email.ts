@@ -3,7 +3,7 @@ import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sess
 import { launch } from "../data/launch";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
 import type { Booking, CampInterest, CoachInterest, InterestRegistration, Parent, Player } from "./booking/types";
-import { labelFor, summariseCoachAvailability, summariseHolidays } from "./interest-options";
+import { labelFor, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms, summariseHolidays } from "./interest-options";
 
 type Email = { to: string; subject: string; text: string };
 
@@ -102,7 +102,7 @@ ${signOff}
   });
   await notifyAcademy(
     `Coach interest: ${c.name} — ${c.roles.join(", ")}`,
-    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nCoaching experience: ${c.coachingExperience}\nCoaching philosophy: ${c.coachingPhilosophy}\nStrengths: ${c.strengths}\nWeaknesses / working on: ${c.weaknesses}\nAutumn/spring: ${summariseCoachAvailability(c.availability)}${c.availability.notes ? ` (${c.availability.notes})` : ""}${c.availability.summerNotes ? `\nSummer notes: ${c.availability.summerNotes}` : ""}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
+    `${c.name} <${c.email}> ${c.phone}\nRoles: ${c.roles.join(", ")}${c.specialism ? `\nSpecialism: ${c.specialism}` : ""}\nQualifications: ${c.qualifications}\nPlaying background: ${c.playingBackground ?? "—"}\nCoaching experience: ${c.coachingExperience}\nCoaching philosophy: ${c.coachingPhilosophy}\nStrengths: ${c.strengths}\nWeaknesses / working on: ${c.weaknesses}\nTerms: ${summariseCoachTerms(c.availability)}\nWeekly: ${summariseCoachAvailability(c.availability)}${c.availability.notes ? ` (${c.availability.notes})` : ""}${c.availability.summerNotes ? `\nSummer notes: ${c.availability.summerNotes}` : ""}\nCamp weeks: ${summariseCoachCamps(c.availability)}${c.availability.holidayWeekly ? `\nHoliday weekly sessions: ${c.availability.holidayWeekly}` : ""}${c.availability.campNotes ? `\nHoliday notes: ${c.availability.campNotes}` : ""}\nDBS: ${c.dbsStatus}\nSafeguarding: ${c.safeguardingStatus}\nFirst aid: ${c.firstAid ? "Yes" : "No"}${c.message ? `\n\n${c.message}` : ""}`,
   );
 }
 

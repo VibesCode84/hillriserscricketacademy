@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { coachAvailabilityOptions, coachRoles, interestOptions, valuesOf } from "./interest-options";
-import { holidayOptions, holidayPeriods } from "../data/calendar";
+import { campDayOptions, campWeeks, holidayOptions, holidayPeriods, sessionTerms } from "../data/calendar";
 
 const phone = z
   .string()
@@ -147,10 +147,17 @@ export const coachInterestSchema = z.object({
       sunday: multi(coachAvailabilityOptions.sundayHours),
       weekdayBlocks: multi(coachAvailabilityOptions.weekdayBlocks),
       notes: optionalText(500),
+      terms: z.array(z.enum(sessionTerms.map((t) => t.label) as [string, ...string[]])).min(1, "Please tick the terms you could coach").max(3),
       summerNotes: optionalText(500),
+      holidayWeekly: z.enum(["yes", "some", "no"]).optional(),
+      camps: z
+        .object(Object.fromEntries(campWeeks.map((w) => [w.id, multi(campDayOptions).optional()])))
+        .default({})
+        .transform((c) => Object.fromEntries(Object.entries(c).filter(([, v]) => v && v.length)) as Record<string, string[]>),
+      campNotes: optionalText(500),
     })
     .refine((a) => a.saturday.length + a.sunday.length + a.weekdayBlocks.length > 0, {
-      message: "Please tick when you could coach in autumn and spring",
+      message: "Please tick when you could coach each week",
       path: ["termTime"],
     }),
   dbsStatus: z.string().trim().min(2, "Please tell us your DBS status").max(200),

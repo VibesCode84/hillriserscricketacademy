@@ -8,7 +8,7 @@ import { coachInterestSchema, interestRegistrationSchema } from "../src/lib/vali
 import { programmes, REGISTRATION_FEE_PENCE, formatOfferPrice, formatProgrammePrice, getProgramme } from "../src/data/programmes";
 import { sessions } from "../src/data/sessions";
 import { ageBand } from "../src/lib/age";
-import { coachAvailabilityOptions, summariseCoachAvailability } from "../src/lib/interest-options";
+import { coachAvailabilityOptions, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms } from "../src/lib/interest-options";
 
 const freshStore = () => new FileBookingStore(path.join(mkdtempSync(path.join(tmpdir(), "hillrisers-")), "store.json"));
 
@@ -91,6 +91,9 @@ test("coach expressions of interest validate and store", async () => {
       saturday: ["2:30–3:30pm", "3:30–4:30pm"],
       sunday: [],
       weekdayBlocks: ["Wednesday 6–9pm (3-hour block)"],
+      terms: ["Autumn term", "Summer term"],
+      camps: { "2027-02-15": ["Full days"], "2027-08-02": [] },
+      holidayWeekly: "some",
     },
     dbsStatus: "Enhanced cricket DBS 2025",
     safeguardingStatus: "Completed 2025",
@@ -105,9 +108,12 @@ test("coach expressions of interest validate and store", async () => {
   assert.ok(!coachInterestSchema.safeParse({ ...input, roles: [] }).success);
   assert.ok(!coachInterestSchema.safeParse({ ...input, coachingPhilosophy: "", strengths: "", weaknesses: "" }).success);
   assert.deepEqual(c.availability.saturday, ["2:30–3:30pm", "3:30–4:30pm"]);
+  assert.equal(summariseCoachTerms(c.availability), "Autumn term, Summer term");
+  assert.equal(summariseCoachCamps(c.availability), "15–19 February 2027: Full days");
+  assert.ok(!coachInterestSchema.safeParse({ ...input, availability: { ...input.availability, terms: [] } }).success);
 });
 
-test("coach availability matches the John Lyon hall slots; summer TBC", () => {
+test("coach availability matches the John Lyon hall slots", () => {
   const base = {
     name: "Alex Coach", email: "a@example.com", phone: "07000 111222", roles: ["Lead coach"], qualifications: "ECB L2",
     coachingExperience: "Ten seasons of junior coaching", coachingPhilosophy: "Players first, always.", strengths: "Batting",
@@ -119,12 +125,12 @@ test("coach availability matches the John Lyon hall slots; summer TBC", () => {
   assert.equal(coachAvailabilityOptions.sundayHours[0], "9–10am");
   assert.ok(coachAvailabilityOptions.sundayHours.includes("11am–12pm"));
   assert.equal(coachAvailabilityOptions.sundayHours.at(-1), "4–5pm");
-  const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [] } });
+  const none = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: [], weekdayBlocks: [], terms: ["Spring term"] } });
   assert.ok(!none.success);
   assert.ok(none.error.issues.map((i) => i.path.join(".")).includes("availability.termTime"));
-  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["9–10am"], sunday: [], weekdayBlocks: [] } });
+  const bad = coachInterestSchema.safeParse({ ...base, availability: { saturday: ["9–10am"], sunday: [], weekdayBlocks: [], terms: ["Spring term"] } });
   assert.ok(!bad.success);
-  const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], summerNotes: "Club cricket Saturdays" } });
+  const ok = coachInterestSchema.safeParse({ ...base, availability: { saturday: [], sunday: ["2–3pm"], weekdayBlocks: [], terms: ["Spring term"], summerNotes: "Club cricket Saturdays" } });
   assert.ok(ok.success);
   assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
 });

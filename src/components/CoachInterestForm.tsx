@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { coachAvailabilityOptions as opts, coachRoles } from "@/lib/interest-options";
+import { campDayOptions, campWeeks, sessionTerms } from "@/data/calendar";
 import { buttonClass } from "./Button";
 
 export function CoachInterestForm() {
@@ -10,6 +11,9 @@ export function CoachInterestForm() {
   const [saturday, setSaturday] = useState<string[]>([]);
   const [sunday, setSunday] = useState<string[]>([]);
   const [weekdayBlocks, setWeekdayBlocks] = useState<string[]>([]);
+  const [terms, setTerms] = useState<string[]>([]);
+  const [camps, setCamps] = useState<Record<string, string[]>>({});
+  const [holidayWeekly, setHolidayWeekly] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -29,9 +33,21 @@ export function CoachInterestForm() {
           ...fd,
           roles,
           firstAid,
-          availability: { saturday, sunday, weekdayBlocks, notes: fd.availabilityNotes, summerNotes: fd.summerNotes },
+          availability: {
+            saturday,
+            sunday,
+            weekdayBlocks,
+            notes: fd.availabilityNotes,
+            terms,
+            summerNotes: fd.summerNotes,
+            holidayWeekly: holidayWeekly || undefined,
+            camps,
+            campNotes: fd.campNotes,
+          },
           availabilityNotes: undefined,
           summerNotes: undefined,
+          campNotes: undefined,
+          holidayWeeklyChoice: undefined,
           company: fd.company || undefined,
         }),
       });
@@ -123,6 +139,12 @@ export function CoachInterestForm() {
         setSunday={setSunday}
         weekdayBlocks={weekdayBlocks}
         setWeekdayBlocks={setWeekdayBlocks}
+        terms={terms}
+        setTerms={setTerms}
+        camps={camps}
+        setCamps={setCamps}
+        holidayWeekly={holidayWeekly}
+        setHolidayWeekly={setHolidayWeekly}
         errors={errors}
       />
 
@@ -207,16 +229,58 @@ function AvailabilityPicker(props: {
   setSunday: (v: string[]) => void;
   weekdayBlocks: string[];
   setWeekdayBlocks: (v: string[]) => void;
+  terms: string[];
+  setTerms: (v: string[]) => void;
+  camps: Record<string, string[]>;
+  setCamps: (v: Record<string, string[]>) => void;
+  holidayWeekly: string;
+  setHolidayWeekly: (v: string) => void;
   errors: Record<string, string>;
 }) {
   const termErr = props.errors["availability.termTime"];
+  const termsErr = props.errors["availability.terms"];
+  const periods = [...new Set(campWeeks.map((w) => w.period))];
   return (
     <div className="space-y-6">
       <section className="rounded-2xl bg-cream p-5 md:p-6">
-        <h3 className="font-serif text-2xl text-navy-950">Autumn and spring availability</h3>
+        <h3 className="font-serif text-2xl text-navy-950">Session dates 2026/27</h3>
         <p className="mt-1 text-sm text-ink-muted">
-          Indoors at John Lyon, with bowling machines available. Tick every hour you could coach at weekends, and whether you could take
-          the 3-hour evening block on Wednesdays or Thursdays.
+          Weekly sessions run in term time at John Lyon. We&rsquo;re closed over Christmas, 21 December – 3 January. Tick every term you
+          could coach.
+        </p>
+        <fieldset className="mt-5">
+          <legend className="sr-only">Terms you could coach</legend>
+          <div className="grid gap-3">
+            {sessionTerms.map((t) => {
+              const on = props.terms.includes(t.label);
+              return (
+                <label
+                  key={t.id}
+                  className={`flex cursor-pointer gap-4 rounded-xl border p-4 transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+                    on ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 bg-white text-navy-950 hover:border-navy-950/40"
+                  }`}
+                >
+                  <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-[#c9a227]" checked={on} onChange={() => props.setTerms(toggleIn(props.terms, t.label))} />
+                  <span>
+                    <span className="block font-semibold">
+                      {t.label} · {t.weeks} weeks
+                    </span>
+                    <span className="block text-sm">{t.dates}</span>
+                    <span className={`mt-1 block text-sm ${on ? "text-slate" : "text-ink-muted"}`}>{t.note}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+        {termsErr && <p className="error-text">{termsErr}</p>}
+      </section>
+
+      <section className="rounded-2xl bg-cream p-5 md:p-6">
+        <h3 className="font-serif text-2xl text-navy-950">Weekly availability</h3>
+        <p className="mt-1 text-sm text-ink-muted">
+          Indoors at John Lyon, with bowling machines available in autumn and spring. Tick every hour you could coach at weekends, and
+          whether you could take the 3-hour evening block on Wednesdays or Thursdays.
         </p>
         <div className="mt-5 space-y-5">
           <HourGrid day="Saturdays (2:30–5:30pm)" hours={opts.saturdayHours} value={props.saturday} onChange={props.setSaturday} />
@@ -230,21 +294,89 @@ function AvailabilityPicker(props: {
             </div>
           </fieldset>
           <div>
-            <label htmlFor="co-availabilityNotes" className="label">Anything else about your autumn/spring availability? <span className="font-normal text-ink-muted">(optional)</span></label>
+            <label htmlFor="co-availabilityNotes" className="label">Anything else about your weekly availability? <span className="font-normal text-ink-muted">(optional)</span></label>
             <input id="co-availabilityNotes" name="availabilityNotes" className="field" placeholder="e.g. not available alternate Sundays" />
+          </div>
+          <div>
+            <label htmlFor="co-summerNotes" className="label">
+              Anything about the summer term we should know? <span className="font-normal text-ink-muted">(optional)</span>
+            </label>
+            <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play club cricket on Saturdays" />
+            <p className="hint">Summer times may change once outdoor nets are confirmed.</p>
           </div>
         </div>
         {termErr && <p className="error-text">{termErr}</p>}
       </section>
 
       <section className="rounded-2xl bg-navy-950 p-5 text-cream md:p-6">
-        <h3 className="font-serif text-2xl">Summer: to be confirmed</h3>
+        <h3 className="font-serif text-2xl">Holiday camps: potential dates</h3>
         <p className="mt-1 text-sm leading-relaxed text-slate">
-          The summer timetable is still to be confirmed. The sports hall is unavailable on a small number of dates during exam season, and
-          we&rsquo;re expecting to have outdoor nets available too. We&rsquo;ll talk to you about summer sessions nearer the time.
+          We&rsquo;re planning holiday camps, Monday to Friday. Dates and formats are still to be confirmed. Tick any weeks you might be able to
+          coach, and whether full or part days suit you.
         </p>
-        <label htmlFor="co-summerNotes" className="label mt-5 !text-cream">Any summer commitments we should know about? <span className="font-normal text-slate">(optional)</span></label>
-        <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play club cricket on Saturdays" />
+        <div className="mt-5 space-y-5">
+          {periods.map((period) => (
+            <fieldset key={period}>
+              <legend className="label !text-cream">{period}</legend>
+              <div className="mt-1 divide-y divide-cream/10 rounded-xl border border-cream/10">
+                {campWeeks
+                  .filter((w) => w.period === period)
+                  .map((w) => (
+                    <div key={w.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-sm">{w.dates}</span>
+                      <div className="grid grid-cols-2 gap-2 sm:w-64">
+                        {campDayOptions.map((o) => {
+                          const on = props.camps[w.id]?.includes(o) ?? false;
+                          return (
+                            <label
+                              key={o}
+                              className={`flex cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-sm font-medium transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+                                on ? "border-gold bg-gold text-navy-950" : "border-cream/20 text-cream hover:border-cream/50"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                aria-label={`${w.dates}: ${o}`}
+                                checked={on}
+                                onChange={() => props.setCamps({ ...props.camps, [w.id]: toggleIn(props.camps[w.id] ?? [], o) })}
+                              />
+                              {o}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </fieldset>
+          ))}
+          <fieldset>
+            <legend className="label !text-cream">Could you also coach weekly sessions in the school holidays?</legend>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {opts.holidayWeekly.map((o) => {
+                const on = props.holidayWeekly === o.value;
+                return (
+                  <label
+                    key={o.value}
+                    className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+                      on ? "border-gold bg-gold text-navy-950" : "border-cream/20 text-cream hover:border-cream/50"
+                    }`}
+                  >
+                    <input type="radio" name="holidayWeeklyChoice" className="sr-only" checked={on} onChange={() => props.setHolidayWeekly(o.value)} />
+                    {o.label}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+          <div>
+            <label htmlFor="co-campNotes" className="label !text-cream">
+              Anything else about the holidays? <span className="font-normal text-slate">(optional)</span>
+            </label>
+            <input id="co-campNotes" name="campNotes" className="field" placeholder="e.g. away the first two weeks of August" />
+          </div>
+        </div>
       </section>
     </div>
   );

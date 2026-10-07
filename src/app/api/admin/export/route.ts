@@ -1,6 +1,6 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
 import { coachAvailabilityOptions, interestOptions, labelFor } from "@/lib/interest-options";
-import { holidayOptions, holidayPeriods } from "@/data/calendar";
+import { campDayOptions, campWeeks, holidayOptions, holidayPeriods, sessionTerms } from "@/data/calendar";
 import { ageBand, ageOn } from "@/lib/age";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
@@ -81,7 +81,10 @@ export async function GET(req: Request) {
         ...coachAvailabilityOptions.sundayHours.map((h) => `Sun ${h}`),
         ...coachAvailabilityOptions.weekdayBlocks,
         "Availability notes",
-        "Summer notes", "DBS", "Safeguarding", "First aid", "Message",
+        ...sessionTerms.map((t) => t.label),
+        "Summer notes",
+        ...campWeeks.flatMap((w) => campDayOptions.map((o) => `Camp ${w.dates}: ${o}`)),
+        "Holiday weekly sessions", "Holiday notes", "DBS", "Safeguarding", "First aid", "Message",
       ],
       rows.map((c) => [
         c.createdAt, c.name, c.email, c.phone, c.roles.join(" / "), c.specialism, c.qualifications, c.playingBackground, c.coachingExperience, c.coachingPhilosophy, c.strengths, c.weaknesses,
@@ -89,7 +92,10 @@ export async function GET(req: Request) {
         ...coachAvailabilityOptions.sundayHours.map((h) => (c.availability.sunday.includes(h) ? "Yes" : "")),
         ...coachAvailabilityOptions.weekdayBlocks.map((b) => (c.availability.weekdayBlocks.includes(b) ? "Yes" : "")),
         c.availability.notes,
-        c.availability.summerNotes, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
+        ...sessionTerms.map((t) => (c.availability.terms?.includes(t.label) ? "Yes" : "")),
+        c.availability.summerNotes,
+        ...campWeeks.flatMap((w) => campDayOptions.map((o) => (c.availability.camps?.[w.id]?.includes(o) ? "Yes" : ""))),
+        c.availability.holidayWeekly, c.availability.campNotes, c.dbsStatus, c.safeguardingStatus, c.firstAid ? "Yes" : "No", c.message,
       ]),
     );
   }

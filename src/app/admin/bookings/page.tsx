@@ -6,7 +6,7 @@ import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
 import { BookingRowActions, ManualBookingForm, WaitlistRow } from "@/components/admin/AdminActions";
-import { interestOptions, labelFor, summariseCoachAvailability, summariseHolidays } from "@/lib/interest-options";
+import { interestOptions, labelFor, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms, summariseHolidays } from "@/lib/interest-options";
 import { holidayOptions, holidayPeriods } from "@/data/calendar";
 import { ageOn, ageBand } from "@/lib/age";
 import { getPaymentProvider } from "@/lib/payments";
@@ -196,9 +196,13 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                 {c.coachingPhilosophy && <div className="whitespace-pre-line">Coaching philosophy: {c.coachingPhilosophy}</div>}
                 {c.strengths && <div className="whitespace-pre-line">Strengths: {c.strengths}</div>}
                 {c.weaknesses && <div className="whitespace-pre-line">Weaknesses / working on: {c.weaknesses}</div>}
-                <div>Autumn/spring: {summariseCoachAvailability(c.availability)}</div>
+                <div>Terms: {summariseCoachTerms(c.availability)}</div>
+                <div>Weekly: {summariseCoachAvailability(c.availability)}</div>
                 {c.availability.notes && <div>Notes: {c.availability.notes}</div>}
                 {c.availability.summerNotes && <div>Summer notes: {c.availability.summerNotes}</div>}
+                <div>Camp weeks: {summariseCoachCamps(c.availability)}</div>
+                {c.availability.holidayWeekly && <div>Holiday weekly sessions: {c.availability.holidayWeekly}</div>}
+                {c.availability.campNotes && <div>Holiday notes: {c.availability.campNotes}</div>}
                 <div>DBS: {c.dbsStatus} · Safeguarding: {c.safeguardingStatus} · First aid: {c.firstAid ? "Yes" : "No"}</div>
                 {c.message && <div className="whitespace-pre-line">Message: {c.message}</div>}
                 <div>{new Date(c.createdAt).toLocaleString("en-GB")}</div>

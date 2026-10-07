@@ -1,4 +1,4 @@
-import { holidayPeriods } from "../data/calendar";
+import { campWeeks, holidayPeriods, sessionTerms } from "../data/calendar";
 
 /**
  * Options for the register-your-interest form. Shared by the form, server
@@ -109,15 +109,29 @@ export const coachAvailabilityOptions = {
   sundayHours: hourlySlots("09:00", "17:00"),
   /** Autumn & spring: one 3-hour evening block */
   weekdayBlocks: ["Wednesday 6–9pm (3-hour block)", "Thursday 6–9pm (3-hour block)"],
+  /** Weekly sessions during school holidays (not the Christmas shutdown) */
+  holidayWeekly: [
+    { value: "yes", label: "Yes" },
+    { value: "some", label: "Some weeks" },
+    { value: "no", label: "No" },
+  ],
 };
 
 export type CoachAvailability = {
+  /** Weekly slots, all terms */
   saturday: string[];
   sunday: string[];
   weekdayBlocks: string[];
   notes?: string;
-  /** Summer timetable is TBC — coaches can note any summer commitments */
+  /** Term labels from sessionTerms they could coach. Missing on early expressions of interest. */
+  terms?: string[];
+  /** Summer times may change (outdoor nets) — coaches can note any summer commitments */
   summerNotes?: string;
+  /** Weekly sessions during school holidays: yes / some / no */
+  holidayWeekly?: "yes" | "some" | "no";
+  /** Potential camp weeks (campWeeks ids) → "Full days" / "Part days" */
+  camps?: Record<string, string[]>;
+  campNotes?: string;
 };
 
 /** One-line summary for emails, admin and CSV */
@@ -129,6 +143,17 @@ export function summariseCoachAvailability(a: CoachAvailability) {
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "—";
 }
+
+/** e.g. "Autumn term, Spring term" — in calendar order */
+export const summariseCoachTerms = (a: CoachAvailability) =>
+  sessionTerms.filter((t) => a.terms?.includes(t.label)).map((t) => t.label).join(", ") || "—";
+
+/** e.g. "14–18 December 2026: Full days; 5–9 April 2027: Part days" */
+export const summariseCoachCamps = (a: CoachAvailability) =>
+  campWeeks
+    .filter((w) => a.camps?.[w.id]?.length)
+    .map((w) => `${w.dates}: ${a.camps![w.id].join(", ")}`)
+    .join("; ") || "—";
 
 /* ── Holiday wishes ─────────────────────────────────────────────────────── */
 
