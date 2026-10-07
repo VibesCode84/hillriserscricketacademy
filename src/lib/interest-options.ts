@@ -1,3 +1,5 @@
+import { holidayPeriods } from "../data/calendar";
+
 /**
  * Options for the register-your-interest form. Shared by the form, server
  * validation, emails, admin and CSV export. Single-choice answers are stored
@@ -47,7 +49,7 @@ export const interestOptions = {
     { value: "twice", label: "Twice a week" },
     { value: "not-sure", label: "Not sure" },
   ],
-  otherInterests: ["Holiday camps", "1-to-1 coaching", "Summer outdoor coaching"],
+  otherInterests: ["1-to-1 coaching", "Summer outdoor coaching"],
   paymentPreference: [
     { value: "termly", label: "Termly" },
     { value: "monthly", label: "Monthly" },
@@ -124,4 +126,14 @@ export function summariseCoachAvailability(a: CoachAvailability) {
     ...a.weekdayBlocks,
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : "—";
+}
+
+/* ── Holiday wishes ─────────────────────────────────────────────────────── */
+
+/** e.g. "Spring half term: Part-day camp, Full-day camp; Easter holidays: Normal weekly sessions" */
+export function summariseHolidays(holidays: Record<string, string[]> | undefined) {
+  return holidayPeriods
+    .filter((p) => holidays?.[p.id]?.length)
+    .map((p) => `${p.label}: ${holidays![p.id].join(", ")}`)
+    .join("; ");
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { interestOptions } from "@/lib/interest-options";
+import { holidayOptions, holidayPeriods, shutdown } from "@/data/calendar";
 import { buttonClass } from "./Button";
 
 type Child = {
@@ -19,6 +20,8 @@ type Child = {
   availability: string[];
   availabilityNotes: string;
   frequency: string;
+  holidays: Record<string, string[]>;
+  holidayNotes: string;
   otherInterests: string[];
   paymentPreference: string;
 };
@@ -37,6 +40,8 @@ const newChild = (): Child => ({
   availability: [],
   availabilityNotes: "",
   frequency: "",
+  holidays: {},
+  holidayNotes: "",
   otherInterests: [],
   paymentPreference: "",
 });
@@ -143,7 +148,7 @@ export function InterestForm() {
         body: JSON.stringify({
           ...parent,
           heardAbout: parent.heardAbout || undefined,
-          children: children.map((c) => ({ ...c, school: c.school || undefined, club: c.club || undefined, availabilityNotes: c.availabilityNotes || undefined })),
+          children: children.map((c) => ({ ...c, school: c.school || undefined, club: c.club || undefined, availabilityNotes: c.availabilityNotes || undefined, holidayNotes: c.holidayNotes || undefined })),
           contactConsent,
           marketingConsent,
           company,
@@ -288,6 +293,36 @@ export function InterestForm() {
                 <div className="mt-5">
                   <SingleChoice name={`c${i}-freq`} legend="How often?" options={interestOptions.frequency} value={c.frequency} onChange={(v) => setChild(i, { frequency: v })} error={e("frequency")} />
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-navy-950/10 p-5">
+                <p className="label">School holidays</p>
+                <p className="text-sm leading-relaxed text-ink-muted">
+                  Would they like weekly sessions to carry on in their normal slot, or a part-day or full-day camp? Tick any that suit, or
+                  leave a holiday blank. We&rsquo;re closed over Christmas, {shutdown.dates}.{" "}
+                  <Link href="/calendar" className="font-semibold text-navy-950 underline underline-offset-4">See the 2026/27 calendar</Link>.
+                </p>
+                <div className="mt-5 space-y-5">
+                  {holidayPeriods.map((p) => (
+                    <MultiChoice
+                      key={p.id}
+                      legend={p.label}
+                      hint={`· ${p.dates}`}
+                      options={holidayOptions}
+                      value={c.holidays[p.id] ?? []}
+                      onChange={(v) => setChild(i, { holidays: { ...c.holidays, [p.id]: v } })}
+                    />
+                  ))}
+                </div>
+                <label htmlFor={`ri-c${i}-hols`} className="label mt-5">Anything else about the holidays? <span className="font-normal text-ink-muted">(optional)</span></label>
+                <textarea
+                  id={`ri-c${i}-hols`}
+                  rows={2}
+                  className="field"
+                  placeholder="e.g. away the first week of August; mornings only for camps"
+                  value={c.holidayNotes}
+                  onChange={(ev) => setChild(i, { holidayNotes: ev.target.value })}
+                />
               </div>
 
               <div className="grid gap-7 sm:grid-cols-2">

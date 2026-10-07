@@ -1,5 +1,6 @@
 import { getSession, formatTimeRange, sessionLabel } from "@/data/sessions";
 import { coachAvailabilityOptions, interestOptions, labelFor } from "@/lib/interest-options";
+import { holidayOptions, holidayPeriods } from "@/data/calendar";
 import { ageBand, ageOn } from "@/lib/age";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { getStore } from "@/lib/booking";
@@ -47,6 +48,7 @@ export async function GET(req: Request) {
         "Child first name", "Date of birth", "Age today", "Age band", "School", "Club", "Girls-only", "Level", "Main role",
         ...interestOptions.availability, "Availability notes", "How often",
         "Small group (up to 6 per net)", "Group of 3", "1-to-1", "1 hour", "90 minutes", "2 hours",
+        ...holidayPeriods.flatMap((p) => holidayOptions.map((o) => `${p.label}: ${o}`)), "Holiday notes",
         "Wants", "Other interests", "Payment preference",
       ],
       regs.flatMap((r) =>
@@ -59,6 +61,7 @@ export async function GET(req: Request) {
             ...interestOptions.availability.map((o) => yes(c.availability, o)), c.availabilityNotes, labelFor("frequency", c.frequency),
             yes(c.formats, "Small group (up to 6 per net)"), yes(c.formats, "Group of 3"), yes(c.formats, "1-to-1"),
             yes(c.sessionLengths, "1 hour"), yes(c.sessionLengths, "90 minutes"), yes(c.sessionLengths, "2 hours"),
+            ...holidayPeriods.flatMap((p) => holidayOptions.map((o) => yes(c.holidays?.[p.id] ?? [], o))), c.holidayNotes,
             c.wants.join(" / "), c.otherInterests.join(" / "), labelFor("paymentPreference", c.paymentPreference),
           ];
         }),

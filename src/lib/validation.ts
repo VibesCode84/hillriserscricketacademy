@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { coachAvailabilityOptions, coachRoles, interestOptions, valuesOf } from "./interest-options";
+import { holidayOptions, holidayPeriods } from "../data/calendar";
 
 const phone = z
   .string()
@@ -99,6 +100,12 @@ const childSchema = z.object({
   availability: multi(interestOptions.availability),
   availabilityNotes: optionalText(500),
   frequency: z.enum(valuesOf("frequency"), { errorMap: () => ({ message: "Please choose an option" }) }),
+  holidays: z
+    .object(Object.fromEntries(holidayPeriods.map((p) => [p.id, multi(holidayOptions).optional()])))
+    .default({})
+    // Keep only periods with at least one choice
+    .transform((h) => Object.fromEntries(Object.entries(h).filter(([, v]) => v && v.length)) as Record<string, string[]>),
+  holidayNotes: optionalText(500),
   otherInterests: multi(interestOptions.otherInterests),
   paymentPreference: z.enum(valuesOf("paymentPreference"), { errorMap: () => ({ message: "Please choose an option" }) }),
 });

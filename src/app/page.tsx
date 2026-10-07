@@ -169,10 +169,10 @@ export default function HomePage() {
         <div className="container-x flex flex-col gap-5 py-10 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="eyebrow">Holiday camps</p>
-            <p className="mt-3 font-serif text-3xl text-cream">Specialist holiday camps, starting Spring half term.</p>
-            <p className="mt-1 text-slate">Details TBC — register interest to hear first.</p>
+            <p className="mt-3 font-serif text-3xl text-cream">Cricket in the school holidays.</p>
+            <p className="mt-1 text-slate">Specialist camps, part-day or full-day — tell us which holidays suit you.</p>
           </div>
-          <ButtonLink href="/camps#register" variant="secondary" className="shrink-0">Register interest</ButtonLink>
+          <ButtonLink href="/calendar" variant="secondary" className="shrink-0">See the calendar</ButtonLink>
         </div>
       </section>
 

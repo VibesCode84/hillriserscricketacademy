@@ -108,7 +108,14 @@ export type ChildInterest = {
   availability: string[];
   availabilityNotes?: string;
   frequency: "once" | "twice" | "not-sure";
-  /** Holiday camps / 1-to-1 / Summer outdoor (multi) */
+  /**
+   * Holiday wishes per period (ids from holidayPeriods in data/calendar):
+   * normal weekly sessions / part-day camp / full-day camp (multi).
+   * Missing on registrations made before this was asked.
+   */
+  holidays?: Record<string, string[]>;
+  holidayNotes?: string;
+  /** 1-to-1 / Summer outdoor (multi) */
   otherInterests: string[];
   paymentPreference: "termly" | "monthly";
 };

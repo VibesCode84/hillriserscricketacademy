@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { camps } from "@/data/camps";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
@@ -13,7 +14,7 @@ const [firstCamp] = camps;
 export const metadata: Metadata = {
   title: "Specialist Holiday Cricket Camps in Harrow",
   description:
-    "HillRisers specialist junior cricket holiday camps, starting in the Spring half term. Details to be confirmed — register your interest to hear first.",
+    "HillRisers specialist junior cricket holiday camps at John Lyon School, part-day or full-day. Details to be confirmed — register your interest to hear first.",
   alternates: { canonical: "/camps" },
 };
 
@@ -38,12 +39,13 @@ export default function CampsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Holiday camps · Starting Spring half term"
+        eyebrow="Holiday camps · Details TBC"
         title="Specialist holiday camps."
         intro={
           <p>
-            Specialist cricket coaching in the school holidays from the HillRisers coaching team. Academy sessions pause for half term —
-            that&rsquo;s when we run camps, starting in the Spring half term.
+            Specialist cricket coaching in the school holidays from the HillRisers coaching team — part-day or full-day camps, with weekly
+            sessions possibly carrying on too. See the <Link href="/calendar" className="underline underline-offset-4">2026/27 calendar</Link>{" "}
+            for holiday dates.
           </p>
         }
         actions={

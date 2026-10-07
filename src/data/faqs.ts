@@ -16,6 +16,10 @@ export const faqGroups: FAQGroup[] = [
         a: "We're building it around the families who register. Tell us when your child can attend, how long they'd like sessions to be and what they want from cricket, and we'll plan the timetable around the answers.",
       },
       {
+        q: "Do sessions run in the school holidays?",
+        a: "We're planning holiday camps (part-day and full-day), and weekly sessions may carry on in their normal slot too — we'll decide from what families tell us on the interest form. We're closed from 21 December to 3 January. See the 2026/27 calendar for dates.",
+      },
+      {
         q: "Is my child good enough?",
         a: "If they enjoy cricket, yes. Players are placed by ability, not just age, and move up when they're ready — from complete beginners to club and representative players.",
       },

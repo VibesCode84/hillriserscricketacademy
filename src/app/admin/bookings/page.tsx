@@ -6,7 +6,8 @@ import { formatPrice } from "@/data/site";
 import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
 import { BookingRowActions, ManualBookingForm, WaitlistRow } from "@/components/admin/AdminActions";
-import { interestOptions, labelFor, summariseCoachAvailability } from "@/lib/interest-options";
+import { interestOptions, labelFor, summariseCoachAvailability, summariseHolidays } from "@/lib/interest-options";
+import { holidayOptions, holidayPeriods } from "@/data/calendar";
 import { ageOn, ageBand } from "@/lib/age";
 import { getPaymentProvider } from "@/lib/payments";
 
@@ -53,6 +54,10 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
     { title: "Preferred format", rows: tally(children.flatMap((c) => c.formats), interestOptions.formats) },
     { title: "Session length", rows: tally(children.flatMap((c) => c.sessionLengths), interestOptions.sessionLengths) },
     { title: "Girls-only interest", rows: tally(children.map((c) => labelFor("girlsOnly", c.girlsOnly)), interestOptions.girlsOnly.map((o) => o.label)) },
+    ...holidayPeriods.map((p) => ({
+      title: `${p.label} (${p.dates})`,
+      rows: tally(children.flatMap((c) => c.holidays?.[p.id] ?? []), holidayOptions),
+    })),
   ];
   const activeOnly = show !== "all";
   const visible = bookings.filter((b) => !activeOnly || ["confirmed", "pending_payment", "part_refunded"].includes(b.status));
@@ -150,6 +155,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                   <div>Formats: {c.formats.join(", ") || "—"}</div>
                   <div>Lengths: {c.sessionLengths.join(", ") || "—"}</div>
                   <div className="sm:col-span-2">Wants: {c.wants.join(", ") || "—"}</div>
+                  <div className="sm:col-span-2">Holidays: {summariseHolidays(c.holidays) || "—"}{c.holidayNotes ? ` — ${c.holidayNotes}` : ""}</div>
                   <div>Other interests: {c.otherInterests.join(", ") || "—"}</div>
                   <div>Payment: {labelFor("paymentPreference", c.paymentPreference)}</div>
                 </dl>

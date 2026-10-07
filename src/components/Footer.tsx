@@ -12,6 +12,7 @@ const groups = [
     links: [
       { href: "/programmes", label: "Programmes & Prices" },
       { href: "/how-booking-works", label: "How Booking Works" },
+      { href: "/calendar", label: "2026/27 Calendar" },
       { href: "/girls", label: "Girls Cricket" },
       { href: "/little-cricketers", label: "Little Cricketers" },
       { href: "/camps", label: "Holiday Camps" },

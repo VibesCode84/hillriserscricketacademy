@@ -23,7 +23,8 @@ const child = (overrides = {}) => ({
   sessionLengths: ["90 minutes"],
   availability: ["Saturday afternoon", "Sunday morning"],
   frequency: "once",
-  otherInterests: ["Holiday camps"],
+  holidays: { "spring-half-term-2027": ["Part-day camp", "Full-day camp"], "easter-2027": [] },
+  otherInterests: ["1-to-1 coaching"],
   paymentPreference: "monthly",
   ...overrides,
 });
@@ -63,7 +64,7 @@ test("interest form rejects options that aren't on the form", () => {
 
 test("interest registrations are stored with every child", async () => {
   const store = freshStore();
-  const parsed = interestRegistrationSchema.parse(registration());
+  const parsed = interestRegistrationSchema.parse(registration({ children: [child(), child({ firstName: "Dev", holidays: undefined })] }));
   const { company: _c, ...data } = parsed;
   void _c;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -168,4 +169,14 @@ test("holiday camp interest is stored (camp details TBC)", async () => {
   const store = freshStore();
   await store.createCampInterest({ camps: [camps[0].id], parentName: "P", email: "p@example.com", childName: "Kid", childAge: 15, interest: "batting" });
   assert.equal((await store.listCampInterests()).length, 1);
+});
+
+test("holiday wishes keep only ticked periods and summarise in calendar order", async () => {
+  const { summariseHolidays } = await import("../src/lib/interest-options");
+  const parsed = interestRegistrationSchema.parse(registration({ children: [child(), child({ firstName: "Dev", holidays: undefined })] }));
+  assert.deepEqual(parsed.children[0].holidays, { "spring-half-term-2027": ["Part-day camp", "Full-day camp"] });
+  assert.deepEqual(parsed.children[1].holidays, {});
+  assert.equal(summariseHolidays(parsed.children[0].holidays), "Spring half term: Part-day camp, Full-day camp");
+  // Unknown options are rejected
+  assert.equal(interestRegistrationSchema.safeParse(registration({ children: [child({ holidays: { "easter-2027": ["Overnight"] } })] })).success, false);
 });

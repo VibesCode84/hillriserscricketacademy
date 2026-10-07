@@ -3,7 +3,7 @@ import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sess
 import { launch } from "../data/launch";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
 import type { Booking, CampInterest, CoachInterest, InterestRegistration, Parent, Player } from "./booking/types";
-import { labelFor, summariseCoachAvailability } from "./interest-options";
+import { labelFor, summariseCoachAvailability, summariseHolidays } from "./interest-options";
 
 type Email = { to: string; subject: string; text: string };
 
@@ -78,6 +78,7 @@ ${signOff}
           (c) =>
             `${c.firstName} (DOB ${c.dateOfBirth}) — ${labelFor("level", c.level)}, ${labelFor("mainRole", c.mainRole)}\n` +
             `  Available: ${c.availability.join(", ") || "—"}${c.availabilityNotes ? ` (${c.availabilityNotes})` : ""}\n` +
+            `  Holidays: ${summariseHolidays(c.holidays) || "—"}${c.holidayNotes ? ` (${c.holidayNotes})` : ""}\n` +
             `  Wants: ${c.wants.join(", ") || "—"}\n  Formats: ${c.formats.join(", ") || "—"} · Lengths: ${c.sessionLengths.join(", ") || "—"}`,
         )
         .join("\n\n") +
