@@ -10,7 +10,7 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Venue — John Lyon School, Harrow on the Hill",
   description:
-    "HillRisers coaches in the John Lyon School sports hall, Harrow on the Hill — three indoor nets and bowling machines — with outdoor nets expected in summer.",
+    "HillRisers coaches in the John Lyon School sports hall, Harrow on the Hill — three indoor nets and a bowling machine — with outdoor nets expected in summer.",
   alternates: { canonical: "/venue" },
 };
 
@@ -24,8 +24,8 @@ const info = [
     b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected, and full run-ups return outdoors.",
   },
   {
-    t: "Bowling machines",
-    b: "Bowling machines are available through autumn and spring, so players get more quality balls in every session.",
+    t: "Bowling machine",
+    b: "A bowling machine is available through autumn and spring, so players get more quality balls in their sessions.",
   },
   {
     t: "Summer",
@@ -48,7 +48,7 @@ export default function VenuePage() {
       <PageHero
         eyebrow="The venue"
         title="John Lyon School, Harrow on the Hill."
-        intro={<p>Three indoor nets and bowling machines in the sports hall, with outdoor nets expected in summer.</p>}
+        intro={<p>Three indoor nets and a bowling machine in the sports hall, with outdoor nets expected in summer.</p>}
         actions={
           <>
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>

@@ -15,7 +15,7 @@ export function VenueFeature() {
         <p className="eyebrow">The venue</p>
         <h2 className="mt-5 text-[2.5rem] leading-[1.05] md:text-[3.25rem]">Train at John Lyon School.</h2>
         <p className="mt-6 text-lg leading-relaxed text-ink-muted">
-          We coach in the {site.venue.name} sports hall, Harrow on the Hill, with three indoor nets and bowling machines — and we&rsquo;re
+          We coach in the {site.venue.name} sports hall, Harrow on the Hill, with three indoor nets and a bowling machine — and we&rsquo;re
           expecting outdoor nets in summer.
         </p>
         <address className="mt-6 not-italic leading-relaxed text-navy-950">

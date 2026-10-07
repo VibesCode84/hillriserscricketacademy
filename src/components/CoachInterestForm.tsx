@@ -279,7 +279,7 @@ function AvailabilityPicker(props: {
       <section className="rounded-2xl bg-cream p-5 md:p-6">
         <h3 className="font-serif text-2xl text-navy-950">Weekly availability</h3>
         <p className="mt-1 text-sm text-ink-muted">
-          Indoors at John Lyon, with bowling machines available in autumn and spring. Tick every hour you could coach at weekends, and
+          Indoors at John Lyon, with a bowling machine available in autumn and spring. Tick every hour you could coach at weekends, and
           whether you could take the 3-hour evening block on Wednesdays or Thursdays.
         </p>
         <div className="mt-5 space-y-5">

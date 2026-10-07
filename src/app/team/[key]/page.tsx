@@ -30,7 +30,7 @@ const opportunity = [
   { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
   { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
   { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall, with outdoor nets expected in summer." },
-  { t: "Bowling machines", b: "Bowling machines are available through autumn and spring, with video analysis on the way." },
+  { t: "A bowling machine", b: "A bowling machine is available through autumn and spring, with video analysis on the way." },
   { t: "A founding team", b: "Be one of the coaches who shapes HillRisers from the very first session — your ideas will define how we coach." },
 ];
 
@@ -53,7 +53,7 @@ const reasons = [
   },
   {
     t: "Technology to help",
-    b: "Bowling machines give players more quality balls, and video analysis is on the way so you can show them exactly what you see.",
+    b: "A bowling machine gives players more quality balls, and video analysis is on the way so you can show them exactly what you see.",
   },
   {
     t: "Support in the net",

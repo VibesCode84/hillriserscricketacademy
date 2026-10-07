@@ -63,7 +63,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "Where are sessions held?",
-        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and bowling machines. Summer arrangements are to be confirmed, and we're expecting outdoor nets.",
+        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and a bowling machine. Summer arrangements are to be confirmed, and we're expecting outdoor nets.",
       },
       {
         q: "Can seam bowlers bowl off a full run-up indoors?",
