@@ -129,7 +129,7 @@ export const programmes: Programme[] = [
 export const REGISTRATION_FEE_PENCE = 3000;
 
 /** Specialist skills coached within the programmes */
-export const specialistSkills = ["Batting", "Power hitting", "Sweeps and ramps", "Seam bowling", "Spin bowling"];
+export const specialistSkills = ["Batting", "Power hitting", "Sweeps and ramps", "Seam bowling", "Spin bowling", "Wicket-keeping"];
 
 export const groupSizes = {
   earlyRisers: 16,

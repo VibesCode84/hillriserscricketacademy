@@ -116,7 +116,7 @@ export function CoachInterestForm() {
       </fieldset>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        {text("specialism", "Specialism", { optional: true, placeholder: "e.g. batting incl. sweeps and ramps, seam, spin" })}
+        {text("specialism", "Specialism", { optional: true, placeholder: "e.g. batting incl. sweeps and ramps, seam, spin, wicket-keeping" })}
         {text("qualifications", "Coaching qualifications", { placeholder: "e.g. ECB Level 2" })}
         {text("playingBackground", "Playing background", { optional: true, area: true, placeholder: "e.g. club 1st XI, county age-group, league cricket" })}
         {text("coachingExperience", "Your coaching experience", { area: true, placeholder: "Who you've coached, where and at what level — e.g. club juniors U9–U15, school cricket, county age-group" })}

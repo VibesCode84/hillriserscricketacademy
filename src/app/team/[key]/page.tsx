@@ -63,7 +63,7 @@ const reasons = [
 
 const roles = [
   { role: "Lead coach", detail: "Leads sessions and the coaching team on the day." },
-  { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam or spin." },
+  { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam, spin or wicket-keeping." },
   { role: "Girls Academy lead", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
   { role: "Early-years coach", detail: "Early Risers (ages 4–6): three 40-minute sessions on Sunday mornings, 9:00–11:00am." },
   { role: "Junior helpers", detail: "Support coaches in sessions — a great first step into coaching." },
