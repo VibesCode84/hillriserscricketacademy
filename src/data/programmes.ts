@@ -129,7 +129,7 @@ export const programmes: Programme[] = [
   {
     key: "bowling-machine",
     name: "Bowling machine net",
-    ages: "All ages",
+    ages: "All ages, including adults",
     summary: "A net of your own with a bowling machine and automatic ball feeder — ball after ball, at the pace and line you choose. Autumn and spring terms.",
     pricePence: 4000,
     offerPricePence: 3000,

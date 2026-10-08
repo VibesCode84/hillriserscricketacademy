@@ -46,7 +46,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How much does it cost?",
-        a: "Our standard rate for all group programmes — Development, Performance and the girls-only groups — is £30 per hour, and for 2026/27 we're offering it at £25 per hour. Small groups of three are £45 per player per hour, and 1-to-1 coaching is from £75 per hour. Early Risers is £15 per session. A bowling machine net, with an automatic ball feeder, is £40 per net per hour — £30 per hour in 2026/27, to the end of spring term. New players pay a £30 registration fee, which includes a HillRisers playing shirt.",
+        a: "Our standard rate for all group programmes — Development, Performance and the girls-only groups — is £30 per hour, and for 2026/27 we're offering it at £25 per hour. Small groups of three are £45 per player per hour, and 1-to-1 coaching is from £75 per hour. Early Risers is £15 per session. A bowling machine net with an automatic ball feeder, open to all ages including adults, is £40 per net per hour — £30 per hour in 2026/27, to the end of spring term. New players pay a £30 registration fee, which includes a HillRisers playing shirt.",
       },
       {
         q: "How long are sessions?",
