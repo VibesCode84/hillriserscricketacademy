@@ -6,6 +6,7 @@ import { Section, SectionHeader } from "@/components/Section";
 import { Reveal } from "@/components/Reveal";
 import { ProgrammeTable } from "@/components/ProgrammeTable";
 import { CTASection, NotSureBanner } from "@/components/CTASection";
+import { photos } from "@/data/photos";
 
 export const metadata: Metadata = {
   title: "Programmes & Prices — Junior Cricket Coaching in Harrow",
@@ -30,6 +31,7 @@ export default function ProgrammesPage() {
       <PageHero
         eyebrow="Programmes and prices"
         title="Outstanding coaching at every stage."
+        image={photos.keeper}
         intro={<p>From first steps with a soft ball to elite hard-ball specialist nets — expertly coached in small groups, groups of three or 1-to-1.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
       />

@@ -40,19 +40,21 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 
+        {/* Phones and tablets: the same two photos side by side */}
+        <div className="grid grid-cols-2 gap-3 lg:hidden">
+          <Photo {...photos.girlBatting} className="aspect-[4/5] rounded-[1.5rem]" priority sizes="50vw" />
+          <Photo {...photos.coachAndBatter} className="aspect-[4/5] rounded-[1.5rem]" sizes="50vw" />
+        </div>
+
         <div className="relative hidden h-[34rem] lg:block">
           <Photo
-            src={photos.keeper.src}
-            alt={photos.keeper.alt}
-            position="center 35%"
+            {...photos.girlBatting}
             className="absolute right-0 top-0 h-[26rem] w-[72%] rounded-[2rem]"
             priority
             sizes="40vw"
           />
           <Photo
-            src={photos.coachAndBatter.src}
-            alt={photos.coachAndBatter.alt}
-            position="center 40%"
+            {...photos.coachAndBatter}
             className="absolute bottom-0 left-0 h-[17rem] w-[52%] rounded-[1.75rem] ring-8 ring-navy-950"
             sizes="25vw"
           />
