@@ -4,7 +4,7 @@ The website for HillRisers Cricket Academy: specialist junior cricket coaching (
 
 **Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed times are **Early Risers, Sundays: three 40-minute sessions, 9:00–9:40am, 9:40–10:20am and 10:20–11:00am (ages 4–6)**.
 
-Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Cloudflare Workers (via [OpenNext](https://opennext.js.org/cloudflare)) at **https://hillrisers.co.uk**.
+Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Cloudflare Workers (via [OpenNext](https://opennext.js.org/cloudflare)) at **https://cricket.hillrisers.co.uk**.
 
 ## Getting started
 
@@ -59,7 +59,7 @@ Submissions are stored, in order of preference, in Postgres (`DATABASE_URL`), in
 1. **Database.** `wrangler.jsonc` binds a D1 database named `hillrisers` as `DB`; Wrangler creates it on the first deploy. Tables are created on first use. Check **Workers & Pages → hillriserscricketacademy → Bindings** shows `DB`. If the deploy log says D1 provisioning was skipped, create the database under **Storage & databases → D1** (name `hillrisers`), add its `database_id` to `wrangler.jsonc` and push.
 2. **Admin.** In **Workers & Pages → hillriserscricketacademy → Settings → Variables and secrets**, add `ADMIN_PASSWORD` (as a secret), then go to `/admin/bookings` (username `admin`). `keep_vars` in `wrangler.jsonc` keeps dashboard variables on each deploy.
 3. **Email (optional but recommended).** Add `RESEND_API_KEY` (secret), `EMAIL_FROM` (a sender on a domain verified in Resend, e.g. `hello@hillrisers.co.uk`) and `ACADEMY_NOTIFY_EMAIL` (where new registrations and coach applications are sent). Without these, emails are logged instead of sent.
-4. **Site URL.** Canonical URLs and email links use `NEXT_PUBLIC_SITE_URL` if set, otherwise `https://hillrisers.co.uk`.
+4. **Site URL.** Canonical URLs and email links use `NEXT_PUBLIC_SITE_URL` if set, otherwise `https://cricket.hillrisers.co.uk`.
 
 ## Booking engine (switched off until trial booking opens)
 

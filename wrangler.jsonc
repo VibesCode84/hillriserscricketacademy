@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Cloudflare Worker for hillrisers.co.uk, built with OpenNext (@opennextjs/cloudflare)
+  // Cloudflare Worker for cricket.hillrisers.co.uk, built with OpenNext (@opennextjs/cloudflare)
   "name": "hillriserscricketacademy",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-06",

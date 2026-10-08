@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
   // Pages retired when the site moved to a register-your-interest launch
   async redirects() {
     return [
+      // www.cricket.hillrisers.co.uk → cricket.hillrisers.co.uk (one address for search engines)
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.cricket.hillrisers.co.uk" }],
+        destination: "https://cricket.hillrisers.co.uk/:path*",
+        permanent: true,
+      },
       { source: "/academy", destination: "/programmes", permanent: true },
       { source: "/academy/:slug", destination: "/programmes", permanent: true },
       { source: "/sessions", destination: "/how-booking-works", permanent: true },
