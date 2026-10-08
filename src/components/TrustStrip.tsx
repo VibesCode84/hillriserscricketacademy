@@ -21,11 +21,10 @@ export function TrustBand() {
     { k: "6", v: "Maximum players per net, each net with its own coach" },
     { k: "3", v: "Indoor nets at John Lyon in autumn and spring" },
     { k: site.ages, v: "Ages, placed by ability — not just age" },
-    { k: "100%", v: "Of sessions include fielding" },
   ];
   return (
     <section className="border-y border-gold/15 bg-navy-900" aria-label="HillRisers at a glance">
-      <div className="container-x grid grid-cols-2 gap-px lg:grid-cols-4">
+      <div className="container-x grid gap-px sm:grid-cols-3">
         {facts.map((f) => (
           <div key={f.k} className="py-8 pr-4 md:py-10">
             <p className="font-serif text-4xl text-gold md:text-5xl">{f.k}</p>
