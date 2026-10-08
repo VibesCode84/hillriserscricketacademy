@@ -4,7 +4,7 @@ The website for HillRisers Cricket Academy: specialist junior cricket coaching (
 
 **Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed times are **Early Risers, Sundays: three 40-minute sessions, 9:00–9:40am, 9:40–10:20am and 10:20–11:00am (ages 4–6)**.
 
-Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Vercel.
+Built with Next.js 15 (App Router), TypeScript and Tailwind CSS 4, and deployed on Cloudflare Workers (via [OpenNext](https://opennext.js.org/cloudflare)) at **https://hillrisers.co.uk**.
 
 ## Getting started
 
@@ -44,14 +44,22 @@ npm run build
 
 The private **coach recruitment** form (`/team/<key>`, `POST /api/coach-interest`) works the same way, with its own admin list and CSV export.
 
-## Setting up storage and email on Vercel
+## Deployment (Cloudflare)
 
-Without a database, submissions go to temporary storage and **are lost**. The admin page shows a red warning until one is connected.
+Cloudflare Workers Builds deploys every push to the connected branch. Its settings: build command `npm run build`, deploy command `npx wrangler deploy`.
 
-1. **Database.** In the Vercel project, go to **Storage → Create Database → Neon (Postgres)** and connect it. This sets `DATABASE_URL` automatically. A Supabase connection string also works. Tables are created on first use (`db/schema.sql`). Redeploy afterwards.
-2. **Admin.** Set `ADMIN_PASSWORD`, then go to `/admin/bookings` (username `admin`).
-3. **Email (optional but recommended).** Set `RESEND_API_KEY`, `EMAIL_FROM` (a sender on a domain verified in Resend) and `ACADEMY_NOTIFY_EMAIL` (where new registrations and coach applications are sent). Without these, emails are logged instead of sent.
-4. **Site URL.** Canonical URLs use `NEXT_PUBLIC_SITE_URL`, then Vercel's production URL, then `https://hillriserscricketacademytest.vercel.app`.
+- `npm run build` runs `next build`, and on Cloudflare (where `WORKERS_CI` is set) also `opennextjs-cloudflare build --skipNextBuild`, which turns the build into a Worker in `.open-next/`. Elsewhere (local, Vercel) it is a plain `next build`.
+- `wrangler.jsonc` configures the Worker. Its `name` and the `WORKER_SELF_REFERENCE` service must both be `hillriserscricketacademy` (the Worker's name in Cloudflare).
+- `npm run preview` builds and runs the Worker locally; `npm run deploy` builds and deploys from your machine.
+
+### Storage and email
+
+Submissions are stored, in order of preference, in Postgres (`DATABASE_URL`), in a **Cloudflare D1** database bound as `DB`, or in a local JSON file (development only; on a server it is temporary and **is lost**). The admin page shows a red warning when no database is connected.
+
+1. **Database.** `wrangler.jsonc` binds a D1 database named `hillrisers` as `DB`; Wrangler creates it on the first deploy. Tables are created on first use. Check **Workers & Pages → hillriserscricketacademy → Bindings** shows `DB`. If the deploy log says D1 provisioning was skipped, create the database under **Storage & databases → D1** (name `hillrisers`), add its `database_id` to `wrangler.jsonc` and push.
+2. **Admin.** In **Workers & Pages → hillriserscricketacademy → Settings → Variables and secrets**, add `ADMIN_PASSWORD` (as a secret), then go to `/admin/bookings` (username `admin`). `keep_vars` in `wrangler.jsonc` keeps dashboard variables on each deploy.
+3. **Email (optional but recommended).** Add `RESEND_API_KEY` (secret), `EMAIL_FROM` (a sender on a domain verified in Resend, e.g. `hello@hillrisers.co.uk`) and `ACADEMY_NOTIFY_EMAIL` (where new registrations and coach applications are sent). Without these, emails are logged instead of sent.
+4. **Site URL.** Canonical URLs and email links use `NEXT_PUBLIC_SITE_URL` if set, otherwise `https://hillrisers.co.uk`.
 
 ## Booking engine (switched off until trial booking opens)
 
@@ -77,5 +85,5 @@ The deposit equals one session fee, per `/terms`.
 - [ ] A contact email for coach applications, if you want one alongside the form.
 - [ ] Coaches' names and credentials once signed (`src/data/coaches.ts`).
 - [ ] Confirmed wording for the Terms & Conditions, which are marked "Draft – to be reviewed".
-- [ ] Real photography. Image slots show labelled placeholders; pass `src` to `<Photo>` to replace them.
-- [ ] A database and email set up on Vercel (see above) before registrations open on 8 October.
+- [ ] More photography. Three photos are in `public/images` (listed in `src/data/photos.ts`); other slots show labelled placeholders until `src` is passed to `<Photo>`.
+- [ ] Admin password and email set up on Cloudflare, and the D1 database confirmed (see above), before registrations open.

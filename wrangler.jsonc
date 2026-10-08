@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Cloudflare Worker for hillrisers.co.uk, built with OpenNext (@opennextjs/cloudflare)
+  "name": "hillriserscricketacademy",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Must match "name" above
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hillriserscricketacademy"
+    }
+  ],
+  // Registrations, coach interest etc. Created automatically on first deploy if it doesn't exist.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hillrisers"
+    }
+  ],
+  // Keep variables set in the Cloudflare dashboard (ADMIN_PASSWORD etc.) on each deploy
+  "keep_vars": true,
+  "observability": {
+    "enabled": true
+  }
+}

@@ -18,7 +18,7 @@ import {
   type WaitlistEntry,
 } from "./types";
 
-type Data = {
+export type Data = {
   parents: Parent[];
   players: Player[];
   bookings: Booking[];
@@ -29,7 +29,7 @@ type Data = {
   enquiries: Enquiry[];
 };
 
-const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], interestRegistrations: [], coachInterests: [], campInterests: [], enquiries: [] });
+export const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [], interestRegistrations: [], coachInterests: [], campInterests: [], enquiries: [] });
 
 /**
  * JSON-file store for local development and demos. All mutations run through
@@ -39,9 +39,9 @@ const empty = (): Data => ({ parents: [], players: [], bookings: [], waitlist: [
 export class FileBookingStore implements BookingStore {
   private queue: Promise<unknown> = Promise.resolve();
 
-  constructor(private file: string) {}
+  constructor(private file = "") {}
 
-  private async read(): Promise<Data> {
+  protected async read(): Promise<Data> {
     try {
       return { ...empty(), ...JSON.parse(await fs.readFile(this.file, "utf8")) };
     } catch (err) {
@@ -50,7 +50,7 @@ export class FileBookingStore implements BookingStore {
     }
   }
 
-  private async write(data: Data) {
+  protected async write(data: Data) {
     await fs.mkdir(path.dirname(this.file), { recursive: true });
     const tmp = `${this.file}.${process.pid}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(data, null, 2));
@@ -58,7 +58,7 @@ export class FileBookingStore implements BookingStore {
   }
 
   /** Serialise read-modify-write transactions. */
-  private tx<T>(fn: (data: Data) => T | Promise<T>): Promise<T> {
+  protected tx<T>(fn: (data: Data) => T | Promise<T>): Promise<T> {
     const run = this.queue.then(async () => {
       const data = await this.read();
       const result = await fn(data);
@@ -69,7 +69,7 @@ export class FileBookingStore implements BookingStore {
     return run;
   }
 
-  private async snapshot() {
+  protected async snapshot() {
     await this.queue;
     return this.read();
   }

@@ -9,6 +9,7 @@ import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
 import { Reveal } from "@/components/Reveal";
 import { CoachInterestForm } from "@/components/CoachInterestForm";
+import { photos } from "@/data/photos";
 
 export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
@@ -18,11 +19,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Only the configured key renders; any other /team/* URL is a 404
-export const dynamicParams = false;
-export function generateStaticParams() {
-  return [{ key: COACH_PAGE_KEY }];
-}
+// Rendered per request (works the same on Vercel and Cloudflare); only the
+// configured key renders, any other /team/* URL is a 404 (checked below)
+export const dynamic = "force-dynamic";
 
 // The opportunity, for prospective coaches (this page is private)
 const opportunity = [
@@ -95,7 +94,7 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
           </p>
         }
         actions={<ButtonLink href="#apply" arrow className="group">Express your interest</ButtonLink>}
-        image={{ alt: "Coach working with a young batter in an indoor net" }}
+        image={photos.coachAndBatter}
       />
 
       <Section tone="cream">

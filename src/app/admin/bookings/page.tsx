@@ -3,7 +3,7 @@ import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/dat
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
 import { coachPagePath } from "@/data/recruitment";
 import { formatPrice } from "@/data/site";
-import { availabilityFor, getStore, type BookingStatus } from "@/lib/booking";
+import { availabilityFor, getStore, storeKind, type BookingStatus } from "@/lib/booking";
 import { Crest } from "@/components/Logo";
 import { BookingRowActions, ManualBookingForm, WaitlistRow } from "@/components/admin/AdminActions";
 import { interestOptions, labelFor, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms, summariseHolidays } from "@/lib/interest-options";
@@ -92,10 +92,10 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
         </div>
       </header>
 
-      {!process.env.DATABASE_URL && process.env.VERCEL && (
+      {storeKind() === "file" && process.env.NODE_ENV === "production" && (
         <p className="mt-6 rounded-2xl border border-[#8c1d18]/30 bg-[#fbeae8] p-4 text-sm text-[#8c1d18]" role="alert">
-          <strong>Submissions are not being saved permanently.</strong> No database is connected, so registrations are kept in temporary
-          storage and will be lost. Connect a Postgres database (Vercel → Storage → Neon, or set DATABASE_URL) before sharing the site.
+          <strong>Submissions are not being saved permanently.</strong> No database is connected. On Cloudflare, add a D1 database
+          binding named DB to the Worker (it is created automatically on deploy); elsewhere, set DATABASE_URL to a Postgres database.
         </p>
       )}
 

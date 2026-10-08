@@ -7,6 +7,7 @@ import { CoachCard } from "@/components/CoachCard";
 import { CoachExperience, CoachingPhilosophy, SessionFlow } from "@/components/Coaching";
 import { Reveal } from "@/components/Reveal";
 import { CTASection } from "@/components/CTASection";
+import { photos } from "@/data/photos";
 
 export const metadata: Metadata = {
   title: "Our Coaching — Philosophy and Coaches",
@@ -27,7 +28,7 @@ export default function CoachesPage() {
           </p>
         }
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
-        image={{ alt: "Coach giving feedback to a young batter in an indoor net" }}
+        image={photos.coachAndBatter}
       />
 
       <Section tone="light">

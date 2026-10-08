@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    formats: ["image/avif", "image/webp"],
-  },
+  // Photos are already web-sized WebP; serving them as-is works the same on Vercel and Cloudflare
+  images: { unoptimized: true },
   poweredByHeader: false,
+  // Cloudflare (OpenNext) bundles the standalone output; WORKERS_CI is set by Cloudflare Workers Builds
+  output: process.env.WORKERS_CI ? "standalone" : undefined,
   // The Postgres store reads db/schema.sql at runtime
   outputFileTracingIncludes: { "/**": ["./db/schema.sql"] },
   serverExternalPackages: ["pg"],

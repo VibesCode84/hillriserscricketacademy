@@ -12,6 +12,7 @@ export function Photo({
   sizes = "(min-width: 1024px) 50vw, 100vw",
   tone = "navy",
   showCaption = true,
+  position = "center",
 }: {
   src?: string;
   alt: string;
@@ -20,11 +21,13 @@ export function Photo({
   sizes?: string;
   tone?: "navy" | "deep" | "warm";
   showCaption?: boolean;
+  /** CSS object-position for real photos, e.g. "center 25%" to keep faces in frame */
+  position?: string;
 }) {
   if (src) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" style={{ objectPosition: position }} />
       </div>
     );
   }

@@ -1,5 +1,7 @@
 import path from "node:path";
 import { sessions, type AcademySession } from "../../data/sessions";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { D1BookingStore, type D1Database } from "./d1-store";
 import { FileBookingStore } from "./file-store";
 import { PgBookingStore } from "./pg-store";
 import type { BookingStore, SessionCounts } from "./types";
@@ -13,11 +15,31 @@ export const STRIPE_CHECKOUT_MINUTES = 30;
 
 const globalForStore = globalThis as unknown as { __hillrisersStore?: BookingStore };
 
+/** Where data is kept: Postgres (DATABASE_URL), Cloudflare D1 (DB binding) or a local/temporary JSON file. */
+export type StoreKind = "postgres" | "d1" | "file";
+
+/** The D1 binding named DB, when running on Cloudflare. */
+function d1Binding(): D1Database | undefined {
+  if ((globalThis as { navigator?: { userAgent?: string } }).navigator?.userAgent !== "Cloudflare-Workers") return undefined;
+  try {
+    return (getCloudflareContext().env as { DB?: D1Database }).DB;
+  } catch {
+    return undefined;
+  }
+}
+
+export function storeKind(): StoreKind {
+  return process.env.DATABASE_URL ? "postgres" : d1Binding() ? "d1" : "file";
+}
+
 export function getStore(): BookingStore {
   if (!globalForStore.__hillrisersStore) {
     const url = process.env.DATABASE_URL;
+    const d1 = url ? undefined : d1Binding();
     if (url) {
       globalForStore.__hillrisersStore = new PgBookingStore(url);
+    } else if (d1) {
+      globalForStore.__hillrisersStore = new D1BookingStore(d1);
     } else {
       if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
         console.warn("[hillrisers] DATABASE_URL is not set — bookings are stored in /tmp and will not persist.");

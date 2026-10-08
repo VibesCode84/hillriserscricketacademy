@@ -8,6 +8,7 @@ import { Reveal } from "@/components/Reveal";
 import { Photo } from "@/components/Photo";
 import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
+import { photos } from "@/data/photos";
 
 export const metadata: Metadata = {
   title: "Girls Cricket Coaching in Harrow — Girls-Only Pathway",
@@ -48,7 +49,7 @@ export default function GirlsPage() {
         title="The best place for girls to play cricket."
         intro={<p>Outstanding specialist coaching in a girls-only environment — from first steps with a hard ball to performance nets.</p>}
         actions={<ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>}
-        image={{ alt: "Girls playing cricket in an indoor net" }}
+        image={photos.girlBatting}
       />
 
       <Section tone="light">

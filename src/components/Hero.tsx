@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ButtonLink } from "./Button";
 import { Photo } from "./Photo";
+import { photos } from "@/data/photos";
 
 function HeroArtwork() {
   return (
@@ -41,15 +42,18 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
 
         <div className="relative hidden h-[34rem] lg:block">
           <Photo
-            alt="Young batter playing a drive in an indoor net"
+            src={photos.keeper.src}
+            alt={photos.keeper.alt}
+            position="center 35%"
             className="absolute right-0 top-0 h-[26rem] w-[72%] rounded-[2rem]"
             priority
             sizes="40vw"
           />
           <Photo
-            alt="Coach giving feedback to a young bowler"
+            src={photos.coachAndBatter.src}
+            alt={photos.coachAndBatter.alt}
+            position="center 40%"
             className="absolute bottom-0 left-0 h-[17rem] w-[52%] rounded-[1.75rem] ring-8 ring-navy-950"
-            tone="warm"
             sizes="25vw"
           />
           <div className="absolute bottom-10 right-4 max-w-[13rem] rounded-2xl border border-gold/25 bg-navy-900/90 p-5 backdrop-blur">
@@ -76,7 +80,7 @@ export function PageHero({
   title: ReactNode;
   intro?: ReactNode;
   actions?: ReactNode;
-  image?: { src?: string; alt: string };
+  image?: { src?: string; alt: string; position?: string };
   children?: ReactNode;
   afterActions?: ReactNode;
 }) {
@@ -93,7 +97,7 @@ export function PageHero({
           {children}
         </div>
         {image && (
-          <Photo src={image.src} alt={image.alt} priority className="aspect-[4/3] rounded-[2rem] lg:aspect-[4/5]" sizes="(min-width: 1024px) 40vw, 100vw" />
+          <Photo src={image.src} alt={image.alt} position={image.position} priority className="aspect-[4/3] rounded-[2rem] lg:aspect-[4/5]" sizes="(min-width: 1024px) 40vw, 100vw" />
         )}
       </div>
     </section>

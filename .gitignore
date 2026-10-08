@@ -9,3 +9,6 @@ next-env.d.ts
 .vercel
 npm-debug.log*
 .DS_Store
+.open-next
+.wrangler
+.dev.vars*

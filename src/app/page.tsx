@@ -14,6 +14,7 @@ import { BookingSteps } from "@/components/BookingSteps";
 import { KeyDates } from "@/components/KeyDates";
 import { CTASection } from "@/components/CTASection";
 import { VenueFeature } from "@/components/VenueFeature";
+import { photos } from "@/data/photos";
 
 const pillars = [
   {
@@ -97,7 +98,7 @@ export default function HomePage() {
       {/* Girls */}
       <section className="relative overflow-hidden bg-navy-900">
         <div className="grid lg:grid-cols-2">
-          <Photo alt="Girls playing cricket in an indoor net" className="min-h-[20rem] lg:min-h-[36rem]" sizes="(min-width: 1024px) 50vw, 100vw" />
+          <Photo {...photos.girlBatting} className="min-h-[24rem] lg:min-h-[36rem]" sizes="(min-width: 1024px) 50vw, 100vw" />
           <div className="flex items-center py-20 md:py-28">
             <Reveal className="container-x max-w-2xl lg:px-16">
               <p className="eyebrow">Girls cricket</p>
