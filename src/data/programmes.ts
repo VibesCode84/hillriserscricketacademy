@@ -11,7 +11,8 @@ export type ProgrammeKey =
   | "performance"
   | "girls-performance"
   | "small-group"
-  | "one-to-one";
+  | "one-to-one"
+  | "bowling-machine";
 
 export type Programme = {
   key: ProgrammeKey;
@@ -25,8 +26,10 @@ export type Programme = {
   pricePence: number;
   /** Special-offer price in pence (see OFFER_LABEL) */
   offerPricePence?: number;
+  /** Overrides OFFER_LABEL for this programme's offer */
+  offerLabel?: string;
   /** How the price is quoted */
-  priceUnit: "per session" | "per hour" | "per player per hour";
+  priceUnit: "per session" | "per hour" | "per player per hour" | "per net per hour";
   /** "from £75" */
   priceFrom?: boolean;
   girlsOnly?: boolean;
@@ -122,6 +125,16 @@ export const programmes: Programme[] = [
     pricePence: 7500,
     priceUnit: "per hour",
     priceFrom: true,
+  },
+  {
+    key: "bowling-machine",
+    name: "Bowling machine net",
+    ages: "All ages",
+    summary: "A net of your own with a bowling machine and automatic ball feeder — ball after ball, at the pace and line you choose. Autumn and spring terms.",
+    pricePence: 4000,
+    offerPricePence: 3000,
+    offerLabel: "2026/27 offer to end of spring",
+    priceUnit: "per net per hour",
   },
 ];
 

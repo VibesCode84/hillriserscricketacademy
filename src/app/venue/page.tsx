@@ -25,7 +25,7 @@ const info = [
   },
   {
     t: "Bowling machine",
-    b: "A bowling machine is available through autumn and spring, so players get more quality balls in their sessions.",
+    b: "A bowling machine with an automatic ball feeder is available through autumn and spring — in sessions, or book the bowling machine net on its own.",
   },
   {
     t: "Summer",

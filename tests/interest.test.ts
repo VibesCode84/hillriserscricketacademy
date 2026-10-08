@@ -148,7 +148,9 @@ test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer
   assert.equal(price("small-group"), 4500);
   assert.equal(formatProgrammePrice(getProgramme("one-to-one")!), "from £75 per hour");
   assert.equal(REGISTRATION_FEE_PENCE, 3000);
-  assert.equal(programmes.length, 7);
+  assert.equal(programmes.length, 8);
+  assert.equal(formatProgrammePrice(getProgramme("bowling-machine")!), "£40 per net per hour");
+  assert.equal(formatOfferPrice(getProgramme("bowling-machine")!), "£30 per net per hour");
 });
 
 test("the only fixed times are Early Risers, three 40-minute Sunday sessions", () => {

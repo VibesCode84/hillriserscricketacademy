@@ -19,7 +19,7 @@ export function ProgrammePrice({ p, light = true, align = "right" }: { p: Progra
     <span className={`inline-flex flex-col ${align === "right" ? "items-end" : "items-start"}`}>
       <span className="font-semibold">{offer}</span>
       <span className={`text-sm ${light ? "text-ink-muted" : "text-slate"}`}>
-        <s>{formatProgrammePrice(p)}</s> · <span className={light ? "text-gold-deep" : "text-gold"}>{OFFER_LABEL}</span>
+        <s>{formatProgrammePrice(p)}</s> · <span className={light ? "text-gold-deep" : "text-gold"}>{p.offerLabel ?? OFFER_LABEL}</span>
       </span>
     </span>
   );
@@ -88,7 +88,7 @@ export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) 
         <p className="font-semibold">Registration {formatPrice(REGISTRATION_FEE_PENCE)} for new players, including a HillRisers playing shirt.</p>
         <p className={`mt-2 text-sm leading-relaxed ${light ? "text-ink-muted" : "text-slate"}`}>
           Group programmes are priced per hour of coaching. Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families
-          tell us they want. Early Risers is priced per session.
+          tell us they want. Early Risers is priced per session, and the bowling machine net per net per hour.
         </p>
       </div>
     </div>

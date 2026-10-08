@@ -41,7 +41,7 @@ export const interestOptions = {
     "Girls-only environment",
     "Playing matches",
   ],
-  formats: ["Small group (up to 6 per net)", "Group of 3", "1-to-1"],
+  formats: ["Small group (up to 6 per net)", "Group of 3", "1-to-1", "Bowling machine net"],
   sessionLengths: ["1 hour", "90 minutes", "2 hours"],
   availability: ["Wednesday evening", "Thursday evening", "Saturday afternoon", "Sunday morning", "Sunday afternoon"],
   frequency: [
