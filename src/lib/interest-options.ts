@@ -30,6 +30,7 @@ export const interestOptions = {
     "Enjoyment and confidence",
     "Learning the basics",
     "Improving technique",
+    "Hard ball training",
     "Power hitting",
     "Sweeps and ramps",
     "Seam bowling",

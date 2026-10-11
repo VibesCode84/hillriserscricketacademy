@@ -67,7 +67,7 @@ export const programmes: Programme[] = [
     ages: "7–11",
     ageMin: 7,
     ageMax: 11,
-    summary: "Technique, and the move from tennis ball to hard ball.",
+    summary: "Technique, and the move from soft ball to hard ball.",
     pricePence: STANDARD_HOURLY_PENCE,
     offerPricePence: OFFER_HOURLY_PENCE,
     priceUnit: "per hour",
