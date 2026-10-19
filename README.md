@@ -44,6 +44,12 @@ npm run build
 
 The private **coach recruitment** form (`/team/<key>`, `POST /api/coach-interest`) works the same way, with its own admin list and CSV export.
 
+## Two sites, one app
+
+- **cricket.hillrisers.co.uk** is the cricket academy (`src/app/(cricket)`).
+- **hillrisers.co.uk** is the HillRisers landing page (`src/app/(hub)/hillrisers`), with buttons for cricket, hockey and netball and a short About us. Its content is in `src/data/hub.ts`; give hockey or netball an `href` when their sites are ready.
+- `src/middleware.ts` chooses by address: on hillrisers.co.uk, `/` shows the landing page and any other path is redirected to the same path on the cricket site; `www.` addresses redirect to the bare domain.
+
 ## Deployment (Cloudflare)
 
 Cloudflare Workers Builds deploys every push to the connected branch. Its settings: build command `npm run build`, deploy command `npx wrangler deploy`.

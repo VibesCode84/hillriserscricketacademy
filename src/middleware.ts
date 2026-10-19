@@ -1,7 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-/** HTTP Basic auth for the admin area. Set ADMIN_PASSWORD to enable access. */
+const HUB_HOSTS = ["hillrisers.co.uk", "www.hillrisers.co.uk"];
+const CRICKET_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://cricket.hillrisers.co.uk").replace(/\/$/, "");
+
+/**
+ * - hillrisers.co.uk: "/" shows the HillRisers landing page; any other page
+ *   is sent to the same path on the cricket academy site.
+ * - Admin area: HTTP Basic auth (set ADMIN_PASSWORD to enable it).
+ */
 export function middleware(req: NextRequest) {
+  const host = (req.headers.get("host") ?? "").split(":")[0].toLowerCase();
+  const { pathname, search } = req.nextUrl;
+
+  if (HUB_HOSTS.includes(host)) {
+    if (host.startsWith("www.")) return NextResponse.redirect(`https://hillrisers.co.uk${pathname}${search}`, 308);
+    if (pathname === "/") return NextResponse.rewrite(new URL("/hillrisers", req.url));
+    return NextResponse.redirect(`${CRICKET_URL}${pathname}${search}`, 308);
+  }
+
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) return adminAuth(req);
+  return NextResponse.next();
+}
+
+function adminAuth(req: NextRequest) {
   const password = process.env.ADMIN_PASSWORD;
   const username = process.env.ADMIN_USERNAME ?? "admin";
   if (!password) {
@@ -28,4 +49,5 @@ function timingSafeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-export const config = { matcher: ["/admin/:path*", "/api/admin/:path*"] };
+// Everything except build assets and images (those load the same on every address)
+export const config = { matcher: ["/((?!_next/|images/|icon.svg|favicon.ico).*)"] };

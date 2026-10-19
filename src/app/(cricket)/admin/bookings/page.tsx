@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- the /api/admin/export links are CSV downloads, not pages */
 import Link from "next/link";
 import { sessions, formatTimeRange, getSession, sessionLabel, DAYS } from "@/data/sessions";
 import { FUTURE_CAMPS, getCamp } from "@/data/camps";
