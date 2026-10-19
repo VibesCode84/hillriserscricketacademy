@@ -28,7 +28,8 @@ export type Sport = {
   cta?: string;
   /** "small" shows a slim, low-key row under the main cards */
   size?: "large" | "small";
-  image?: { src: string; alt: string; position?: string };
+  /** position: CSS object-position on tablets and up; mobilePosition: on phones (photo above the text) */
+  image?: { src: string; alt: string; position?: string; mobilePosition?: string };
 };
 
 export const sports: Sport[] = [
@@ -46,6 +47,7 @@ export const sports: Sport[] = [
     line: "Delivered with our partner, Eagles Netball Club",
     href: "https://eaglesnetballclub.com",
     cta: "Visit Eagles Netball Club",
+    image: { src: "/images/eagles-netball.webp", alt: "Eagles Netball Club players in club kit on an outdoor netball court", position: "center 95%", mobilePosition: "center 70%" },
   },
   { key: "hockey", name: "Hockey", size: "small" },
 ];

@@ -33,27 +33,31 @@ function SportIcon({ sport }: { sport: Sport["key"] }) {
 }
 
 function SportCard({ sport }: { sport: Sport }) {
+  const pos = sport.image?.position ?? "center";
   const inner = (
     <>
-      {sport.image ? (
-        <Image
-          src={sport.image.src}
-          alt={sport.image.alt}
-          fill
-          priority
-          sizes="(min-width: 1024px) 40vw, 100vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          style={{ objectPosition: sport.image.position }}
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-800 via-navy-900 to-navy-950">
-          <div className="absolute right-6 top-6 text-gold/60 md:right-8 md:top-8">
-            <SportIcon sport={sport.key} />
+      {/* Phones: photo on top, text below. Tablets and up: text over the photo. */}
+      <div className="relative aspect-[4/3] md:absolute md:inset-0 md:aspect-auto">
+        {sport.image ? (
+          <Image
+            src={sport.image.src}
+            alt={sport.image.alt}
+            fill
+            priority
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 [object-position:var(--pos-m)] group-hover:scale-[1.03] md:[object-position:var(--pos)]"
+            style={{ "--pos": pos, "--pos-m": sport.image.mobilePosition ?? pos } as React.CSSProperties}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-navy-800 via-navy-900 to-navy-950">
+            <div className="absolute right-6 top-6 text-gold/60 md:right-8 md:top-8">
+              <SportIcon sport={sport.key} />
+            </div>
           </div>
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/40 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+        )}
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-navy-950 via-navy-950/40 to-transparent md:block" />
+      </div>
+      <div className="relative p-6 md:absolute md:inset-x-0 md:bottom-0 md:p-8">
         <h2 className="font-serif text-4xl text-cream md:text-5xl">{sport.name}</h2>
         {sport.line && <p className="mt-2 text-sm text-slate md:text-base">{sport.line}</p>}
         {sport.href ? (
@@ -66,7 +70,7 @@ function SportCard({ sport }: { sport: Sport }) {
       </div>
     </>
   );
-  const shape = "group relative block min-h-[24rem] overflow-hidden rounded-[1.75rem] ring-1 ring-cream/10 lg:min-h-[32rem]";
+  const shape = "group relative block overflow-hidden rounded-[1.75rem] bg-navy-900 ring-1 ring-cream/10 md:min-h-[26rem] lg:min-h-[32rem]";
   return sport.href ? (
     <a href={sport.href} rel="noopener" className={`${shape} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}>
       {inner}
