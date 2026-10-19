@@ -38,7 +38,6 @@ export const sports: Sport[] = [
     cta: "Visit the cricket academy",
     image: { src: "/images/girl-batting.webp", alt: "Girl in navy and gold kit batting in an indoor net", position: "center 25%" },
   },
-  { key: "hockey", name: "Hockey" },
   {
     key: "netball",
     name: "Netball",
@@ -46,4 +45,5 @@ export const sports: Sport[] = [
     href: "https://eaglesnetballclub.com",
     cta: "Visit Eagles Netball Club",
   },
+  { key: "hockey", name: "Hockey" },
 ];
