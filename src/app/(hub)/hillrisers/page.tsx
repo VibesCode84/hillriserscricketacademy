@@ -70,7 +70,7 @@ function SportCard({ sport, featured }: { sport: Sport; featured: boolean }) {
     featured ? "min-h-[26rem] lg:row-span-2 lg:min-h-0" : "min-h-[15rem]"
   }`;
   return sport.href ? (
-    <a href={sport.href} className={`${shape} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}>
+    <a href={sport.href} rel="noopener" className={`${shape} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}>
       {inner}
     </a>
   ) : (

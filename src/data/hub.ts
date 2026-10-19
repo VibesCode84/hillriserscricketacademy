@@ -9,10 +9,10 @@ export const hub = {
   hosts: ["hillrisers.co.uk", "www.hillrisers.co.uk"],
   name: "HillRisers",
   tagline: "Specialist junior coaching in Harrow.",
-  description: "HillRisers brings specialist junior coaching to Harrow — cricket, hockey and netball. Choose your sport.",
+  description: "HillRisers brings specialist junior coaching to Harrow — cricket, hockey and netball, all launching soon. Choose your sport.",
   about: [
     "HillRisers brings specialist coaching to young people in Harrow, in small groups and built around each child.",
-    "Our cricket academy launches at John Lyon School, Harrow on the Hill, in November 2026. Hockey and netball are coming soon.",
+    "Cricket, hockey and netball are all launching soon. Our cricket academy starts at John Lyon School, Harrow on the Hill, in November 2026, and our netball is delivered with our partner, Eagles Netball Club.",
   ],
 };
 
@@ -36,5 +36,11 @@ export const sports: Sport[] = [
     image: { src: "/images/girl-batting.webp", alt: "Girl in navy and gold kit batting in an indoor net", position: "center 25%" },
   },
   { key: "hockey", name: "Hockey" },
-  { key: "netball", name: "Netball" },
+  {
+    key: "netball",
+    name: "Netball",
+    line: "Delivered with our partner, Eagles Netball Club",
+    href: "https://eaglesnetballclub.com",
+    cta: "Visit Eagles Netball Club",
+  },
 ];
