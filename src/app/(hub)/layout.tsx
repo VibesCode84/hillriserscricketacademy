@@ -5,7 +5,7 @@ import "../globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(hub.url),
-  title: "HillRisers — Sports Provision in Harrow",
+  title: "HillRisers — Sport for Every Stage in Harrow",
   description: hub.description,
   openGraph: { type: "website", siteName: hub.name, locale: "en_GB", title: "HillRisers", description: hub.description },
   alternates: { canonical: "/" },

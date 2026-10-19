@@ -59,18 +59,18 @@ function SportCard({ sport }: { sport: Sport }) {
       </div>
       <div className="relative p-6 md:absolute md:inset-x-0 md:bottom-0 md:p-8">
         <h2 className="font-serif text-4xl text-cream md:text-5xl">{sport.name}</h2>
-        {sport.line && <p className="mt-2 text-sm text-slate md:text-base">{sport.line}</p>}
+        {sport.line && <p className="mt-2 max-w-md text-sm leading-relaxed text-slate md:text-base">{sport.line}</p>}
         {sport.href ? (
           <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-navy-950 transition group-hover:bg-gold-soft">
             {sport.cta ?? `Visit ${sport.name}`} <span aria-hidden="true">→</span>
           </span>
         ) : (
-          <span className="mt-5 inline-flex rounded-full border border-cream/25 px-5 py-2.5 text-sm font-semibold text-cream/80">Coming soon</span>
+          <span className="mt-5 inline-flex rounded-full border border-cream/25 px-5 py-2.5 text-sm font-semibold text-cream/80">{sport.status ?? "Coming soon"}</span>
         )}
       </div>
     </>
   );
-  const shape = "group relative block overflow-hidden rounded-[1.75rem] bg-navy-900 ring-1 ring-cream/10 md:min-h-[26rem] lg:min-h-[32rem]";
+  const shape = "group relative block overflow-hidden rounded-[1.75rem] bg-navy-900 ring-1 ring-cream/10 md:min-h-[30rem] lg:min-h-[37rem]";
   return sport.href ? (
     <a href={sport.href} rel="noopener" className={`${shape} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}>
       {inner}
@@ -89,8 +89,12 @@ function SmallSport({ sport }: { sport: Sport }) {
       <span className="text-gold/50 [&_svg]:h-8 [&_svg]:w-8">
         <SportIcon sport={sport.key} />
       </span>
-      <span className="font-serif text-2xl text-cream/90">{sport.name}</span>
-      <span className="ml-auto text-sm text-slate">{sport.href ? (sport.cta ?? "Visit") + " →" : "Coming soon"}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-serif text-2xl text-cream/90">{sport.name}</span>
+        {sport.line && <span className="mt-0.5 block text-sm text-slate">{sport.line}</span>}
+        <span className="mt-1 block text-sm text-gold sm:hidden">{sport.href ? (sport.cta ?? "Visit") + " →" : (sport.status ?? "Coming soon")}</span>
+      </span>
+      <span className="hidden shrink-0 text-sm text-slate sm:block">{sport.href ? (sport.cta ?? "Visit") + " →" : (sport.status ?? "Coming soon")}</span>
     </>
   );
   const cls = "mt-4 flex items-center gap-4 rounded-2xl border border-cream/10 px-5 py-4";
@@ -129,9 +133,10 @@ export default function HillRisersHome() {
           {hub.tagline.replace(/\.$/, "")}
           <span className="text-gold-soft">.</span>
         </h1>
-        <p className="mt-5 text-lg text-slate md:text-xl">Choose your sport.</p>
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate md:text-xl">{hub.intro}</p>
+        <p className="mt-10 text-lg text-cream md:text-xl">{hub.prompt}</p>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
           {large.map((s) => (
             <SportCard key={s.key} sport={s} />
           ))}
@@ -143,7 +148,8 @@ export default function HillRisersHome() {
 
       <section id="about" className="relative border-t border-cream/10">
         <div className="container-x py-14">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-gold">About us</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-gold">{hub.aboutHeading}</h2>
+          <p className="mt-4 max-w-2xl font-serif text-3xl leading-tight text-cream md:text-4xl">{hub.aboutLead}</p>
           {hub.about.map((p) => (
             <p key={p} className="mt-4 max-w-2xl leading-relaxed text-slate">
               {p}
