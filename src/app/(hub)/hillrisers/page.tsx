@@ -126,7 +126,7 @@ export default function HillRisersHome() {
         </div>
       </section>
 
-      <footer className="container-x relative border-t border-cream/10 py-8 text-sm text-slate/70">© {new Date().getFullYear()} HillRisers</footer>
+      <footer className="container-x relative border-t border-cream/10 py-8 text-sm text-slate/70">© {new Date().getFullYear()} {hub.legalName} · Company number {hub.companyNumber}</footer>
     </div>
   );
 }

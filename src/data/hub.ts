@@ -13,7 +13,10 @@ export const hub = {
   about: [
     "HillRisers brings specialist coaching to young people in Harrow, in small groups and built around each child.",
     "Cricket, hockey and netball are all launching soon. Our cricket academy starts at John Lyon School, Harrow on the Hill, in November 2026, and our netball is delivered with our partner, Eagles Netball Club.",
+    "HillRisers is run by HillRisers CIC, a community interest company registered in England and Wales (company number 17511172).",
   ],
+  legalName: "HillRisers CIC",
+  companyNumber: "17511172",
 };
 
 export type Sport = {
