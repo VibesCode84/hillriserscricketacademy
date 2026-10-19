@@ -54,6 +54,8 @@ The private **coach recruitment** form (`/team/<key>`, `POST /api/coach-interest
 
 Cloudflare Workers Builds deploys every push to the connected branch. Its settings: build command `npm run build`, deploy command `npx wrangler deploy`.
 
+If pushes stop deploying, check the **Cloudflare Workers and Pages** GitHub app (GitHub → Settings → Applications → Configure) still has access to this repository; it is shared with other projects, and only repositories selected there can build.
+
 - `npm run build` runs `next build`, and on Cloudflare (where `WORKERS_CI` is set) also `opennextjs-cloudflare build --skipNextBuild`, which turns the build into a Worker in `.open-next/`. Elsewhere (local, Vercel) it is a plain `next build`.
 - `wrangler.jsonc` configures the Worker. Its `name` and the `WORKER_SELF_REFERENCE` service must both be `hillriserscricketacademy` (the Worker's name in Cloudflare).
 - `npm run preview` builds and runs the Worker locally; `npm run deploy` builds and deploys from your machine.
