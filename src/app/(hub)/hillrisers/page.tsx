@@ -32,7 +32,7 @@ function SportIcon({ sport }: { sport: Sport["key"] }) {
   );
 }
 
-function SportCard({ sport, featured }: { sport: Sport; featured: boolean }) {
+function SportCard({ sport }: { sport: Sport }) {
   const inner = (
     <>
       {sport.image ? (
@@ -66,9 +66,7 @@ function SportCard({ sport, featured }: { sport: Sport; featured: boolean }) {
       </div>
     </>
   );
-  const shape = `group relative block overflow-hidden rounded-[1.75rem] ring-1 ring-cream/10 ${
-    featured ? "min-h-[26rem] lg:row-span-2 lg:min-h-0" : "min-h-[15rem]"
-  }`;
+  const shape = "group relative block min-h-[24rem] overflow-hidden rounded-[1.75rem] ring-1 ring-cream/10 lg:min-h-[32rem]";
   return sport.href ? (
     <a href={sport.href} rel="noopener" className={`${shape} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}>
       {inner}
@@ -80,8 +78,30 @@ function SportCard({ sport, featured }: { sport: Sport; featured: boolean }) {
   );
 }
 
+/** A slim, low-key row for a sport that isn't ready yet */
+function SmallSport({ sport }: { sport: Sport }) {
+  const body = (
+    <>
+      <span className="text-gold/50 [&_svg]:h-8 [&_svg]:w-8">
+        <SportIcon sport={sport.key} />
+      </span>
+      <span className="font-serif text-2xl text-cream/90">{sport.name}</span>
+      <span className="ml-auto text-sm text-slate">{sport.href ? (sport.cta ?? "Visit") + " →" : "Coming soon"}</span>
+    </>
+  );
+  const cls = "mt-4 flex items-center gap-4 rounded-2xl border border-cream/10 px-5 py-4";
+  return sport.href ? (
+    <a href={sport.href} rel="noopener" className={`${cls} hover:border-cream/25`}>
+      {body}
+    </a>
+  ) : (
+    <div className={cls}>{body}</div>
+  );
+}
+
 export default function HillRisersHome() {
-  const [first, ...rest] = sports;
+  const large = sports.filter((s) => s.size !== "small");
+  const small = sports.filter((s) => s.size === "small");
   return (
     <div className="relative min-h-screen overflow-hidden text-cream">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -107,12 +127,14 @@ export default function HillRisersHome() {
         </h1>
         <p className="mt-5 text-lg text-slate md:text-xl">Choose your sport.</p>
 
-        <div className="mt-10 grid gap-4 lg:h-[34rem] lg:grid-cols-[1.25fr_1fr] lg:grid-rows-2">
-          <SportCard sport={first} featured />
-          {rest.map((s) => (
-            <SportCard key={s.key} sport={s} featured={false} />
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          {large.map((s) => (
+            <SportCard key={s.key} sport={s} />
           ))}
         </div>
+        {small.map((s) => (
+          <SmallSport key={s.key} sport={s} />
+        ))}
       </main>
 
       <section id="about" className="relative border-t border-cream/10">

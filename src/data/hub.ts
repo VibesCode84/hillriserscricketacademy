@@ -26,6 +26,8 @@ export type Sport = {
   line?: string;
   href?: string;
   cta?: string;
+  /** "small" shows a slim, low-key row under the main cards */
+  size?: "large" | "small";
   image?: { src: string; alt: string; position?: string };
 };
 
@@ -45,5 +47,5 @@ export const sports: Sport[] = [
     href: "https://eaglesnetballclub.com",
     cta: "Visit Eagles Netball Club",
   },
-  { key: "hockey", name: "Hockey" },
+  { key: "hockey", name: "Hockey", size: "small" },
 ];
