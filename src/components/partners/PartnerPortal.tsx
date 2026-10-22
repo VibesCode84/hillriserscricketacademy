@@ -78,7 +78,7 @@ export function PartnerPortal(props: {
   const paidBooking = banner?.bookingId ? bookings.find((b) => b.id === banner.bookingId) : undefined;
 
   return (
-    <main className="container-x py-10 md:py-14">
+    <div className="container-x py-10 md:py-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-ink-muted">Signed in as {props.partner.contactName}</p>
@@ -200,7 +200,7 @@ export function PartnerPortal(props: {
       <Documents documents={documents} onChange={refreshMe} />
 
       <Account partner={props.partner} />
-    </main>
+    </div>
   );
 }
 
@@ -539,7 +539,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                         <tr key={s.start}>
                           <td className="whitespace-nowrap px-4 py-2 font-semibold">{timeLabel(s.start)}–{timeLabel(s.end)}</td>
                           {[1, 2, 3].map((n) => {
-                            if (!s.nets.includes(n)) return <td key={n} className="px-2 py-2 text-center text-xs text-ink-muted/60">Not available</td>;
+                            if (!s.nets.includes(n)) return <td key={n} className="px-2 py-2 text-center text-ink-muted/40" aria-hidden="true">–</td>;
                             const key = slotKey(block.id, s, n);
                             const taken = avail?.nets[key] ?? false;
                             const on = !!selected[key];

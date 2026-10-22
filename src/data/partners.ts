@@ -78,8 +78,7 @@ export const partnerBlocks: PartnerBlock[] = [
     label: "Autumn block 2026",
     summary: "November to 13 December 2026",
     notes: [
-      "Wednesdays: from 25 November (the hall is booked for netball until 18 November).",
-      "Thursdays: two nets available.",
+      "Wednesdays start on 25 November.",
       "No sessions over the Christmas shutdown (21 December – 3 January).",
     ],
     slots: [
@@ -99,7 +98,6 @@ export const partnerBlocks: PartnerBlock[] = [
       "Open to partners who have booked the autumn block.",
       "Pay in full, or reserve with a deposit and pay the balance by midnight after your last autumn session.",
       "No sessions in half term (15–21 February).",
-      "Thursdays: two nets available.",
       "Includes the Easter weekend (27–28 March).",
     ],
     slots: [
@@ -126,6 +124,18 @@ export const partnerBlocks: PartnerBlock[] = [
 export const releasedBlocks = partnerBlocks.filter((b) => !b.test);
 
 export const getBlock = (id: string) => partnerBlocks.find((b) => b.id === id);
+
+/** What a block offers, one row per day: times and weeks */
+export function blockDays(block: PartnerBlock) {
+  const days = new Map<PartnerDay, SlotTemplate[]>();
+  for (const s of block.slots) days.set(s.day, [...(days.get(s.day) ?? []), s]);
+  return [...days.entries()].map(([day, slots]) => ({
+    day,
+    from: slots[0].start,
+    to: slots.at(-1)!.end,
+    dates: slots[0].dates,
+  }));
+}
 
 /** Whether a partner's bookings let them book this block (see requiresBlock) */
 export const blockUnlocked = (block: PartnerBlock, bookings: { blockId: string; status: string }[]) =>

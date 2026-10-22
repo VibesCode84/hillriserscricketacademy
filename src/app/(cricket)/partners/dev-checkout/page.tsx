@@ -13,7 +13,7 @@ export default async function DevPartnerCheckout({ searchParams }: { searchParam
   const booking = await getPartnerStore().getBooking(id);
   if (!booking) notFound();
   return (
-    <main className="container-x max-w-xl py-16">
+    <div className="container-x max-w-xl py-16">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-deep">Test payment — Stripe isn&rsquo;t connected</p>
       <h1 className="mt-3 text-4xl">
         Pay{" "}
@@ -24,6 +24,6 @@ export default async function DevPartnerCheckout({ searchParams }: { searchParam
       </h1>
       <p className="mt-3 text-ink-muted">{booking.items.length} net{booking.items.length === 1 ? "" : "s"} for the block. No money is taken on this test page.</p>
       <DevPartnerCheckoutButtons bookingId={booking.id} />
-    </main>
+    </div>
   );
 }
