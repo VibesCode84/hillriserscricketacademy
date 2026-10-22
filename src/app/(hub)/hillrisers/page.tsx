@@ -155,6 +155,10 @@ export default function HillRisersHome() {
               {p}
             </p>
           ))}
+          <p className="mt-6 text-slate">
+            Get in touch:{" "}
+            <a href={`mailto:${hub.email}`} className="text-cream underline underline-offset-4 hover:text-gold-soft">{hub.email}</a>
+          </p>
         </div>
       </section>
 

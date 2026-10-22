@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Crest } from "@/components/Logo";
+import { site } from "@/data/site";
 
 export const metadata: Metadata = {
   title: { default: "Partner portal", template: "%s | HillRisers partner portal" },
@@ -25,7 +26,8 @@ export default function PartnersLayout({ children }: { children: React.ReactNode
       </header>
       {children}
       <footer className="container-x border-t border-navy-950/10 py-8 text-sm text-ink-muted">
-        HillRisers CIC · John Lyon School, Harrow on the Hill
+        HillRisers CIC · John Lyon School, Harrow on the Hill ·{" "}
+        <a href={`mailto:${site.email}`} className="underline underline-offset-4">{site.email}</a>
       </footer>
     </div>
   );

@@ -23,6 +23,7 @@ export const hub = {
     "HillRisers CIC is a Community Interest Company established to increase access to high-quality sport and create sustainable sporting opportunities for the local community.",
   ],
   legalName: "HillRisers CIC",
+  email: "office@hillrisers.co.uk",
   companyNumber: "17511172",
 };
 

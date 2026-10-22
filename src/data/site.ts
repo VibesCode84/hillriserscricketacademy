@@ -11,8 +11,8 @@ export const site = {
     "The very best junior cricket coaching in Harrow. Elite coaches from the area, small groups of up to six per net, a girls-only pathway and coaching built around every child — at John Lyon School, Harrow on the Hill.",
   /** Used for canonical URLs, metadata and links in emails */
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://cricket.hillrisers.co.uk").replace(/\/$/, ""),
-  /** Public contact email — TODO: add when confirmed */
-  email: undefined as string | undefined,
+  /** Public contact email (also the reply-to on site emails) */
+  email: "office@hillrisers.co.uk" as string | undefined,
   /** Public phone number, e.g. "07123 456789" — TODO: add when confirmed */
   phone: undefined as string | undefined,
   /** Safeguarding / welfare contact — TODO: add before sessions start */
