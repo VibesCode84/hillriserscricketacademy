@@ -27,10 +27,11 @@ const wed = block.slots.find((s) => s.day === "Wednesday")!;
 const thu = block.slots.find((s) => s.day === "Thursday")!;
 const partner = { orgName: "Test CC", contactName: "Sam", email: "Sam@Example.com", phone: "07000 000000", type: "Club", sports: "Cricket" };
 
-test("released slots: Wednesdays from 25 Nov, Thursdays two nets, Sundays from 11am", () => {
+test("released slots: Wednesdays from 25 Nov, Thursdays two nets, Sundays 9am–5pm", () => {
   assert.deepEqual(wed.dates, ["2026-11-25", "2026-12-02", "2026-12-09"]);
   assert.deepEqual(thu.nets, [1, 2]);
-  assert.equal(block.slots.filter((s) => s.day === "Sunday")[0].start, "11:00");
+  assert.equal(block.slots.filter((s) => s.day === "Sunday")[0].start, "09:00");
+  assert.equal(block.slots.filter((s) => s.day === "Sunday").length, 8);
   assert.equal(block.slots.filter((s) => s.day === "Saturday").length, 3);
   assert.ok(block.slots.every((s) => s.dates.every((d) => d <= "2026-12-13")));
 });

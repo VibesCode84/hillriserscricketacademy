@@ -18,6 +18,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Milliseconds from now until an ISO time (negative once it has passed) */
+const msUntil = (iso: string) => new Date(iso).getTime() - Date.now();
+
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ booking?: string }> }) {
   const { booking: bookingId } = await searchParams;
   const store = getStore();
@@ -46,7 +49,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     );
   }
 
-  const holdLive = booking.status === "pending_payment" && booking.holdExpiresAt && new Date(booking.holdExpiresAt).getTime() > Date.now();
+  const holdLive = booking.status === "pending_payment" && !!booking.holdExpiresAt && msUntil(booking.holdExpiresAt) > 0;
   if (!holdLive) {
     return (
       <Shell>
@@ -69,7 +72,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     ["Venue", site.venue.name],
     ["Session fee", formatPrice(session.pricePence)],
   ];
-  const minutesLeft = Math.max(1, Math.round((new Date(booking.holdExpiresAt!).getTime() - Date.now()) / 60000));
+  const minutesLeft = Math.max(1, Math.round(msUntil(booking.holdExpiresAt!) / 60000));
 
   return (
     <Shell>

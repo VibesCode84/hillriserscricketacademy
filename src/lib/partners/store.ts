@@ -184,7 +184,7 @@ export const hashKey = (key: string) => createHash("sha256").update(key).digest(
 const now = () => new Date().toISOString();
 
 /** A slot is taken by a confirmed booking or by a payment hold that hasn't expired */
-const holds = (b: NetBooking, at = Date.now()) =>
+export const holds = (b: NetBooking, at = Date.now()) =>
   b.status === "confirmed" || (b.status === "pending_payment" && !!b.holdExpiresAt && Date.parse(b.holdExpiresAt) > at);
 
 export type ReserveResult =

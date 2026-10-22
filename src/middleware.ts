@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+// Kept as "middleware" (Edge) rather than Next.js 16's "proxy": OpenNext on Cloudflare
+// supports Edge middleware; Node.js proxy support there is still experimental.
+
 const HUB_HOSTS = ["hillrisers.co.uk", "www.hillrisers.co.uk"];
 const CRICKET_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://cricket.hillrisers.co.uk").replace(/\/$/, "");
 

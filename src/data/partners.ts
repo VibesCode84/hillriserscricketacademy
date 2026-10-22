@@ -57,14 +57,13 @@ export const partnerBlocks: PartnerBlock[] = [
     notes: [
       "Wednesdays: from 25 November (the hall is booked for netball until 18 November).",
       "Thursdays: two nets available.",
-      "Sundays: from 11am (Early Risers runs 9–11am).",
       "No sessions over the Christmas shutdown (21 December – 3 January).",
     ],
     slots: [
       ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], wednesdays),
       ...hourly("Thursday", "18:00", "21:00", [1, 2], thursdays),
       ...hourly("Saturday", "14:30", "17:30", [1, 2, 3], saturdays),
-      ...hourly("Sunday", "11:00", "17:00", [1, 2, 3], sundays),
+      ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], sundays),
     ],
   },
 ];

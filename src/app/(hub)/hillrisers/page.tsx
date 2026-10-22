@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Crest } from "@/components/Logo";
 import { hub, sports, type Sport } from "@/data/hub";
 
-// Served at hillrisers.co.uk/ (the middleware rewrites the landing page's "/" here)
+// Served at hillrisers.co.uk/ (src/middleware.ts rewrites the landing page's "/" here)
 
 function SportIcon({ sport }: { sport: Sport["key"] }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };

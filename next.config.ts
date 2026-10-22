@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Cloudflare (OpenNext) bundles the standalone output; WORKERS_CI is set by Cloudflare Workers Builds
   output: process.env.WORKERS_CI ? "standalone" : undefined,
-  // The Postgres store reads db/schema.sql at runtime
-  outputFileTracingIncludes: { "/**": ["./db/schema.sql"] },
+  // The Postgres store reads db/schema.sql at runtime; pg loads its Cloudflare socket add-on dynamically,
+  // so it isn't traced automatically (OpenNext's bundler needs it present)
+  outputFileTracingIncludes: { "/**": ["./db/schema.sql", "./node_modules/pg-cloudflare/**"] },
   serverExternalPackages: ["pg"],
   // Pages retired when the site moved to a register-your-interest launch
   async redirects() {

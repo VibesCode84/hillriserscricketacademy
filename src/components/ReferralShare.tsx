@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { site } from "@/data/site";
 import { buttonClass } from "./Button";
 
 export function ReferralShare() {
   const [copied, setCopied] = useState(false);
 
-  const [origin, setOrigin] = useState<string>(site.url);
-  useEffect(() => setOrigin(window.location.origin), []);
-  const link = `${origin}/register`;
+  const link = `${site.url}/register`;
   const message = `HillRisers Cricket Academy is launching at John Lyon School and is building its timetable around the families who register. Cricket's better with a mate — register your interest here: ${link}`;
 
   const copy = async () => {

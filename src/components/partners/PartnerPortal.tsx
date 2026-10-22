@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BOWLING_MACHINE_PENCE,
@@ -59,9 +60,11 @@ export function PartnerPortal(props: {
     return () => clearInterval(t);
   }, [banner, refreshMe]);
 
+  const router = useRouter();
   const signOut = async () => {
     await fetch("/api/partners/access", { method: "DELETE" });
-    window.location.href = "/partners";
+    router.replace("/partners");
+    router.refresh();
   };
 
   const paidBooking = banner?.bookingId ? bookings.find((b) => b.id === banner.bookingId) : undefined;

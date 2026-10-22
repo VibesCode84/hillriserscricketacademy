@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { documentKinds, getBlock, machineKey, partnerBlocks, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
-import { getPartnerStore, partnerStorageIsPermanent } from "@/lib/partners/store";
+import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
 import { Crest } from "@/components/Logo";
 
@@ -42,7 +42,7 @@ export default async function AdminPartnersPage() {
       {partnerBlocks.map((block) => {
         const taken = new Map<string, string>();
         for (const b of bookings) {
-          if (b.blockId !== block.id || (b.status !== "confirmed" && !(b.status === "pending_payment" && b.holdExpiresAt && Date.parse(b.holdExpiresAt) > Date.now()))) continue;
+          if (b.blockId !== block.id || !holds(b)) continue;
           const name = partners.find((p) => p.id === b.partnerId)?.orgName ?? "?";
           for (const i of b.items) {
             taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (paying…)" : ""}`);

@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { sessions, formatTimeRange, getSession, sessionLabel } from "@/data/sessions";
 import type { BookingStatus, WaitlistEntry } from "@/lib/booking/types";
+import { site } from "@/data/site";
 
 async function adminPost(body: unknown) {
   const res = await fetch("/api/admin/bookings", {
@@ -79,9 +80,7 @@ export function BookingRowActions({ booking }: { booking: { id: string; status: 
 
 export function WaitlistRow({ entry, sessionLabel }: { entry: WaitlistEntry; sessionLabel: string }) {
   const s = getSession(entry.sessionId);
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
-  const link = `${origin}/book?session=${entry.sessionId}`;
+  const link = `${site.url}/book?session=${entry.sessionId}`;
   const subject = `A place is available — ${s?.title ?? "HillRisers"}`;
   const body = `Hi ${entry.parentName.split(" ")[0]},\n\nGood news — a place has opened for ${entry.playerName} in ${sessionLabel}.\n\nYou can book it here: ${link}\n\nThe HillRisers coaching team`;
   return (
