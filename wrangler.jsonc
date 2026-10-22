@@ -24,7 +24,13 @@
       "database_name": "hillrisers"
     }
   ],
-  // Keep variables set in the Cloudflare dashboard (ADMIN_PASSWORD etc.) on each deploy
+  // Plain (non-secret) settings. Secrets — STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY,
+  // ADMIN_PASSWORD — are set in the dashboard under Settings → Runtime variables and secrets.
+  "vars": {
+    "ACADEMY_NOTIFY_EMAIL": "office@hillrisers.co.uk",
+    "EMAIL_FROM": "HillRisers <hello@hillrisers.co.uk>"
+  },
+  // Keep variables set in the Cloudflare dashboard on each deploy
   "keep_vars": true,
   // Partner balance reminders: 07:00 and 08:00 UTC = 8am UK in BST and GMT (the run before 8am sends nothing)
   "triggers": {
