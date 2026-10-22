@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function PartnersHome({ searchParams }: { searchParams: Promise<{ link?: string }> }) {
   if (await currentPartner()) redirect("/partners/portal");
   const { link } = await searchParams;
-  const block = partnerBlocks[0];
   return (
     <main>
       <section className="bg-navy-950 pb-16 pt-12 text-cream md:pb-20">
@@ -46,11 +45,18 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             </ol>
           </div>
           <div>
-            <h2 className="text-2xl">Now booking: {block.label}</h2>
-            <p className="mt-1 text-ink-muted">{block.summary}</p>
-            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-muted">
-              {block.notes.map((n) => <li key={n}>{n}</li>)}
-            </ul>
+            <h2 className="text-2xl">Now booking</h2>
+            <div className="mt-3 space-y-5">
+              {partnerBlocks.map((block) => (
+                <div key={block.id}>
+                  <h3 className="text-xl">{block.label}</h3>
+                  <p className="text-ink-muted">{block.summary}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-muted">
+                    {block.notes.map((n) => <li key={n}>{n}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
           <div>
             <h2 className="text-2xl">Documents you&rsquo;ll need</h2>

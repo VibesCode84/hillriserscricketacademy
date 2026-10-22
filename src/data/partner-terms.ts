@@ -1,7 +1,7 @@
 
 /** Draft delivery partner terms for coaches and delivery partners — to be reviewed by HillRisers */
 export const partnerTerms = [
-  { t: "Block bookings", b: `Sessions are booked in blocks: the same net, at the same time, every week of the block. Partner fees are shown in the partner portal and paid in full when you book.` },
+  { t: "Block bookings", b: `Sessions are booked in blocks: the same net, at the same time, every week of the block. We only accept block bookings, and the block rate is shown in the partner portal. Bookings are paid in full when you book.` },
   { t: "Bowling machine", b: `The bowling machine is charged per hour on top of the net. There is one machine, so it can be booked on one net per time slot. You must supply your own balls, and the machine must be operated by a coach holding at least an ECB Level 2 (or equivalent) qualification.` },
   { t: "No filming or video", b: "No filming or video recording of any kind is permitted at the venue, including on phones. This applies to coaches, players and anyone attending." },
   { t: "Safeguarding and documents", b: "You must hold, and upload, a current coaching qualification, enhanced DBS check, safeguarding training and public liability insurance for everyone coaching in your sessions. HillRisers reviews documents and may cancel a booking if they are missing or invalid." },

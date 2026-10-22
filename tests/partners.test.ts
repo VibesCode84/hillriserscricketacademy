@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { getBlock, itemPricePence, machineKey, slotKey } from "../src/data/partners";
+import { getBlock, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
 import { createD1PartnerStore, createFilePartnerStore } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
@@ -36,10 +36,10 @@ test("released slots: Wednesdays from 25 Nov, Thursdays two nets, Sundays 9am–
   assert.ok(block.slots.every((s) => s.dates.every((d) => d <= "2026-12-13")));
 });
 
-test("pricing: £17 per net per hour for every week, bowling machine +£10 per hour", () => {
-  assert.equal(itemPricePence(wed, false), 3 * 1700);
-  assert.equal(itemPricePence(sat, false), 6 * 1700);
-  assert.equal(itemPricePence(sat, true), 6 * 2700);
+test("pricing: £18.80 block rate per net per hour for every week, bowling machine +£10 per hour", () => {
+  assert.equal(itemPricePence(wed, false), 3 * 1880);
+  assert.equal(itemPricePence(sat, false), 6 * 1880);
+  assert.equal(itemPricePence(sat, true), 6 * 2880);
 });
 
 for (const [name, make] of [
@@ -71,7 +71,7 @@ for (const [name, make] of [
     });
     assert.equal(both.ok, false);
     const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true }], machineCoach: "Alex" });
-    assert.ok(first.ok && first.booking.totalPence === 6 * 2700);
+    assert.ok(first.ok && first.booking.totalPence === 6 * 2880);
     const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: true }] });
     assert.equal(second.ok, false);
     assert.ok((await store.taken(block.id)).has(machineKey(block.id, sat)));
@@ -127,4 +127,14 @@ test("each booked session says who it's for", () => {
   assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["items.0.ability", "items.0.ageGroup", "items.0.gender"]);
   const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], noVideo: true, agreeTerms: true });
   assert.ok(ok.success);
+});
+
+test("spring block: 11 weeks from 6 January, none in half term", () => {
+  const spring = partnerBlocks.find((b) => b.id === "spring-2027")!;
+  for (const s of spring.slots) {
+    assert.equal(s.dates.length, 11);
+    assert.ok(s.dates.every((d) => d < "2027-02-15" || d > "2027-02-21"));
+  }
+  assert.equal(spring.slots.find((s) => s.day === "Wednesday")!.dates[0], "2027-01-06");
+  assert.equal(spring.slots.find((s) => s.day === "Sunday")!.dates.at(-1), "2027-03-28");
 });

@@ -2,13 +2,14 @@
  * Net bookings for coaches and delivery partners (private portal at /partners).
  *
  * - Block bookings only: a net at the same time every week for a whole block.
- * - £17 per net per hour; the bowling machine is £10 per hour on top.
+ * - £18.80 per net per hour (the block rate); the bowling machine is £10 per hour on top.
  * - There is ONE bowling machine, so it can go on one net per time slot.
  * - Only the slots listed here are released. Update this file to release the
  *   next block or change what is available.
  */
 
-export const PARTNER_RATE_PENCE = 1700;
+/** Block rate: block bookings only, so there is no separate per-session rate */
+export const PARTNER_RATE_PENCE = 1880;
 export const BOWLING_MACHINE_PENCE = 1000;
 export const NETS = [1, 2, 3] as const;
 /** How long slots are held while a partner pays */
@@ -49,6 +50,16 @@ const thursdays = ["2026-11-05", "2026-11-12", "2026-11-19", "2026-11-26", "2026
 const saturdays = ["2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"];
 const sundays = ["2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13"];
 
+/** Spring 2027: 11 weeks, 4 January – 28 March, skipping half term (15–21 February) */
+const springWeek = (first: string) => {
+  const out: string[] = [];
+  for (let d = new Date(`${first}T12:00:00Z`); d <= new Date("2027-03-28T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 7)) {
+    const iso = d.toISOString().slice(0, 10);
+    if (iso < "2027-02-15" || iso > "2027-02-21") out.push(iso);
+  }
+  return out;
+};
+
 export const partnerBlocks: PartnerBlock[] = [
   {
     id: "autumn-2026",
@@ -64,6 +75,22 @@ export const partnerBlocks: PartnerBlock[] = [
       ...hourly("Thursday", "18:00", "21:00", [1, 2], thursdays),
       ...hourly("Saturday", "14:30", "17:30", [1, 2, 3], saturdays),
       ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], sundays),
+    ],
+  },
+  {
+    id: "spring-2027",
+    label: "Spring block 2027",
+    summary: "6 January to 28 March 2027 (11 weeks)",
+    notes: [
+      "No sessions in half term (15–21 February).",
+      "Thursdays: two nets available.",
+      "Includes the Easter weekend (27–28 March).",
+    ],
+    slots: [
+      ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], springWeek("2027-01-06")),
+      ...hourly("Thursday", "18:00", "21:00", [1, 2], springWeek("2027-01-07")),
+      ...hourly("Saturday", "14:30", "17:30", [1, 2, 3], springWeek("2027-01-09")),
+      ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], springWeek("2027-01-10")),
     ],
   },
 ];

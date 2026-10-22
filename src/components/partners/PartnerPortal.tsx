@@ -111,6 +111,16 @@ export function PartnerPortal(props: {
         </details>
       )}
 
+      <div className="mt-8 rounded-2xl border border-gold/30 bg-white p-5 md:p-6">
+        <h2 className="text-2xl">Block bookings only</h2>
+        <p className="mt-2 max-w-3xl leading-relaxed text-ink-muted">
+          We only accept block bookings: you book the same net, at the same time, every week of the block. Our block rate is{" "}
+          <strong className="text-navy-950">{formatPrice(PARTNER_RATE_PENCE)} per net per hour</strong>, with the bowling machine{" "}
+          {formatPrice(BOWLING_MACHINE_PENCE)} per hour on top. We don&rsquo;t take one-off or weekly bookings, so there&rsquo;s no
+          separate session rate.
+        </p>
+      </div>
+
       {props.blocks.map((block) => (
         <BookingGrid key={block.id} block={block} onBooked={refreshMe} />
       ))}
@@ -301,7 +311,7 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-3xl">{block.label}</h2>
-          <p className="text-ink-muted">{block.summary} · {formatPrice(PARTNER_RATE_PENCE)} per net per hour · bowling machine +{formatPrice(BOWLING_MACHINE_PENCE)} per hour</p>
+          <p className="text-ink-muted">{block.summary} · block rate {formatPrice(PARTNER_RATE_PENCE)} per net per hour · bowling machine +{formatPrice(BOWLING_MACHINE_PENCE)} per hour</p>
         </div>
         <p className="inline-flex items-center gap-2 text-sm text-ink-muted" aria-live="polite">
           <span className={`h-2.5 w-2.5 rounded-full ${live ? "animate-pulse bg-[#1d9b4b]" : "bg-[#b0b0b0]"}`} aria-hidden="true" />

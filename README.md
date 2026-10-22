@@ -73,7 +73,7 @@ Submissions are stored, in order of preference, in Postgres (`DATABASE_URL`), in
 
 Coaches and delivery partners register, upload documents and book nets by the block, paying by Stripe. It isn't linked from the parent-facing site; share **cricket.hillrisers.co.uk/partners** with partners.
 
-- **What's released and prices:** `src/data/partners.ts` — blocks, days, times, nets and weeks; £17 per net per hour; bowling machine +£10 per hour (one machine, so one net per time slot). Edit this file to release the next block.
+- **What's released and prices:** `src/data/partners.ts` — blocks, days, times, nets and weeks; £18.80 per net per hour (block rate, block bookings only); bowling machine +£10 per hour (one machine, so one net per time slot). Edit this file to release the next block.
 - **Live availability:** the grid refreshes every 8 seconds. Nets are held for 30 minutes while a partner pays; an expired or cancelled payment frees them. Two partners can never book the same net (or the machine) — the hold is atomic.
 - **Documents:** qualifications, DBS, safeguarding, first aid and insurance (PDF, photo or Word, up to 10 MB). Stored in the D1 database. Partners can book straight away; review documents at `/admin/partners` (approve / reject with a note).
 - **Sign-in:** each partner has a private portal link (shown in the portal, and emailed once email is set up). "Email me a new link" issues a fresh one.
