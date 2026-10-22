@@ -1,6 +1,6 @@
 import { site } from "@/data/site";
 
-const items = ["The area's best coaches", "Max six per net", "Girls-only pathway", "John Lyon School"];
+const items = ["The area's best coaches", "Max six per net", "Boys and girls aged 4–15", "John Lyon School"];
 
 export function TrustStrip({ className = "" }: { className?: string }) {
   return (
@@ -20,7 +20,7 @@ export function TrustBand() {
   const facts = [
     { k: "6", v: "Maximum players per net, each net with its own coach" },
     { k: site.ages, v: "Ages, placed by ability — not just age" },
-    { k: "Girls-only", v: "Dedicated sessions for girls, from first steps to performance nets" },
+    { k: "Every skill", v: "Batting, seam, spin and wicket-keeping, with fielding in every session" },
   ];
   return (
     <section className="border-y border-gold/15 bg-navy-900" aria-label="HillRisers at a glance">

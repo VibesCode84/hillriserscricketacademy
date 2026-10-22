@@ -8,7 +8,7 @@ export const site = {
   name: "HillRisers Cricket Academy",
   shortName: "HillRisers",
   description:
-    "The very best junior cricket coaching in Harrow. Elite coaches from the area, small groups of up to six per net, a girls-only pathway and coaching built around every child — at John Lyon School, Harrow on the Hill.",
+    "The very best junior cricket coaching in Harrow. Elite coaches from the area, small groups of up to six per net and coaching built around every child, with girls-only groups too — at John Lyon School, Harrow on the Hill.",
   /** Used for canonical URLs, metadata and links in emails */
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://cricket.hillrisers.co.uk").replace(/\/$/, ""),
   /** Public contact email (also the reply-to on site emails) */

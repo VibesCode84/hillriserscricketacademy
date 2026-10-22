@@ -95,27 +95,6 @@ export default function HomePage() {
         </Reveal>
       </Section>
 
-      {/* Girls */}
-      <section className="relative overflow-hidden bg-navy-900">
-        <div className="grid lg:grid-cols-2">
-          <Photo {...photos.girlBatting} className="min-h-[24rem] lg:min-h-[36rem]" sizes="(min-width: 1024px) 50vw, 100vw" />
-          <div className="flex items-center py-20 md:py-28">
-            <Reveal className="container-x max-w-2xl lg:px-16">
-              <p className="eyebrow">Girls cricket</p>
-              <h2 className="mt-5 text-[2.5rem] leading-[1.05] text-cream md:text-[3.5rem]">The best place for girls to play cricket.</h2>
-              <p className="mt-6 text-lg leading-relaxed text-slate">
-                A first-class girls-only pathway: Girls Development (8–11) and Girls Performance (11–15), with the same outstanding coaching
-                as our mixed groups. Girls are welcome in every mixed group too.
-              </p>
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href="/girls" arrow className="group">Girls cricket</ButtonLink>
-                <ButtonLink href="/register" variant="secondary">Register your interest</ButtonLink>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
       {/* How booking works */}
       <Section tone="light" id="booking">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -159,6 +138,22 @@ export default function HomePage() {
           </div>
         )}
       </Section>
+
+      {/* Girls — one strand of the offer, alongside mixed groups */}
+      <section className="border-y border-gold/15 bg-navy-900">
+        <div className="container-x grid items-center gap-8 py-12 md:grid-cols-[14rem_1fr_auto] md:gap-10">
+          <Photo {...photos.girlBatting} className="hidden aspect-square rounded-2xl md:block" sizes="14rem" />
+          <div>
+            <p className="eyebrow">Girls cricket</p>
+            <p className="mt-3 font-serif text-3xl text-cream">Girls-only groups, too.</p>
+            <p className="mt-2 max-w-2xl text-slate">
+              Alongside our mixed groups we&rsquo;re planning Girls Development (8–11) and Girls Performance (11–15), with the same
+              coaching. Girls are welcome in every mixed group as well.
+            </p>
+          </div>
+          <ButtonLink href="/girls" variant="secondary" className="shrink-0">Girls cricket</ButtonLink>
+        </div>
+      </section>
 
       {/* Venue */}
       <Section tone="light">

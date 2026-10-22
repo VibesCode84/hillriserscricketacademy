@@ -36,7 +36,7 @@ export default function CalendarPage() {
         actions={
           <>
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
-            <ButtonLink href="/how-booking-works" variant="secondary">How booking works</ButtonLink>
+            <ButtonLink href="/how-booking-works" variant="secondary">How it works</ButtonLink>
           </>
         }
       />

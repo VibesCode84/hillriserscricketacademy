@@ -29,12 +29,12 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
             Elite cricket coaching, built around <em className="font-normal italic text-gold-soft">your child.</em>
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate md:text-xl">
-            The very best coaches from the area, in small groups, with coaching shaped around the needs of every cricket-loving child.
+            The very best coaches from the area, in small groups, with coaching shaped around every cricket-loving boy and girl aged 4–15.
             Tell us when your child can attend and what they want from cricket — we&rsquo;ll build the timetable around you.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
-            <ButtonLink href="/how-booking-works" variant="secondary">How booking works</ButtonLink>
+            <ButtonLink href="/how-booking-works" variant="secondary">How it works</ButtonLink>
           </div>
           <p className="mt-4 text-sm text-slate">HillRisers programmes are coming soon. Registered families hear first and get priority booking before places open to everyone.</p>
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
@@ -42,19 +42,19 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
 
         {/* Phones and tablets: the same two photos side by side */}
         <div className="grid grid-cols-2 gap-3 lg:hidden">
-          <Photo {...photos.girlBatting} className="aspect-[4/5] rounded-[1.5rem]" priority sizes="50vw" />
-          <Photo {...photos.coachAndBatter} className="aspect-[4/5] rounded-[1.5rem]" sizes="50vw" />
+          <Photo {...photos.coachAndBatter} className="aspect-[4/5] rounded-[1.5rem]" priority sizes="50vw" />
+          <Photo {...photos.girlBatting} className="aspect-[4/5] rounded-[1.5rem]" sizes="50vw" />
         </div>
 
         <div className="relative hidden h-[34rem] lg:block">
           <Photo
-            {...photos.girlBatting}
+            {...photos.coachAndBatter}
             className="absolute right-0 top-0 h-[26rem] w-[72%] rounded-[2rem]"
             priority
             sizes="40vw"
           />
           <Photo
-            {...photos.coachAndBatter}
+            {...photos.girlBatting}
             className="absolute bottom-0 left-0 h-[17rem] w-[52%] rounded-[1.75rem] ring-8 ring-navy-950"
             sizes="25vw"
           />
