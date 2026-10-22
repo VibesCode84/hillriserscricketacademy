@@ -58,12 +58,11 @@ export async function sendInterestConfirmation(r: InterestRegistration) {
 Thank you for registering your interest in HillRisers Cricket Academy for ${who}. There's nothing to pay at this stage.
 
 WHAT HAPPENS NEXT
-1. We're using every family's answers — availability, level and what each child wants from cricket — to build the timetable.
-2. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking before places open to everyone.
-3. You then book a trial session, on the day your child plans to train, paying a deposit equal to one session fee.
-4. After the trial, the deposit is credited if your child joins, or refunded if they don't (provided they attended or cancelled with at least ${launch.trialCancellationHours} hours' notice).
+1. We're using every family's answers — which days they can make, level and what each child wants from cricket — to shape our programmes.
+2. Registered families hear first, with ${launch.priorityBookingHours} hours' priority booking before places open to everyone.
+3. Your child can try a session before you commit.
 
-We'll be in touch as soon as the timetable is ready. How booking works: ${site.url}/how-booking-works
+We'll be in touch as soon as programmes are ready. How it works: ${site.url}/how-booking-works
 
 ${contactLine()}
 

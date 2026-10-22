@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { formatProgrammePrice, getProgramme, groupSizes } from "@/data/programmes";
+import { groupSizes } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -8,11 +8,9 @@ import { Photo } from "@/components/Photo";
 import { FAQAccordion, faqJsonLd } from "@/components/FAQAccordion";
 import { CTASection } from "@/components/CTASection";
 
-const programme = getProgramme("early-risers")!;
-
 export const metadata: Metadata = {
   title: "Early Risers — Cricket for Ages 4–6 in Harrow",
-  description: `Early Risers at John Lyon School, Harrow on the Hill: soft-ball cricket for ages 4–6, ${programme.fixedTime}. ${formatProgrammePrice(programme)}.`,
+  description: "Early Risers at John Lyon School, Harrow on the Hill: fun, soft-ball cricket for ages 4–6, coached in short sessions on Sunday mornings.",
   alternates: { canonical: "/early-risers" },
 };
 
@@ -44,7 +42,6 @@ export default function EarlyRisersPage() {
       >
         <div className="mt-8 inline-flex flex-wrap gap-x-6 gap-y-2 rounded-2xl border border-gold/25 bg-navy-900/70 px-5 py-4 text-cream">
           <span><strong className="text-gold">When:</strong> Sunday mornings, 40-minute sessions — times to be confirmed</span>
-          <span><strong className="text-gold">Price:</strong> {formatProgrammePrice(programme)}</span>
           <span><strong className="text-gold">Group size:</strong> max {groupSizes.earlyRisers}</span>
         </div>
       </PageHero>

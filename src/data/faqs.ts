@@ -34,27 +34,27 @@ export const faqGroups: FAQGroup[] = [
     ],
   },
   {
-    title: "Booking and prices",
+    title: "Joining",
     items: [
       {
-        q: "How does booking work?",
-        a: `Register your interest. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking. You then book a trial session, on the day your child plans to train, paying a deposit equal to one session fee.`,
+        q: "How does it work?",
+        a: `Register your interest and tell us what your child wants from cricket and which days they can make. We'll shape the programmes around what families tell us, and registered families hear first, with ${launch.priorityBookingHours} hours' priority booking before places open to everyone.`,
       },
       {
-        q: "What happens after the trial?",
-        a: `If your child joins, the deposit is credited to their remaining sessions, and you book autumn and spring terms together — paid in full or monthly. If they don't, the deposit is refunded, provided they attended or you cancelled with at least ${launch.trialCancellationHours} hours' notice.`,
+        q: "Can my child try a session first?",
+        a: "Yes. Your child can try a session before you commit.",
       },
       {
         q: "How much does it cost?",
-        a: "Our standard rate for all group programmes — Development, Performance and the girls-only groups — is £30 per hour, and for 2026/27 we're offering it at £25 per hour. Small groups of three are £45 per player per hour, and 1-to-1 coaching is from £75 per hour. Early Risers is £15 per session. A bowling machine net with an automatic ball feeder, open to all ages including adults, is £40 per net per hour — £30 per hour in 2026/27, to the end of spring term. New players pay a £30 registration fee, which includes a HillRisers playing shirt.",
+        a: "Registering your interest is free and there's no commitment. Full details, including fees, will be shared with registered families first.",
       },
       {
         q: "How long are sessions?",
-        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Early Risers is planned as 40-minute sessions on Sunday mornings, with times to be confirmed.",
+        a: "Session lengths and times will be set from what families tell us. Early Risers is planned as short sessions on Sunday mornings.",
       },
       {
         q: "How big are the groups?",
-        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Early Risers is our only larger group, with a maximum of 24.",
+        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Early Risers is our only larger group, with a maximum of 16.",
       },
     ],
   },

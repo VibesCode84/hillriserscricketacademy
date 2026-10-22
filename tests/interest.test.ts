@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { FileBookingStore } from "../src/lib/booking/file-store";
 import { coachInterestSchema, interestRegistrationSchema } from "../src/lib/validation";
-import { programmes, REGISTRATION_FEE_PENCE, formatOfferPrice, formatProgrammePrice, getProgramme } from "../src/data/programmes";
+import { programmes } from "../src/data/programmes";
 import { sessions } from "../src/data/sessions";
 import { ageBand } from "../src/lib/age";
 import { coachAvailabilityOptions, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms } from "../src/lib/interest-options";
@@ -135,22 +135,12 @@ test("coach availability matches the John Lyon hall slots", () => {
   assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
 });
 
-test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer; Early Risers £15", () => {
-  const price = (k: string) => getProgramme(k)!.pricePence;
-  const offer = (k: string) => getProgramme(k)!.offerPricePence;
-  assert.equal(price("early-risers"), 1500);
-  assert.equal(offer("early-risers"), undefined);
-  for (const k of ["development", "girls-development", "performance", "girls-performance"]) {
-    assert.equal(price(k), 3000, k);
-    assert.equal(offer(k), 2500, k);
+test("public programmes: ages 4–15 and no prices", () => {
+  assert.equal(programmes.length, 7);
+  for (const p of programmes) {
+    assert.ok(!/£|price/i.test(JSON.stringify(p)), p.key);
+    assert.ok((p.ageMin ?? 0) >= 4 && (p.ageMax ?? 0) <= 15, p.key);
   }
-  assert.equal(formatOfferPrice(getProgramme("development")!), "£25 per hour");
-  assert.equal(price("small-group"), 4500);
-  assert.equal(formatProgrammePrice(getProgramme("one-to-one")!), "from £75 per hour");
-  assert.equal(REGISTRATION_FEE_PENCE, 3000);
-  assert.equal(programmes.length, 8);
-  assert.equal(formatProgrammePrice(getProgramme("bowling-machine")!), "£40 per net per hour");
-  assert.equal(formatOfferPrice(getProgramme("bowling-machine")!), "£30 per net per hour");
 });
 
 test("the only fixed times are Early Risers, three 40-minute Sunday sessions", () => {

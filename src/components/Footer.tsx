@@ -10,8 +10,8 @@ const groups = [
   {
     title: "Academy",
     links: [
-      { href: "/programmes", label: "Programmes & Prices" },
-      { href: "/how-booking-works", label: "How Booking Works" },
+      { href: "/programmes", label: "Programmes" },
+      { href: "/how-booking-works", label: "How It Works" },
       { href: "/calendar", label: "2026/27 Calendar" },
       { href: "/girls", label: "Girls Cricket" },
       { href: "/early-risers", label: "Early Risers" },
@@ -35,7 +35,6 @@ const groups = [
       { href: "/terms", label: "Terms & Conditions" },
       { href: "/safeguarding", label: "Safeguarding" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/refunds", label: "Refunds" },
       { href: "/accessibility", label: "Accessibility" },
     ],
   },

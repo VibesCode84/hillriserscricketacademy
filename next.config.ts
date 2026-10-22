@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
         destination: "https://cricket.hillrisers.co.uk/:path*",
         permanent: true,
       },
+      { source: "/refunds", destination: "/terms", permanent: false },
       { source: "/academy", destination: "/programmes", permanent: true },
       { source: "/academy/:slug", destination: "/programmes", permanent: true },
       { source: "/sessions", destination: "/how-booking-works", permanent: true },

@@ -4,7 +4,7 @@ import { site } from "@/data/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
     "", "/register", "/programmes", "/how-booking-works", "/calendar", "/girls", "/early-risers", "/venue", "/coaches",
-    "/camps", "/faq", "/contact", "/refer", "/terms", "/safeguarding", "/privacy", "/refunds", "/accessibility",
+    "/camps", "/faq", "/contact", "/refer", "/terms", "/safeguarding", "/privacy", "/accessibility",
   ];
   return pages.map((p) => ({
     url: `${site.url}${p}`,

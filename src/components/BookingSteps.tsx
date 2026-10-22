@@ -5,23 +5,19 @@ import { Reveal } from "./Reveal";
 export const bookingSteps = [
   {
     t: "Register your interest",
-    b: "Tell us when your child can attend and what they want from cricket. It takes a few minutes and costs nothing.",
+    b: "Tell us what your child wants from cricket and which days they can make. It takes a few minutes, it's free and there's no commitment.",
   },
   {
-    t: "Timetable published",
-    b: `We build the timetable around registered families, who hear first and get ${launch.priorityBookingHours} hours’ priority booking.`,
+    t: "We shape the programmes",
+    b: "We plan groups, days and times around what registered families tell us.",
   },
   {
-    t: "Book a trial session",
-    b: "Trials run before regular sessions start, on the day your child plans to train. You pay a deposit equal to one session fee.",
+    t: "You hear first",
+    b: `Registered families get the details first, with ${launch.priorityBookingHours} hours’ priority booking before places open to everyone.`,
   },
   {
-    t: "After the trial",
-    b: `Joining? The deposit is credited to the remaining sessions, and you book autumn and spring terms together — paid in full or monthly. Not joining? The deposit is refunded, provided your child attended or you cancelled with at least ${launch.trialCancellationHours} hours’ notice.`,
-  },
-  {
-    t: "Regular sessions start",
-    b: "Start dates are confirmed when the timetable is published.",
+    t: "Try a session",
+    b: "Your child can try a session before you commit.",
   },
 ];
 
@@ -29,7 +25,7 @@ export function BookingSteps({ tone = "light", showTermsLink = true }: { tone?: 
   const light = tone === "light";
   return (
     <div>
-      <ol className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <ol className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {bookingSteps.map((s, i) => (
           <Reveal as="li" key={s.t} delay={i * 70} className={`rounded-2xl p-6 ${light ? "bg-white" : "bg-navy-900"}`}>
             <span className={`font-serif text-4xl ${light ? "text-gold-deep" : "text-gold"}`}>{i + 1}</span>

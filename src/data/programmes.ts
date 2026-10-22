@@ -1,8 +1,7 @@
 /**
- * Programmes and price guide. Group programmes share one standard rate
- * (£30 per hour) with a 2026/27 offer of £25 per hour. Prices are per hour —
- * sessions may run for 1 hour, 90 minutes or 2 hours depending on parent
- * feedback. No programme has fixed times yet.
+ * Programmes for ages 4–15. The public site shows no prices while HillRisers
+ * is taking registrations of interest; session lengths and times will be set
+ * from parent feedback.
  */
 export type ProgrammeKey =
   | "early-risers"
@@ -11,8 +10,7 @@ export type ProgrammeKey =
   | "performance"
   | "girls-performance"
   | "small-group"
-  | "one-to-one"
-  | "bowling-machine";
+  | "one-to-one";
 
 export type Programme = {
   key: ProgrammeKey;
@@ -22,30 +20,14 @@ export type Programme = {
   ageMin?: number;
   ageMax?: number;
   summary: string;
-  /** Standard price in pence */
-  pricePence: number;
-  /** Special-offer price in pence (see OFFER_LABEL) */
-  offerPricePence?: number;
-  /** Overrides OFFER_LABEL for this programme's offer */
-  offerLabel?: string;
-  /** How the price is quoted */
-  priceUnit: "per session" | "per hour" | "per player per hour" | "per net per hour";
-  /** "from £75" */
-  priceFrom?: boolean;
   girlsOnly?: boolean;
   /** Planned timing note, shown under the summary */
   fixedTime?: string;
   href?: string;
 };
 
-/** Standard hourly rate for all group programmes (everything bar Early Risers) */
-export const STANDARD_HOURLY_PENCE = 3000;
 /** Early Risers: planned as 40-minute sessions on Sunday mornings; times to be confirmed */
 export const EARLY_RISERS_TIME = "Sunday mornings · 40-minute sessions · times to be confirmed";
-
-/** 2026/27 special offer */
-export const OFFER_HOURLY_PENCE = 2500;
-export const OFFER_LABEL = "2026/27 offer";
 
 export const programmes: Programme[] = [
   {
@@ -55,8 +37,6 @@ export const programmes: Programme[] = [
     ageMin: 4,
     ageMax: 6,
     summary: "Soft ball, movement, fun and confidence.",
-    pricePence: 1500,
-    priceUnit: "per session",
     fixedTime: EARLY_RISERS_TIME,
     href: "/early-risers",
   },
@@ -67,9 +47,6 @@ export const programmes: Programme[] = [
     ageMin: 7,
     ageMax: 11,
     summary: "Technique, and the move from soft ball to hard ball.",
-    pricePence: STANDARD_HOURLY_PENCE,
-    offerPricePence: OFFER_HOURLY_PENCE,
-    priceUnit: "per hour",
   },
   {
     key: "girls-development",
@@ -78,9 +55,6 @@ export const programmes: Programme[] = [
     ageMin: 8,
     ageMax: 11,
     summary: "The Development format, girls only.",
-    pricePence: STANDARD_HOURLY_PENCE,
-    offerPricePence: OFFER_HOURLY_PENCE,
-    priceUnit: "per hour",
     girlsOnly: true,
     href: "/girls",
   },
@@ -91,9 +65,6 @@ export const programmes: Programme[] = [
     ageMin: 10,
     ageMax: 15,
     summary: "Hard ball, specialist nets.",
-    pricePence: STANDARD_HOURLY_PENCE,
-    offerPricePence: OFFER_HOURLY_PENCE,
-    priceUnit: "per hour",
   },
   {
     key: "girls-performance",
@@ -102,43 +73,26 @@ export const programmes: Programme[] = [
     ageMin: 11,
     ageMax: 15,
     summary: "The Performance format, girls only.",
-    pricePence: STANDARD_HOURLY_PENCE,
-    offerPricePence: OFFER_HOURLY_PENCE,
-    priceUnit: "per hour",
     girlsOnly: true,
     href: "/girls",
   },
   {
     key: "small-group",
     name: "Small group (3 players)",
-    ages: "All ages",
+    ages: "4–15",
+    ageMin: 4,
+    ageMax: 15,
     summary: "Specialist coaching for three players.",
-    pricePence: 4500,
-    priceUnit: "per player per hour",
   },
   {
     key: "one-to-one",
     name: "1-to-1",
-    ages: "All ages",
+    ages: "4–15",
+    ageMin: 4,
+    ageMax: 15,
     summary: "Individual coaching.",
-    pricePence: 7500,
-    priceUnit: "per hour",
-    priceFrom: true,
-  },
-  {
-    key: "bowling-machine",
-    name: "Bowling machine net",
-    ages: "All ages, including adults",
-    summary: "A net of your own with a bowling machine and automatic ball feeder — ball after ball, at the pace and line you choose. Autumn and spring terms.",
-    pricePence: 4000,
-    offerPricePence: 3000,
-    offerLabel: "2026/27 offer to end of spring",
-    priceUnit: "per net per hour",
   },
 ];
-
-/** One-off registration fee for new players, including a HillRisers playing shirt */
-export const REGISTRATION_FEE_PENCE = 3000;
 
 /** Specialist skills coached within the programmes */
 export const specialistSkills = ["Batting", "Power hitting", "Sweeps and ramps", "Seam bowling", "Spin bowling", "Wicket-keeping"];
@@ -150,16 +104,4 @@ export const groupSizes = {
 
 export function getProgramme(key: string) {
   return programmes.find((p) => p.key === key);
-}
-
-const pounds = (pence: number) => (pence % 100 === 0 ? `£${pence / 100}` : `£${(pence / 100).toFixed(2)}`);
-
-/** Standard price, e.g. "£30 per hour" or "from £75 per hour" */
-export function formatProgrammePrice(p: Programme) {
-  return `${p.priceFrom ? "from " : ""}${pounds(p.pricePence)} ${p.priceUnit}`;
-}
-
-/** Offer price if one applies, e.g. "£25 per hour" */
-export function formatOfferPrice(p: Programme) {
-  return p.offerPricePence ? `${pounds(p.offerPricePence)} ${p.priceUnit}` : undefined;
 }

@@ -82,7 +82,7 @@ export default function HomePage() {
       <Section tone="cream" id="programmes">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <SectionHeader
-            eyebrow="Programmes and prices"
+            eyebrow="Programmes · Ages 4–15"
             title="World-class coaching at every stage."
             intro={<p className="text-ink-muted">From first steps with a soft ball to hard-ball specialist nets — exceptional coaching for every young cricketer.</p>}
           />
@@ -119,7 +119,7 @@ export default function HomePage() {
       {/* How booking works */}
       <Section tone="light" id="booking">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <SectionHeader eyebrow="How booking works" title="Register now. Book when the timetable is published." />
+          <SectionHeader eyebrow="How it works" title="Tell us what you want. We'll build around you." />
           <Reveal>
             <Link href="/how-booking-works" className="link-underline shrink-0 text-sm font-semibold text-navy-950">Full details →</Link>
           </Reveal>
