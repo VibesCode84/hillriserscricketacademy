@@ -368,6 +368,7 @@ export class PartnerStore {
   async taken(blockId: string) {
     const at = Date.now();
     const set = new Set<string>();
+    if (getBlock(blockId)?.test) return set;
     for (const b of (await this.read()).bookings) {
       if (b.blockId !== blockId || !holds(b, at)) continue;
       for (const i of b.items) {
@@ -426,7 +427,7 @@ export class PartnerStore {
       const at = Date.now();
       const clash = new Set<string>();
       for (const b of d.bookings) {
-        if (b.blockId !== input.blockId || !holds(b, at)) continue;
+        if (block.test || b.blockId !== input.blockId || !holds(b, at)) continue;
         for (const i of b.items) {
           if (wanted.has(i.slotKey)) clash.add(i.slotKey);
           const m = machineKey(input.blockId, i);

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getBlock } from "@/data/partners";
+import { isTestPartner } from "@/lib/partners/test-access";
 import { baseUrl, parseJson } from "@/lib/http";
 import { partnerCheckoutSchema } from "@/lib/validation";
 import { currentPartner } from "@/lib/partners/session";
@@ -14,6 +16,7 @@ export async function POST(req: Request) {
   const parsed = await parseJson(req, partnerCheckoutSchema);
   if ("error" in parsed) return parsed.error;
   const { blockId, items, machineCoach, plan } = parsed.data;
+  if (getBlock(blockId)?.test && !isTestPartner(partner.email)) return NextResponse.json({ ok: false, message: "That block isn't available." }, { status: 400 });
   const store = getPartnerStore();
   const held = await store.reserve({ partnerId: partner.id, blockId, items, machineCoach, plan });
   if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: held.reason === "taken" ? 409 : 400 });

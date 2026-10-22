@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { documentKinds, partnerBlocks } from "@/data/partners";
+import { documentKinds, releasedBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
 
@@ -47,7 +47,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           <div>
             <h2 className="text-2xl">Now booking</h2>
             <div className="mt-3 space-y-5">
-              {partnerBlocks.map((block) => (
+              {releasedBlocks.map((block) => (
                 <div key={block.id}>
                   <h3 className="text-xl">{block.label}</h3>
                   <p className="text-ink-muted">{block.summary}</p>

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- document links and the CSV are downloads, not pages */
 import Link from "next/link";
-import { documentKinds, getBlock, longDate, machineKey, partnerBlocks, slotKey, timeLabel } from "@/data/partners";
+import { documentKinds, getBlock, longDate, machineKey, releasedBlocks, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
@@ -39,7 +39,7 @@ export default async function AdminPartnersPage() {
         </p>
       )}
 
-      {partnerBlocks.map((block) => {
+      {releasedBlocks.map((block) => {
         const taken = new Map<string, string>();
         for (const b of bookings) {
           if (b.blockId !== block.id || !holds(b)) continue;

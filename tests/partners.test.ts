@@ -186,6 +186,18 @@ for (const [name, make] of [
     assert.equal((await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000)).length, 0);
   });
 
+  test(`${name}: the Stripe test booking costs £1 and never fills up`, async () => {
+    const store = make();
+    const t = getBlock("stripe-test")!;
+    const { partner: a } = await store.createPartner(partner);
+    const item = [{ slotKey: slotKey(t.id, t.slots[0], 1), bowlingMachine: false }];
+    const first = await store.reserve({ partnerId: a.id, blockId: t.id, items: item });
+    assert.ok(first.ok && first.booking.totalPence === 100);
+    await store.confirm(first.booking.id, "pi_test");
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: t.id, items: item })).ok);
+    assert.equal((await store.taken(t.id)).size, 0);
+  });
+
   test(`${name}: password sign-in creates a session; signing out ends it; the portal link still works`, async () => {
     const store = make();
     const { partner: a, key } = await store.createPartner({ ...partner, password: "correct horse" });
@@ -250,4 +262,10 @@ test("balance reminders: two weeks after the first autumn session, weekly, then 
   assert.deepEqual(balanceReminderDates("2026-11-05", "2026-12-13", "2026-12-04"), ["2026-12-10", "2026-12-11", "2026-12-13"]);
   assert.equal(londonTime("2026-11-05", 8).toISOString(), "2026-11-05T08:00:00.000Z");
   assert.equal(londonTime("2026-10-22", 8).toISOString(), "2026-10-22T07:00:00.000Z");
+});
+
+test("the Stripe test booking is only for test accounts", async () => {
+  const { isTestPartner } = await import("../src/lib/partners/test-access");
+  assert.ok(isTestPartner("Office@HillRisers.co.uk"));
+  assert.ok(!isTestPartner("someone@example.com"));
 });

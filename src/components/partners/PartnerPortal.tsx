@@ -496,7 +496,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-3xl">{block.label}</h2>
-          <p className="text-ink-muted">{block.summary} · block rate {formatPrice(PARTNER_RATE_PENCE)} per net per hour · bowling machine +{formatPrice(BOWLING_MACHINE_PENCE)} per hour</p>
+          <p className="text-ink-muted">{block.test ? block.summary : <>{block.summary} · block rate {formatPrice(PARTNER_RATE_PENCE)} per net per hour · bowling machine +{formatPrice(BOWLING_MACHINE_PENCE)} per hour</>}</p>
         </div>
         <p className="inline-flex items-center gap-2 text-sm text-ink-muted" aria-live="polite">
           <span className={`h-2.5 w-2.5 rounded-full ${live ? "animate-pulse bg-[#1d9b4b]" : "bg-[#b0b0b0]"}`} aria-hidden="true" />

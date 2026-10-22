@@ -26,6 +26,9 @@ export type SlotTemplate = {
   nets: number[];
   /** Weeks in the block (ISO dates) */
   dates: string[];
+  /** Overrides the partner rate / bowling machine price (used by the £1 Stripe test) */
+  ratePence?: number;
+  machinePence?: number;
 };
 
 export type PartnerBlock = {
@@ -42,6 +45,8 @@ export type PartnerBlock = {
    * is due by midnight (UK time) at the end of their last session in `dueAfterBlock`.
    */
   deposit?: { percent: number; dueAfterBlock: string };
+  /** Stripe test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up */
+  test?: boolean;
 };
 
 const hourly = (day: PartnerDay, from: string, to: string, nets: number[], dates: string[]): SlotTemplate[] => {
@@ -104,7 +109,21 @@ export const partnerBlocks: PartnerBlock[] = [
       ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], springWeek("2027-01-10")),
     ],
   },
+  {
+    id: "stripe-test",
+    label: "Stripe test booking (£1)",
+    summary: "Only visible to HillRisers test accounts",
+    notes: [
+      "Takes a real £1 card payment so the whole payment flow can be checked. Refund it afterwards in Stripe (Payments → the payment → Refund).",
+      "Not a real session. It can be booked any number of times.",
+    ],
+    test: true,
+    slots: [{ day: "Sunday", start: "09:00", end: "10:00", nets: [1], dates: ["2026-12-27"], ratePence: 100, machinePence: 0 }],
+  },
 ];
+
+/** Real blocks (everything bar the Stripe test) */
+export const releasedBlocks = partnerBlocks.filter((b) => !b.test);
 
 export const getBlock = (id: string) => partnerBlocks.find((b) => b.id === id);
 
@@ -126,7 +145,7 @@ export function findSlot(blockId: string, key: string) {
 
 /** Price of booking one net for the whole block, optionally with the bowling machine */
 export const itemPricePence = (s: SlotTemplate, bowlingMachine: boolean) =>
-  s.dates.length * (PARTNER_RATE_PENCE + (bowlingMachine ? BOWLING_MACHINE_PENCE : 0));
+  s.dates.length * ((s.ratePence ?? PARTNER_RATE_PENCE) + (bowlingMachine ? (s.machinePence ?? BOWLING_MACHINE_PENCE) : 0));
 
 /** Deposit for a block booking (the full amount when the block takes no deposits) */
 export const depositFor = (block: PartnerBlock, totalPence: number) =>

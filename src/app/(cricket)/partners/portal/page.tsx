@@ -4,6 +4,7 @@ import { partnerBlocks } from "@/data/partners";
 import { currentPartner, PARTNER_COOKIE } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
 import { PartnerPortal } from "@/components/partners/PartnerPortal";
+import { isTestPartner } from "@/lib/partners/test-access";
 import { site } from "@/data/site";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
       partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email, phone: partner.phone, hasPassword: !!partner.passwordHash }}
       documents={documents}
       bookings={sp.cancelled ? await store.bookingsFor(partner.id) : bookings}
-      blocks={partnerBlocks}
+      blocks={partnerBlocks.filter((b) => !b.test || isTestPartner(partner.email))}
       portalLink={key ? `${site.url}/api/partners/access?key=${key}` : undefined}
       banner={banner}
     />
