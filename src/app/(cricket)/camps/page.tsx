@@ -14,7 +14,7 @@ const [firstCamp] = camps;
 export const metadata: Metadata = {
   title: "Specialist Holiday Cricket Camps in Harrow",
   description:
-    "HillRisers specialist junior cricket holiday camps at John Lyon School, part-day or full-day. Details to be confirmed — register your interest to hear first.",
+    "HillRisers specialist junior cricket holiday camps at John Lyon School, part-day or full-day. Details to be confirmed — register your interest and tell us which holidays suit you.",
   alternates: { canonical: "/camps" },
 };
 
@@ -75,7 +75,7 @@ export default function CampsPage() {
             <h3 className="mt-4 text-3xl">{firstCamp.name}</h3>
             <p className="mt-2 text-lg text-gold-soft">Details TBC</p>
             <p className="mt-6 border-t border-cream/10 pt-6 text-sm text-slate">
-              Register interest and you&rsquo;ll hear first — before booking opens to everyone.
+              Register your interest and tell us which holidays and days suit you.
             </p>
             <div className="mt-6">
               <ButtonLink href="#register">Register interest</ButtonLink>

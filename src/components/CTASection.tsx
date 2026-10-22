@@ -4,7 +4,7 @@ import { Reveal } from "./Reveal";
 
 export function CTASection({
   title = "Give your child the very best start in cricket.",
-  body = "Register your interest today. Tell us when your child can attend and what they want from cricket — registered families get priority booking.",
+  body = "Register your interest today. Tell us what your child wants from cricket and which sessions they can make.",
   primary = { href: "/register", label: "Register your interest" },
   secondary = { href: "/how-booking-works", label: "How booking works" },
   children,

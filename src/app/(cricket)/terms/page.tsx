@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { launch } from "@/data/launch";
 import { LegalPage } from "@/components/LegalPage";
 import { ContactLink } from "@/components/ContactLink";
 
@@ -47,8 +46,8 @@ export default function TermsPage() {
 
       <h2 id="interest">2. Registering your interest</h2>
       <p>
-        Registering your interest is free and does not commit you to anything. Registered families get {launch.priorityBookingHours}{" "}
-        hours&rsquo; priority booking when the timetable is published. Registering does not guarantee a place.
+        Registering your interest is free and does not commit you to anything. We use your answers to plan our programmes. Registering
+        does not guarantee a place.
       </p>
 
       <h2 id="booking">3. Booking</h2>

@@ -51,7 +51,7 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
   {
     term: "Autumn term 2026",
     entries: [
-      { id: "launch", kind: "launch", dates: "Coming soon", title: "HillRisers programmes announced", detail: "Our own programmes at John Lyon School are coming soon. Register your interest to hear first and get priority booking." },
+      { id: "launch", kind: "launch", dates: "Coming soon", title: "HillRisers programmes announced", detail: "Our own programmes at John Lyon School are coming soon. Register your interest and tell us what you'd like." },
       { id: "autumn-term", kind: "term", dates: "Until Friday 11 December", title: "Autumn term", detail: "School term time." },
       { id: "christmas", kind: "holiday", dates: holiday("christmas-2026").dates, title: "Christmas holidays (first week)", detail: holidayDetail },
       { id: "shutdown", kind: "shutdown", dates: shutdown.dates, title: shutdown.label, detail: "The venue is closed. No sessions or camps." },

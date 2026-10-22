@@ -9,7 +9,7 @@ import { CTASection } from "@/components/CTASection";
 
 export const metadata: Metadata = {
   title: "How It Works",
-  description: "How HillRisers Cricket Academy works: register your interest, tell us what your child wants and which days they can make, and hear first when programmes open.",
+  description: "How HillRisers Cricket Academy works: register your interest, tell us what your child wants and which sessions they can make, and we'll be in touch when programmes are ready.",
   alternates: { canonical: "/how-booking-works" },
 };
 

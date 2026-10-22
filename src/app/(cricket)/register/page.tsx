@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { launch } from "@/data/launch";
 import { InterestForm } from "@/components/InterestForm";
 import { KeyDates } from "@/components/KeyDates";
 
 export const metadata: Metadata = {
   title: "Register Your Interest",
   description:
-    "Tell us when your child can attend and what they want from cricket. HillRisers will build the timetable around registered families, who get priority booking.",
+    "Tell us what your child wants from cricket and which sessions they can make. HillRisers will shape its programmes around your answers.",
   alternates: { canonical: "/register" },
 };
 
@@ -18,8 +17,8 @@ export default function RegisterPage() {
           <p className="eyebrow">Register your interest</p>
           <h1 className="mt-4 text-[2.75rem] leading-[1.02] text-navy-950 md:text-6xl">Tell us about your cricketer.</h1>
           <p className="mb-10 mt-4 max-w-2xl text-lg text-ink-muted">
-            When can your child attend, and what do they want from cricket? We&rsquo;ll build the timetable around your answers.
-            Registered families get {launch.priorityBookingHours} hours&rsquo; priority booking. It takes about five minutes per child.
+            What does your child want from cricket, and which sessions can they make? We&rsquo;ll shape our programmes around your
+            answers. It takes about five minutes per child.
           </p>
           <InterestForm />
         </div>
@@ -29,7 +28,7 @@ export default function RegisterPage() {
             <ul className="mt-4 space-y-3 text-[0.95rem] text-cream/85">
               {[
                 "Shape the timetable — days, times and session lengths",
-                `${launch.priorityBookingHours} hours' priority booking before places open to everyone`,
+                "Tell us what your child wants from their cricket",
                 "No payment and no commitment",
                 "Add every child in one go",
               ].map((x) => (

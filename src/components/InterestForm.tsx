@@ -185,8 +185,8 @@ export function InterestForm() {
         <p className="eyebrow">Interest registered</p>
         <h2 className="mt-4 text-4xl">Thank you{names.length ? ` — ${names.join(" and ")} ${names.length > 1 ? "are" : "is"} on our list` : ""}.</h2>
         <p className="mt-4 max-w-xl text-lg text-slate">
-          We&rsquo;ve emailed {parent.email} to confirm. We&rsquo;ll use your answers to build the timetable, and you&rsquo;ll get priority
-          booking before places open to everyone.
+          We&rsquo;ve emailed {parent.email} to confirm. We&rsquo;ll use your answers to shape our programmes, and we&rsquo;ll be in touch
+          when they&rsquo;re ready.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link href="/how-booking-works" className={buttonClass("primary")}>What happens next</Link>

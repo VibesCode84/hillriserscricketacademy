@@ -1,19 +1,18 @@
 import Link from "next/link";
-import { launch } from "@/data/launch";
 import { Reveal } from "./Reveal";
 
 export const bookingSteps = [
   {
     t: "Register your interest",
-    b: "Tell us what your child wants from cricket and which days they can make. It takes a few minutes, it's free and there's no commitment.",
+    b: "Tell us what your child wants from cricket and which sessions they can make. It takes a few minutes, it's free and there's no commitment.",
   },
   {
     t: "We shape the programmes",
     b: "We plan groups, days and times around what registered families tell us.",
   },
   {
-    t: "You hear first",
-    b: `Registered families get the details first, with ${launch.priorityBookingHours} hours’ priority booking before places open to everyone.`,
+    t: "We'll be in touch",
+    b: "When programmes are ready, we'll contact you with the details.",
   },
   {
     t: "Try a session",

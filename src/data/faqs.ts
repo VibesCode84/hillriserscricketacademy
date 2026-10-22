@@ -1,4 +1,3 @@
-import { launch } from "./launch";
 
 export type FAQ = { q: string; a: string };
 export type FAQGroup = { title: string; items: FAQ[] };
@@ -9,7 +8,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "When does HillRisers start?",
-        a: "HillRisers' own programmes at John Lyon School are coming soon. Register your interest and you'll hear first when the timetable is published, with priority booking before places open to everyone.",
+        a: "HillRisers' own programmes at John Lyon School are coming soon. Register your interest and tell us what your child wants and which sessions they can make — we'll be in touch when programmes are ready.",
       },
       {
         q: "Why isn't there a timetable yet?",
@@ -38,7 +37,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "How does it work?",
-        a: `Register your interest and tell us what your child wants from cricket and which days they can make. We'll shape the programmes around what families tell us, and registered families hear first, with ${launch.priorityBookingHours} hours' priority booking before places open to everyone.`,
+        a: `Register your interest and tell us what your child wants from cricket and which days they can make. We'll shape the programmes around what families tell us and be in touch when they're ready.`,
       },
       {
         q: "Can my child try a session first?",
@@ -46,7 +45,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How much does it cost?",
-        a: "Registering your interest is free and there's no commitment. Full details, including fees, will be shared with registered families first.",
+        a: "Registering your interest is free and there's no commitment. We'll share full details, including fees, when programmes are ready.",
       },
       {
         q: "How long are sessions?",

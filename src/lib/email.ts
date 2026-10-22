@@ -1,6 +1,5 @@
 import { site, formatPrice } from "../data/site";
 import { formatTimeRange, sessionLabel, type AcademySession } from "../data/sessions";
-import { launch } from "../data/launch";
 import { FUTURE_CAMPS, getCamp } from "../data/camps";
 import type { Booking, CampInterest, CoachInterest, InterestRegistration, Parent, Player } from "./booking/types";
 import { labelFor, summariseCoachAvailability, summariseCoachCamps, summariseCoachTerms, summariseHolidays } from "./interest-options";
@@ -59,7 +58,7 @@ Thank you for registering your interest in HillRisers Cricket Academy for ${who}
 
 WHAT HAPPENS NEXT
 1. We're using every family's answers — which days they can make, level and what each child wants from cricket — to shape our programmes.
-2. Registered families hear first, with ${launch.priorityBookingHours} hours' priority booking before places open to everyone.
+2. We'll be in touch with the details when programmes are ready.
 3. Your child can try a session before you commit.
 
 We'll be in touch as soon as programmes are ready. How it works: ${site.url}/how-booking-works

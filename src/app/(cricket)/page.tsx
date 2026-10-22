@@ -11,7 +11,6 @@ import { CoachCard } from "@/components/CoachCard";
 import { CoachingPhilosophy } from "@/components/Coaching";
 import { ProgrammeTable } from "@/components/ProgrammeTable";
 import { BookingSteps } from "@/components/BookingSteps";
-import { KeyDates } from "@/components/KeyDates";
 import { CTASection } from "@/components/CTASection";
 import { VenueFeature } from "@/components/VenueFeature";
 import { photos } from "@/data/photos";
@@ -105,13 +104,6 @@ export default function HomePage() {
         </div>
         <div className="mt-12">
           <BookingSteps />
-        </div>
-        <div className="mt-14 grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <h3 className="text-3xl text-navy-950">Key dates</h3>
-            <p className="mt-2 text-ink-muted">Registered families get priority booking before places open to everyone.</p>
-          </div>
-          <KeyDates />
         </div>
       </Section>
 

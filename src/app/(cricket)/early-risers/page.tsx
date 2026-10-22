@@ -76,7 +76,7 @@ export default function EarlyRisersPage() {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }} />
       </Section>
 
-      <CTASection title="Save your Early Riser a place." body="Register your interest and you'll get priority booking when places open." />
+      <CTASection title="Save your Early Riser a place." body="Register your interest and tell us which Sunday sessions would suit." />
     </>
   );
 }
