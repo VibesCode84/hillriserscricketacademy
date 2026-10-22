@@ -572,7 +572,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                             ) : selNets.length === 1 ? (
                               <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold">
                                 <input type="checkbox" checked={machineOn !== null} onChange={(e) => setMachine(s, e.target.checked ? selNets[0] : null)} className="h-4 w-4 accent-[#0b2345]" />
-                                Add (+{formatPrice(BOWLING_MACHINE_PENCE * s.dates.length)})
+                                Add (+{formatPrice((s.machinePence ?? BOWLING_MACHINE_PENCE) * s.dates.length)})
                               </label>
                             ) : (
                               <select
