@@ -7,7 +7,7 @@ import { PartnerPortal } from "@/components/partners/PartnerPortal";
 import { site } from "@/data/site";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Book nets" };
+export const metadata = { title: "Book sessions" };
 
 export default async function PortalPage({ searchParams }: { searchParams: Promise<{ paid?: string; cancelled?: string; welcome?: string }> }) {
   const partner = await currentPartner();

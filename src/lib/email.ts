@@ -202,7 +202,7 @@ Thank you for registering ${p.orgName} with HillRisers.
 Your private portal link — keep it safe, it signs you in:
 ${portalLink}
 
-In the portal you can upload your qualifications, DBS, safeguarding and insurance documents, and book nets for the season.
+In the portal you can upload your qualifications, DBS, safeguarding and insurance documents, and book your session slots for the season.
 
 ${contactLine()}
 

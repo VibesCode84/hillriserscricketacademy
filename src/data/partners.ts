@@ -1,5 +1,5 @@
 /**
- * Net hire for coaches and delivery partners (private portal at /partners).
+ * Net bookings for coaches and delivery partners (private portal at /partners).
  *
  * - Block bookings only: a net at the same time every week for a whole block.
  * - £17 per net per hour; the bowling machine is £10 per hour on top.

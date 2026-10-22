@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  // Delivery partner net hire (metadata.kind === "partner")
+  // Delivery partner net booking (metadata.kind === "partner")
   if (event.type.startsWith("checkout.session.")) {
     const cs = event.data.object as Stripe.Checkout.Session;
     if (cs.metadata?.kind === "partner" && cs.metadata.partnerBookingId) {

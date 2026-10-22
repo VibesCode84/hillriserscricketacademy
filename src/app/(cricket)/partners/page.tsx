@@ -16,15 +16,15 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
         <div className="container-x grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <p className="eyebrow">Coaches and delivery partners</p>
-            <h1 className="mt-5 text-[2.6rem] leading-[1.05] md:text-6xl">Book nets at John Lyon School.</h1>
+            <h1 className="mt-5 text-[2.6rem] leading-[1.05] md:text-6xl">Deliver sessions with HillRisers at John Lyon School.</h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate">
-              Hire indoor nets in the John Lyon School sports hall, Harrow on the Hill, for your own coaching sessions — booked by the block, with
-              live availability.
+              Run your coaching sessions as a HillRisers delivery partner in the John Lyon School sports hall, Harrow on the Hill — scheduled by the
+              block, with live availability.
             </p>
           </div>
           <dl className="grid gap-4 self-end sm:grid-cols-2">
             <div className="rounded-2xl border border-gold/25 bg-navy-900 p-5">
-              <dt className="text-sm text-slate">Net hire</dt>
+              <dt className="text-sm text-slate">Partner fee</dt>
               <dd className="mt-1 font-serif text-3xl text-gold">{formatPrice(PARTNER_RATE_PENCE)}<span className="text-base text-slate"> per net per hour</span></dd>
             </div>
             <div className="rounded-2xl border border-gold/25 bg-navy-900 p-5">
@@ -42,7 +42,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
               <li>Create your partner account below.</li>
               <li>Choose your nets and times on the live grid — each booking is the same slot every week of the block.</li>
-              <li>Pay securely by card through Stripe. Your nets are held for 30 minutes while you pay.</li>
+              <li>Pay securely by card through Stripe. Your slots are held for 30 minutes while you pay.</li>
               <li>Upload your documents. You can book straight away; we check documents before your first session.</li>
             </ol>
           </div>

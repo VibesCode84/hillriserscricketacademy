@@ -121,7 +121,7 @@ export function getPaymentProvider(): PaymentProvider | undefined {
   return undefined;
 }
 
-/* ── Delivery partner net hire ────────────────────────────────────────────── */
+/* ── Delivery partner net booking──────────────────────────────────────────── */
 
 
 /** Stripe Checkout for a block booking; the dev stand-in is used locally without Stripe keys */
@@ -150,7 +150,7 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
     })),
     metadata: { kind: "partner", partnerBookingId: booking.id, partnerId: partner.id },
     payment_intent_data: {
-      description: `${partner.orgName} — net hire, ${block?.label ?? booking.blockId}`,
+      description: `${partner.orgName} — delivery partner sessions, ${block?.label ?? booking.blockId}`,
       metadata: { kind: "partner", partnerBookingId: booking.id, partnerId: partner.id },
     },
     expires_at: expiresAt,

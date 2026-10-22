@@ -88,7 +88,7 @@ export function PartnerPortal(props: {
       {banner?.kind === "paid" && (
         <Notice tone="good" onClose={() => setBanner(undefined)}>
           {paidBooking?.status === "confirmed" ? (
-            <><strong>Payment received — your nets are booked.</strong> They&rsquo;re listed under Your bookings.</>
+            <><strong>Payment received — your sessions are booked.</strong> They&rsquo;re listed under Your bookings.</>
           ) : (
             <><strong>Thanks — we&rsquo;re confirming your payment.</strong> This usually takes a few seconds.</>
           )}
@@ -433,7 +433,7 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
           <button type="button" disabled={busy || items.length === 0} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
             {busy ? "Holding your nets…" : `Book and pay ${items.length ? formatPrice(total) : ""}`}
           </button>
-          <p className="mt-3 text-xs text-slate">Secure card payment by Stripe. Your nets are held for {PARTNER_HOLD_MINUTES} minutes while you pay.</p>
+          <p className="mt-3 text-xs text-slate">Secure card payment by Stripe. Your slots are held for {PARTNER_HOLD_MINUTES} minutes while you pay.</p>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>
       </div>
