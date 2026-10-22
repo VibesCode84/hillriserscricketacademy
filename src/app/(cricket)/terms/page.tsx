@@ -61,7 +61,7 @@ export default function TermsPage() {
 
       <h2 id="trial">3. Trial sessions and deposits</h2>
       <ul>
-        <li>Trial sessions run in trial week ({launch.trialWeek}). Your child&rsquo;s trial is on the same day of the week as the group they plan to join.</li>
+        <li>Trial sessions run before regular sessions start; dates are confirmed when the timetable is published. Your child&rsquo;s trial is on the same day of the week as the group they plan to join.</li>
         <li>To book a trial, you pay a deposit equal to one session fee.</li>
         <li>If your child joins after the trial, the deposit is credited to their remaining sessions.</li>
         <li>
@@ -76,9 +76,8 @@ export default function TermsPage() {
         <li>After the trial, players join for the autumn and spring terms together.</li>
         <li>You can pay in full, or monthly.</li>
         <li>
-          The autumn and spring balance (or the first monthly payment) is due by 9am, at least {launch.paymentNoticeDays} days before your
-          child&rsquo;s first regular (non-trial) session:{" "}
-          {launch.paymentDeadlines.map((d) => `${d.due} for a first session on ${d.firstSession}`).join("; ")}.
+          The balance (or the first monthly payment) is due by 9am, at least {launch.paymentNoticeDays} days before your child&rsquo;s first
+          regular (non-trial) session. Exact dates are confirmed when you book.
         </li>
         <li>Prices are shown on our <Link href="/programmes">programmes page</Link> and confirmed when you book.</li>
       </ul>

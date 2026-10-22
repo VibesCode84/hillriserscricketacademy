@@ -9,7 +9,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "When does HillRisers start?",
-        a: `HillRisers launches at John Lyon School in the ${launch.launchDate}. Trial week is ${launch.trialWeek}, and regular sessions start from ${launch.regularSessionsFrom}.`,
+        a: "HillRisers' own programmes at John Lyon School are coming soon. Register your interest and you'll hear first when the timetable is published, with priority booking before places open to everyone.",
       },
       {
         q: "Why isn't there a timetable yet?",
@@ -38,7 +38,7 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "How does booking work?",
-        a: `Register your interest. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking. You then book a trial in trial week (${launch.trialWeek}), on the day your child plans to train, paying a deposit equal to one session fee.`,
+        a: `Register your interest. When the timetable is published, registered families get ${launch.priorityBookingHours} hours' priority booking. You then book a trial session, on the day your child plans to train, paying a deposit equal to one session fee.`,
       },
       {
         q: "What happens after the trial?",
@@ -50,7 +50,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "How long are sessions?",
-        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Early Risers runs on Sunday mornings as three 40-minute sessions: 9:00–9:40am, 9:40–10:20am and 10:20–11:00am.",
+        a: "Sessions may run for 1 hour, 90 minutes or 2 hours, depending on what families tell us. Early Risers is planned as 40-minute sessions on Sunday mornings, with times to be confirmed.",
       },
       {
         q: "How big are the groups?",

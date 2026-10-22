@@ -156,7 +156,7 @@ test("prices: £30/hr standard for group programmes with a £25/hr 2026/27 offer
 test("the only fixed times are Early Risers, three 40-minute Sunday sessions", () => {
   assert.deepEqual(
     programmes.filter((p) => p.fixedTime).map((p) => [p.key, p.fixedTime]),
-    [["early-risers", "Sundays 9:00–11:00am · three 40-minute sessions"]],
+    [["early-risers", "Sunday mornings · 40-minute sessions · times to be confirmed"]],
   );
   assert.deepEqual(
     sessions.map((s) => [s.day, s.startTime, s.endTime]),

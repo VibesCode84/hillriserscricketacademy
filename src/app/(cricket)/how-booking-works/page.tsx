@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { launch } from "@/data/launch";
 import { formatPrice } from "@/data/site";
 import { REGISTRATION_FEE_PENCE } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
@@ -12,7 +11,7 @@ import { CTASection } from "@/components/CTASection";
 
 export const metadata: Metadata = {
   title: "How Booking Works",
-  description: `Register your interest, get priority booking, book a trial in trial week (${launch.trialWeek}) and join for autumn and spring. Key dates for HillRisers Cricket Academy.`,
+  description: "How booking will work at HillRisers Cricket Academy: register your interest, hear first when the timetable is published, get priority booking and book a trial.",
   alternates: { canonical: "/how-booking-works" },
 };
 
@@ -31,7 +30,7 @@ export default function HowBookingWorksPage() {
       <Section tone="cream">
         <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
-            <SectionHeader eyebrow="Key dates" title="Autumn 2026." />
+            <SectionHeader eyebrow="What happens next" title="Programmes coming soon." />
             <p className="mt-6 leading-relaxed text-ink-muted">
               New players pay a one-off registration fee of {formatPrice(REGISTRATION_FEE_PENCE)}, which includes a HillRisers playing
               shirt. See our <Link href="/programmes" className="underline underline-offset-4">programmes and prices</Link> and our{" "}

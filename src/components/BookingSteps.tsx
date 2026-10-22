@@ -9,11 +9,11 @@ export const bookingSteps = [
   },
   {
     t: "Timetable published",
-    b: `We build the timetable around registered families, who then get ${launch.priorityBookingHours} hours’ priority booking.`,
+    b: `We build the timetable around registered families, who hear first and get ${launch.priorityBookingHours} hours’ priority booking.`,
   },
   {
     t: "Book a trial session",
-    b: `Trials run in the first week of term (${launch.trialWeek}), on the day your child plans to train. You pay a deposit equal to one session fee.`,
+    b: "Trials run before regular sessions start, on the day your child plans to train. You pay a deposit equal to one session fee.",
   },
   {
     t: "After the trial",
@@ -21,7 +21,7 @@ export const bookingSteps = [
   },
   {
     t: "Regular sessions start",
-    b: `From ${launch.regularSessionsFrom}.`,
+    b: "Start dates are confirmed when the timetable is published.",
   },
 ];
 

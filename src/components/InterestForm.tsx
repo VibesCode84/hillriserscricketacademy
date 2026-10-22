@@ -301,7 +301,7 @@ export function InterestForm() {
                 {isEarlyRiserAge(c.dateOfBirth) && (
                   <div className="mt-5">
                     <MultiChoice
-                      legend="Early Risers: which Sunday sessions could they do?"
+                      legend="Early Risers (planned for Sunday mornings): which times would suit?"
                       options={interestOptions.earlyRisersSlots}
                       value={c.earlyRisersSlots}
                       onChange={(v) => setChild(i, { earlyRisersSlots: v })}

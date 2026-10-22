@@ -2,7 +2,7 @@
 
 The website for HillRisers Cricket Academy: specialist junior cricket coaching (ages 4–15) at John Lyon School, Harrow on the Hill.
 
-**Current phase: register-your-interest launch.** The site doesn't offer fixed sessions. Parents tell us their children's availability, level and wants through an extensive interest form, and the timetable is built from those answers. The only fixed times are **Early Risers, Sundays: three 40-minute sessions, 9:00–9:40am, 9:40–10:20am and 10:20–11:00am (ages 4–6)**.
+**Current phase: register your interest — programmes coming soon.** HillRisers isn't running its own sessions yet; the nets at John Lyon are booked by delivery partners in 1-hour blocks (see the partner portal below). The public site takes registrations of interest (availability, level, wants) to shape HillRisers' own programmes, with no fixed times, trial dates or payment deadlines until the timetable is set (`src/data/launch.ts`).
 
 Built with Next.js 16 (App Router), TypeScript and Tailwind CSS 4, and deployed on Cloudflare Workers (via [OpenNext](https://opennext.js.org/cloudflare)) at **https://cricket.hillrisers.co.uk**.
 
@@ -22,7 +22,7 @@ npm run build
 | File | What it controls |
 | --- | --- |
 | `src/data/programmes.ts` | Programmes, ages and prices: group programmes £30/hr standard (`STANDARD_HOURLY_PENCE`) with a 2026/27 offer of £25/hr (`OFFER_HOURLY_PENCE`, `OFFER_LABEL`); Early Risers £15/session; registration fee (£30 incl. shirt); group sizes; specialist skills |
-| `src/data/launch.ts` | Key dates (registrations open/close, priority booking, trial week, decision deadline) and booking rules (48-hour priority, 24-hour trial cancellation) |
+| `src/data/launch.ts` | "What happens next" steps and booking rules (48-hour priority booking, 24-hour trial cancellation) |
 | `src/data/coaches.ts` | Coaching team. **Leave empty until each coach has signed**, and the site shows "Coaching team announced soon". Add an entry per coach with factual credentials. |
 | `src/data/site.ts` | Contact email, phone and welfare email (all unset; anything unset is hidden rather than shown as a placeholder), venue, navigation, canonical URL |
 | `src/data/faqs.ts` | FAQ page |

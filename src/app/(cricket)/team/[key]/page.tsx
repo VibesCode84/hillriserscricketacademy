@@ -14,7 +14,7 @@ import { photos } from "@/data/photos";
 export const metadata: Metadata = {
   title: "Coach with Us — Junior Cricket Coaching Jobs in Harrow",
   description:
-    "HillRisers Cricket Academy launches at John Lyon School, Harrow on the Hill, in the week commencing 2 November. Join the founding coaching team: lead, specialist, girls and early-years coaches, and junior helpers.",
+    "HillRisers Cricket Academy is launching at John Lyon School, Harrow on the Hill. Join the founding coaching team: lead, specialist, girls and early-years coaches, and junior helpers.",
   // Private page: shared directly with prospective coaches; never linked from the parent-facing site
   robots: { index: false, follow: false, nocache: true },
 };
@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 
 // The opportunity, for prospective coaches (this page is private)
 const opportunity = [
-  { t: "Launching w/c 2 November", b: "A brand-new academy at John Lyon School, Harrow on the Hill — trial week on 4–8 November and regular sessions from 11 November." },
+  { t: "Launching soon", b: "A brand-new academy at John Lyon School, Harrow on the Hill, with programmes built around the families who register." },
   { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
   { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
   { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall, with outdoor nets expected in summer." },
@@ -64,7 +64,7 @@ const roles = [
   { role: "Lead coach", detail: "Leads sessions and the coaching team on the day." },
   { role: "Specialist coach", detail: "Batting (including power hitting, sweeps and ramps), seam, spin or wicket-keeping." },
   { role: "Girls Academy lead", detail: "Leads the girls-only pathway. Applications from female coaches are particularly welcome." },
-  { role: "Early-years coach", detail: "Early Risers (ages 4–6): three 40-minute sessions on Sunday mornings, 9:00–11:00am." },
+  { role: "Early-years coach", detail: "Early Risers (ages 4–6): 40-minute sessions, planned for Sunday mornings." },
   { role: "Junior helpers", detail: "Support coaches in sessions — a great first step into coaching." },
 ];
 
@@ -89,7 +89,7 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
         title="Join the founding coaching team."
         intro={
           <p>
-            HillRisers launches at {site.venue.name}, Harrow on the Hill, in the week commencing 2 November — and we want the very best coaches in the area to
+            HillRisers is launching at {site.venue.name}, Harrow on the Hill — and we want the very best coaches in the area to
             help us build something special. Market-leading pay, small groups, great facilities and the freedom to coach your way.
           </p>
         }
@@ -140,8 +140,7 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
             </ul>
             <p className="mt-6 text-sm leading-relaxed text-slate">
               Pay for every role is market-leading and reflects your skills, experience and profile — we&rsquo;ll discuss it with you
-              directly. Session times will be set from parent feedback and coach availability. The only fixed times so far are Early Risers, Sundays
-              9:00–11:00am.
+              directly. Session times will be set from parent feedback and coach availability.
             </p>
           </div>
           <div className="self-start rounded-3xl border border-gold/25 bg-navy-900 p-7 md:p-9">

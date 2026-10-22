@@ -9,13 +9,13 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "2026/27 Calendar — Term Dates, Holidays and Closures",
   description:
-    "The HillRisers 2026/27 calendar at John Lyon School, Harrow on the Hill: launch and trial week, term dates, school holidays, the Christmas shutdown and likely holiday arrangements.",
+    "The HillRisers 2026/27 calendar at John Lyon School, Harrow on the Hill: term dates, school holidays, the Christmas shutdown and likely holiday arrangements.",
   alternates: { canonical: "/calendar" },
 };
 
 const kinds: Record<CalendarKind, { label: string; dot: string; badge: string }> = {
-  launch: { label: "Launch", dot: "bg-gold", badge: "bg-gold/15 text-navy-950" },
-  term: { label: "Weekly sessions", dot: "bg-navy-950", badge: "bg-navy-950 text-cream" },
+  launch: { label: "Coming soon", dot: "bg-gold", badge: "bg-gold/15 text-navy-950" },
+  term: { label: "Term time", dot: "bg-navy-950", badge: "bg-navy-950 text-cream" },
   holiday: { label: "Holiday · TBC", dot: "bg-emerald-600", badge: "bg-emerald-600/10 text-emerald-800" },
   affected: { label: "Change of plan", dot: "bg-amber-500", badge: "bg-amber-500/15 text-amber-900" },
   shutdown: { label: "Closed", dot: "bg-red-600", badge: "bg-red-600/10 text-red-800" },
@@ -29,7 +29,7 @@ export default function CalendarPage() {
         title="The year at a glance."
         intro={
           <p>
-            Term dates, school holidays and closures for our first year at John Lyon School. Holiday plans are still taking shape — tell us
+            Term dates, school holidays and closures at John Lyon School for 2026/27. Our programmes and holiday plans are still taking shape — tell us
             what you&rsquo;d like and we&rsquo;ll build around you.
           </p>
         }

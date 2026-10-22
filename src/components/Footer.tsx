@@ -52,8 +52,8 @@ export function Footer() {
           <div className="max-w-sm">
             <Logo />
             <p className="mt-6 text-[0.95rem] leading-relaxed text-slate">
-              The very best junior cricket coaching for ages {site.ages}, at {site.venue.name}, Harrow on the Hill. Launching{" "}
-              week commencing 2 November.
+              The very best junior cricket coaching for ages {site.ages}, at {site.venue.name}, Harrow on the Hill. Programmes{" "}
+              coming soon.
             </p>
             {(site.phone || site.email) && (
               <div className="mt-6 space-y-1.5 text-[0.95rem]">

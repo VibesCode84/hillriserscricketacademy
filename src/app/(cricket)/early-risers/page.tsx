@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { formatProgrammePrice, getProgramme, groupSizes, earlyRisersSlots } from "@/data/programmes";
+import { formatProgrammePrice, getProgramme, groupSizes } from "@/data/programmes";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
@@ -43,7 +43,7 @@ export default function EarlyRisersPage() {
         image={{ alt: "Young children playing a soft-ball cricket game" }}
       >
         <div className="mt-8 inline-flex flex-wrap gap-x-6 gap-y-2 rounded-2xl border border-gold/25 bg-navy-900/70 px-5 py-4 text-cream">
-          <span><strong className="text-gold">When:</strong> Sundays, 40-minute sessions at {earlyRisersSlots.join(", ").replace(/, ([^,]*)$/, " or $1")}</span>
+          <span><strong className="text-gold">When:</strong> Sunday mornings, 40-minute sessions — times to be confirmed</span>
           <span><strong className="text-gold">Price:</strong> {formatProgrammePrice(programme)}</span>
           <span><strong className="text-gold">Group size:</strong> max {groupSizes.earlyRisers}</span>
         </div>

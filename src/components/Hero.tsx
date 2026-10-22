@@ -36,7 +36,7 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
             <ButtonLink href="/how-booking-works" variant="secondary">How booking works</ButtonLink>
           </div>
-          <p className="mt-4 text-sm text-slate">Launching week commencing 2 November. Registered families get priority booking before places open to everyone.</p>
+          <p className="mt-4 text-sm text-slate">HillRisers programmes are coming soon. Registered families hear first and get priority booking before places open to everyone.</p>
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 

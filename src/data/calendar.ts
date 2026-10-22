@@ -7,7 +7,6 @@
  * are described as "likely" and marked TBC.
  */
 
-import { launch } from "./launch";
 
 export type CalendarKind = "launch" | "term" | "holiday" | "shutdown" | "affected";
 
@@ -52,16 +51,8 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
   {
     term: "Autumn term 2026",
     entries: [
-      { id: "launch", kind: "launch", dates: "Week commencing 2 November", title: "HillRisers launches", detail: "Our first weeks at John Lyon School, Harrow on the Hill." },
-      { id: "trial", kind: "launch", dates: "4–8 November", title: "Trial week", detail: "Book a trial on the day your child plans to train. The deposit is credited to your sessions if you join." },
-      {
-        id: "deadline",
-        kind: "launch",
-        dates: "7–11 November, by 9am",
-        title: "Decision and payment deadline",
-        detail: `Autumn and spring balance, or first monthly payment, due 4 days before your child's first regular session: ${launch.paymentDeadlines.map((d) => `${d.due} for ${d.firstSession.split(" ")[0]} groups`).join(", ")}.`,
-      },
-      { id: "regular", kind: "term", dates: "From Wednesday 11 November", title: "Regular sessions start", detail: "Weekly sessions run through to the Christmas holidays." },
+      { id: "launch", kind: "launch", dates: "Coming soon", title: "HillRisers programmes announced", detail: "Our own programmes at John Lyon School are coming soon. Register your interest to hear first and get priority booking." },
+      { id: "autumn-term", kind: "term", dates: "Until Friday 11 December", title: "Autumn term", detail: "School term time." },
       { id: "christmas", kind: "holiday", dates: holiday("christmas-2026").dates, title: "Christmas holidays (first week)", detail: holidayDetail },
       { id: "shutdown", kind: "shutdown", dates: shutdown.dates, title: shutdown.label, detail: "The venue is closed. No sessions or camps." },
     ],
@@ -69,7 +60,7 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
   {
     term: "Spring term 2027",
     entries: [
-      { id: "spring-start", kind: "term", dates: "Week commencing 4 January", title: "Sessions resume", detail: "Weekly sessions restart after the shutdown." },
+      { id: "spring-start", kind: "term", dates: "Week commencing 4 January", title: "Spring term starts", detail: "The venue reopens after the shutdown." },
       { id: "spring-half", kind: "holiday", dates: holiday("spring-half-term-2027").dates, title: "Spring half term", detail: holidayDetail },
       { id: "easter", kind: "holiday", dates: holiday("easter-2027").dates, title: "Easter holidays", detail: `${holidayDetail} Sessions over the Easter weekend (26–29 March) will be confirmed nearer the time.` },
     ],
@@ -78,7 +69,7 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
     term: "Summer term 2027",
     entries: [
       { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "Summer arrangements are to be confirmed. We're expecting outdoor nets alongside the sports hall." },
-      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "Likely: sessions move outdoors or a make-up session is offered. We'll confirm well in advance." },
+      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No indoor sessions on these dates. Likely: sessions move outdoors or a make-up session is offered." },
       { id: "summer-half", kind: "holiday", dates: holiday("summer-half-term-2027").dates, title: "Summer half term", detail: holidayDetail },
       { id: "summer-holidays", kind: "holiday", dates: holiday("summer-holidays-2027").dates, title: "Summer holidays", detail: holidayDetail },
     ],
@@ -94,7 +85,7 @@ export const sessionTerms = [
     label: "Autumn term",
     dates: "Wednesday 4 November – Sunday 13 December 2026",
     weeks: 6,
-    note: "Starts with trial week, 4–8 November.",
+    note: "Start date to be confirmed.",
   },
   {
     id: "spring-2027",

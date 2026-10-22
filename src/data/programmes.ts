@@ -2,7 +2,7 @@
  * Programmes and price guide. Group programmes share one standard rate
  * (£30 per hour) with a 2026/27 offer of £25 per hour. Prices are per hour —
  * sessions may run for 1 hour, 90 minutes or 2 hours depending on parent
- * feedback. Early Risers is the only programme with a fixed time.
+ * feedback. No programme has fixed times yet.
  */
 export type ProgrammeKey =
   | "early-risers"
@@ -33,16 +33,15 @@ export type Programme = {
   /** "from £75" */
   priceFrom?: boolean;
   girlsOnly?: boolean;
-  /** Fixed time — only Early Risers has one */
+  /** Planned timing note, shown under the summary */
   fixedTime?: string;
   href?: string;
 };
 
 /** Standard hourly rate for all group programmes (everything bar Early Risers) */
 export const STANDARD_HOURLY_PENCE = 3000;
-/** Early Risers: three 40-minute sessions every Sunday morning */
-export const earlyRisersSlots = ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"] as const;
-export const EARLY_RISERS_TIME = "Sundays 9:00–11:00am · three 40-minute sessions";
+/** Early Risers: planned as 40-minute sessions on Sunday mornings; times to be confirmed */
+export const EARLY_RISERS_TIME = "Sunday mornings · 40-minute sessions · times to be confirmed";
 
 /** 2026/27 special offer */
 export const OFFER_HOURLY_PENCE = 2500;
