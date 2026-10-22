@@ -4,8 +4,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { getBlock, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
-import { createD1PartnerStore, createFilePartnerStore } from "../src/lib/partners/store";
+import { endOfDayLondon, getBlock, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
+import { createD1PartnerStore, createFilePartnerStore, holds } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
 
@@ -124,6 +124,36 @@ for (const [name, make] of [
     assert.equal((await store.reserve({ partnerId: b.id, blockId: spring.id, items: springItem })).ok, false);
     assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem })).ok);
   });
+  test(`${name}: spring deposit reserves the nets; the balance is due by midnight after the last autumn session`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const springSat = spring.slots.find((s) => s.day === "Saturday")!;
+    const { partner: a } = await store.createPartner(partner);
+    // Autumn can't be reserved with a deposit
+    const noDeposit = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], plan: "deposit" });
+    assert.equal(noDeposit.ok, false);
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
+    assert.ok(autumn.ok);
+    await store.confirm(autumn.booking.id, "pi_a");
+    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, springSat, 1), bowlingMachine: false }], plan: "deposit" });
+    assert.ok(r.ok);
+    assert.equal(r.booking.totalPence, 11 * 1880);
+    assert.equal(r.booking.depositPence, Math.round(11 * 1880 * 0.25));
+    assert.equal(r.booking.balanceDueDate, "2026-12-12");
+    assert.equal(r.booking.balanceDueAt, "2026-12-13T00:00:00.000Z");
+    await store.confirm(r.booking.id, "pi_dep");
+    assert.equal((await store.getBooking(r.booking.id))?.status, "reserved");
+    // A repeated deposit webhook doesn't settle the balance
+    await store.confirm(r.booking.id, "pi_dep");
+    assert.equal((await store.getBooking(r.booking.id))?.status, "reserved");
+    const reserved = (await store.getBooking(r.booking.id))!;
+    assert.ok(holds(reserved, Date.parse("2026-12-12T23:00:00Z")));
+    assert.ok(!holds(reserved, Date.parse("2026-12-13T00:31:00Z")));
+    await store.confirm(r.booking.id, "pi_bal", "balance");
+    const paid = (await store.getBooking(r.booking.id))!;
+    assert.equal(paid.status, "confirmed");
+    assert.ok(paid.balancePaidAt);
+  });
 }
 
 test("checkout needs the no-video confirmation; bowling machine needs a Level 2 coach and own balls", () => {
@@ -155,4 +185,9 @@ test("spring block: 11 weeks from 6 January, none in half term", () => {
   }
   assert.equal(spring.slots.find((s) => s.day === "Wednesday")!.dates[0], "2027-01-06");
   assert.equal(spring.slots.find((s) => s.day === "Sunday")!.dates.at(-1), "2027-03-28");
+});
+
+test("midnight UK time at the end of a date, in GMT and BST", () => {
+  assert.equal(endOfDayLondon("2026-12-13").toISOString(), "2026-12-14T00:00:00.000Z");
+  assert.equal(endOfDayLondon("2027-06-01").toISOString(), "2027-06-01T23:00:00.000Z");
 });

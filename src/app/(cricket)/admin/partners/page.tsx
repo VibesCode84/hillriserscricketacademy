@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- document links and the CSV are downloads, not pages */
 import Link from "next/link";
-import { documentKinds, getBlock, machineKey, partnerBlocks, slotKey, timeLabel } from "@/data/partners";
+import { documentKinds, getBlock, longDate, machineKey, partnerBlocks, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 const kindLabel = (k: string) => documentKinds.find((d) => d.value === k)?.label ?? k;
 const reviewBadge = { pending: "bg-[#fff4d6] text-[#7a5a00]", approved: "bg-[#e3f3e8] text-[#1d6b3a]", rejected: "bg-[#fbeae8] text-[#8c1d18]" };
-const statusBadge = { confirmed: "bg-[#e3f3e8] text-[#1d6b3a]", pending_payment: "bg-[#fff4d6] text-[#7a5a00]", cancelled: "bg-cream-200 text-ink-muted", expired: "bg-cream-200 text-ink-muted" };
+const statusBadge = { confirmed: "bg-[#e3f3e8] text-[#1d6b3a]", reserved: "bg-[#e6eefc] text-[#1d3f7a]", forfeited: "bg-[#fbeae8] text-[#8c1d18]", pending_payment: "bg-[#fff4d6] text-[#7a5a00]", cancelled: "bg-cream-200 text-ink-muted", expired: "bg-cream-200 text-ink-muted" };
 
 export default async function AdminPartnersPage() {
   const store = getPartnerStore();
@@ -45,7 +45,7 @@ export default async function AdminPartnersPage() {
           if (b.blockId !== block.id || !holds(b)) continue;
           const name = partners.find((p) => p.id === b.partnerId)?.orgName ?? "?";
           for (const i of b.items) {
-            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (paying…)" : ""}`);
+            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (paying…)" : b.status === "reserved" ? " (deposit)" : ""}`);
             if (i.bowlingMachine) taken.set(machineKey(block.id, i), name);
           }
         }
@@ -114,9 +114,14 @@ export default async function AdminPartnersPage() {
                     <ul className="mt-2 space-y-1 text-sm">
                       {theirs.map((b) => (
                         <li key={b.id}>
-                          <span className={`mr-2 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[b.status]}`}>{b.status.replace("_", " ")}</span>
+                          <span className={`mr-2 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[b.status]}`}>
+                            {b.status === "forfeited" ? "balance not paid · released" : b.status === "reserved" ? "deposit paid" : b.status.replace("_", " ")}
+                          </span>
                           {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}${i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}`).join("; ")} · {formatPrice(b.totalPence)}
                           {b.machineCoach ? ` · machine coach: ${b.machineCoach}` : ""}
+                          {b.plan === "deposit" && b.depositPence !== undefined
+                            ? ` · deposit ${formatPrice(b.depositPence)}, balance ${formatPrice(b.totalPence - b.depositPence)} ${b.balancePaidAt ? "paid" : `due by midnight ${b.balanceDueDate ? longDate(b.balanceDueDate) : ""}`}`
+                            : ""}
                         </li>
                       ))}
                     </ul>

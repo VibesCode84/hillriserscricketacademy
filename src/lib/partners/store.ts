@@ -4,9 +4,12 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import {
   blockUnlocked,
+  depositFor,
+  endOfDayLondon,
   findSlot,
   getBlock,
   itemPricePence,
+  lastSessionDate,
   machineKey,
   PARTNER_HOLD_MINUTES,
   slotKey,
@@ -63,7 +66,8 @@ export type NetBookingItem = {
   pricePence: number;
 };
 
-export type NetBookingStatus = "pending_payment" | "confirmed" | "cancelled" | "expired";
+/** reserved = deposit paid, balance still due; forfeited = balance missed its deadline (shown, never stored) */
+export type NetBookingStatus = "pending_payment" | "reserved" | "confirmed" | "cancelled" | "expired" | "forfeited";
 
 export type NetBooking = {
   id: string;
@@ -73,6 +77,15 @@ export type NetBooking = {
   /** Level 2 coach operating the bowling machine */
   machineCoach?: string;
   totalPence: number;
+  /** Paying in full (default) or reserving with a deposit */
+  plan?: "full" | "deposit";
+  depositPence?: number;
+  /** Last autumn session date (ISO); the balance is due by midnight at the end of it */
+  balanceDueDate?: string;
+  balanceDueAt?: string;
+  balanceCheckoutId?: string;
+  balancePaymentIntentId?: string;
+  balancePaidAt?: string;
   status: NetBookingStatus;
   holdExpiresAt?: string;
   checkoutId?: string;
@@ -191,7 +204,19 @@ const now = () => new Date().toISOString();
 
 /** A slot is taken by a confirmed booking or by a payment hold that hasn't expired */
 export const holds = (b: NetBooking, at = Date.now()) =>
-  b.status === "confirmed" || (b.status === "pending_payment" && !!b.holdExpiresAt && Date.parse(b.holdExpiresAt) > at);
+  b.status === "confirmed" ||
+  (b.status === "pending_payment" && !!b.holdExpiresAt && Date.parse(b.holdExpiresAt) > at) ||
+  // A balance checkout started before the deadline gets the usual hold time to finish
+  (b.status === "reserved" && !!b.balanceDueAt && Date.parse(b.balanceDueAt) + PARTNER_HOLD_MINUTES * 60_000 > at);
+
+/** Deposit paid but the balance missed its deadline: the nets are released and the deposit kept */
+export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "reserved" && !holds(b, at);
+
+/** How a booking reads now: a reservation past its balance deadline shows as forfeited */
+const view = (b: NetBooking): NetBooking => (balanceOverdue(b) ? { ...b, status: "forfeited" } : b);
+
+/** Balance still to pay on a reserved booking */
+export const balanceDue = (b: NetBooking) => b.totalPence - (b.depositPence ?? b.totalPence);
 
 export type ReserveResult =
   | { ok: true; booking: NetBooking }
@@ -306,13 +331,27 @@ export class PartnerStore {
    * Holds the requested nets (and bowling machine) while the partner pays.
    * Atomic: either every item is free and all are held, or nothing changes.
    */
-  reserve(input: { partnerId: string; blockId: string; items: { slotKey: string; bowlingMachine: boolean; ageGroup?: string; ability?: string; gender?: string }[]; machineCoach?: string }): Promise<ReserveResult> {
+  reserve(input: {
+    partnerId: string;
+    blockId: string;
+    items: { slotKey: string; bowlingMachine: boolean; ageGroup?: string; ability?: string; gender?: string }[];
+    machineCoach?: string;
+    plan?: "full" | "deposit";
+  }): Promise<ReserveResult> {
     return this.tx<ReserveResult>((d) => {
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
       if (!blockUnlocked(block, d.bookings.filter((b) => b.partnerId === input.partnerId))) {
         const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
         return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
+      }
+      let balanceDueDate: string | undefined;
+      if (input.plan === "deposit") {
+        if (!block.deposit) return { ok: false, reason: "invalid", message: `${block.label} must be paid in full.` };
+        balanceDueDate = lastSessionDate(block.deposit.dueAfterBlock, d.bookings.filter((b) => b.partnerId === input.partnerId));
+        if (!balanceDueDate || endOfDayLondon(balanceDueDate).getTime() <= Date.now()) {
+          return { ok: false, reason: "invalid", message: "The deadline for a deposit has passed. Please pay in full." };
+        }
       }
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();
@@ -350,6 +389,14 @@ export class PartnerStore {
         items,
         machineCoach: items.some((i) => i.bowlingMachine) ? input.machineCoach : undefined,
         totalPence: items.reduce((n, i) => n + i.pricePence, 0),
+        ...(balanceDueDate
+          ? {
+              plan: "deposit" as const,
+              depositPence: depositFor(block, items.reduce((n, i) => n + i.pricePence, 0)),
+              balanceDueDate,
+              balanceDueAt: endOfDayLondon(balanceDueDate).toISOString(),
+            }
+          : { plan: "full" as const }),
         status: "pending_payment",
         holdExpiresAt: new Date(at + PARTNER_HOLD_MINUTES * 60_000).toISOString(),
         createdAt: now(),
@@ -367,12 +414,31 @@ export class PartnerStore {
     });
   }
 
-  /** Called from the Stripe webhook (or dev checkout) once payment is confirmed */
-  confirm(bookingId: string, paymentIntentId?: string) {
+  attachBalanceCheckout(bookingId: string, checkoutId: string) {
     return this.tx((d) => {
       const b = d.bookings.find((x) => x.id === bookingId);
-      if (!b || b.status === "confirmed") return b;
-      b.status = "confirmed";
+      if (b) b.balanceCheckoutId = checkoutId;
+      return b;
+    });
+  }
+
+  /**
+   * Called from the Stripe webhook (or dev checkout) once a payment is confirmed.
+   * "initial" is the first payment (in full, or the deposit); "balance" settles a deposit.
+   */
+  confirm(bookingId: string, paymentIntentId?: string, stage: "initial" | "balance" = "initial") {
+    return this.tx((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      if (!b) return b;
+      if (stage === "balance") {
+        if (b.status !== "reserved") return b;
+        b.status = "confirmed";
+        b.balancePaidAt = now();
+        b.balancePaymentIntentId = paymentIntentId;
+        return b;
+      }
+      if (b.status === "confirmed" || b.status === "reserved") return b;
+      b.status = b.plan === "deposit" ? "reserved" : "confirmed";
       b.paidAt = now();
       b.paymentIntentId = paymentIntentId;
       b.holdExpiresAt = undefined;
@@ -391,12 +457,14 @@ export class PartnerStore {
   }
 
   async getBooking(id: string) {
-    return (await this.read()).bookings.find((b) => b.id === id);
+    const b = (await this.read()).bookings.find((x) => x.id === id);
+    return b && view(b);
   }
 
   async bookingsFor(partnerId?: string) {
     return (await this.read()).bookings
       .filter((b) => !partnerId || b.partnerId === partnerId)
+      .map(view)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 }

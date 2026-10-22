@@ -1,7 +1,11 @@
+import { getBlock } from "./partners";
+
+const springDeposit = getBlock("spring-2027")?.deposit?.percent ?? 25;
 
 /** Draft delivery partner terms for coaches and delivery partners — to be reviewed by HillRisers */
 export const partnerTerms = [
-  { t: "Block bookings", b: `Sessions are booked in blocks: the same net, at the same time, every week of the block. We only accept block bookings, and the block rate is shown in the partner portal. Bookings are paid in full when you book.` },
+  { t: "Block bookings", b: `Sessions are booked in blocks: the same net, at the same time, every week of the block. We only accept block bookings, and the block rate is shown in the partner portal. The autumn block is paid in full when you book.` },
+  { t: "Spring: deposit or pay in full", b: `The spring block is only open to partners who have booked and paid for the autumn block. You can pay for spring in full when you book, or reserve your nets with a ${springDeposit}% deposit. If you pay a deposit, the balance must be paid in full by midnight (UK time) on the day of your final autumn session. If it isn't paid by then, your spring nets are released and the deposit is not refunded.` },
   { t: "Bowling machine", b: `The bowling machine is charged per hour on top of the net. There is one machine, so it can be booked on one net per time slot. You must supply your own balls, and the machine must be operated by a coach holding at least an ECB Level 2 (or equivalent) qualification.` },
   { t: "No filming or video", b: "No filming or video recording of any kind is permitted at the venue, including on phones. This applies to coaches, players and anyone attending." },
   { t: "Safeguarding and documents", b: "You must hold, and upload, a current coaching qualification, enhanced DBS check, safeguarding training and public liability insurance for everyone coaching in your sessions. HillRisers reviews documents and may cancel a booking if they are missing or invalid." },

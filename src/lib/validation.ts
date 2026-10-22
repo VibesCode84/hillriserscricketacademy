@@ -218,6 +218,7 @@ export const partnerCheckoutSchema = z
       .min(1, "Please choose at least one slot")
       .max(60),
     machineCoach: optionalText(100),
+    plan: z.enum(["full", "deposit"]).default("full"),
     ownBalls: z.boolean().default(false),
     noVideo: z.boolean().default(false),
     agreeTerms: z.boolean().default(false),

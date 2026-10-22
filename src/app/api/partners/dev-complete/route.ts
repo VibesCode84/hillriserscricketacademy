@@ -10,7 +10,10 @@ export async function POST(req: Request) {
   const parsed = await parseJson(req, z.object({ bookingId: z.string().uuid(), outcome: z.enum(["paid", "cancel"]) }));
   if ("error" in parsed) return parsed.error;
   const store = getPartnerStore();
-  if (parsed.data.outcome === "paid") await store.confirm(parsed.data.bookingId, `dev_pi_${parsed.data.bookingId}`);
-  else await store.release(parsed.data.bookingId, "cancelled");
+  const booking = await store.getBooking(parsed.data.bookingId);
+  const stage = booking?.status === "reserved" ? "balance" : "initial";
+  if (parsed.data.outcome === "paid") await store.confirm(parsed.data.bookingId, `dev_pi_${stage}_${parsed.data.bookingId}`, stage);
+  else if (stage === "initial") await store.release(parsed.data.bookingId, "cancelled");
+  else return NextResponse.json({ ok: true, redirect: "/partners/portal" });
   return NextResponse.json({ ok: true, redirect: `/partners/portal?${parsed.data.outcome === "paid" ? "paid" : "cancelled"}=${parsed.data.bookingId}` });
 }

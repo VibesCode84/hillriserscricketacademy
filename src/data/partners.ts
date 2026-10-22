@@ -37,6 +37,11 @@ export type PartnerBlock = {
   slots: SlotTemplate[];
   /** Only partners with a paid booking in this block can book this one */
   requiresBlock?: string;
+  /**
+   * Partners may reserve with a deposit instead of paying in full. The balance
+   * is due by midnight (UK time) at the end of their last session in `dueAfterBlock`.
+   */
+  deposit?: { percent: number; dueAfterBlock: string };
 };
 
 const hourly = (day: PartnerDay, from: string, to: string, nets: number[], dates: string[]): SlotTemplate[] => {
@@ -83,9 +88,11 @@ export const partnerBlocks: PartnerBlock[] = [
     id: "spring-2027",
     label: "Spring block 2027",
     requiresBlock: "autumn-2026",
+    deposit: { percent: 25, dueAfterBlock: "autumn-2026" },
     summary: "6 January to 28 March 2027 (11 weeks)",
     notes: [
       "Open to partners who have booked the autumn block.",
+      "Pay in full, or reserve with a deposit and pay the balance by midnight after your last autumn session.",
       "No sessions in half term (15–21 February).",
       "Thursdays: two nets available.",
       "Includes the Easter weekend (27–28 March).",
@@ -120,6 +127,37 @@ export function findSlot(blockId: string, key: string) {
 /** Price of booking one net for the whole block, optionally with the bowling machine */
 export const itemPricePence = (s: SlotTemplate, bowlingMachine: boolean) =>
   s.dates.length * (PARTNER_RATE_PENCE + (bowlingMachine ? BOWLING_MACHINE_PENCE : 0));
+
+/** Deposit for a block booking (the full amount when the block takes no deposits) */
+export const depositFor = (block: PartnerBlock, totalPence: number) =>
+  block.deposit ? Math.round((totalPence * block.deposit.percent) / 100) : totalPence;
+
+/** A partner's last paid session date (ISO) in a block — sets the deadline for a deposit balance */
+export function lastSessionDate(blockId: string, bookings: { blockId: string; status: string; items: { slotKey: string }[] }[]) {
+  let last: string | undefined;
+  for (const b of bookings) {
+    if (b.blockId !== blockId || b.status !== "confirmed") continue;
+    for (const i of b.items) {
+      const d = findSlot(blockId, i.slotKey)?.slot.dates.at(-1);
+      if (d && (!last || d > last)) last = d;
+    }
+  }
+  return last;
+}
+
+/** Midnight UK time at the end of a date ("2026-12-13" → 14 Dec 00:00 London) */
+export function endOfDayLondon(iso: string) {
+  const next = new Date(`${iso}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  // London is UTC or UTC+1; at UTC midnight it reads 0 or 1 o'clock
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "numeric", hourCycle: "h23" }).format(next));
+  return new Date(next.getTime() - hour * 3_600_000);
+}
+
+/** "Sunday 13 December" */
+export function longDate(iso: string) {
+  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+}
 
 /** "6:30pm" style label for a 24h time */
 export function timeLabel(t: string) {

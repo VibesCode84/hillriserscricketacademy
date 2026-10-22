@@ -6,6 +6,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   blockUnlocked,
   BOWLING_MACHINE_PENCE,
+  depositFor,
+  lastSessionDate,
+  longDate,
   documentKinds,
   itemPricePence,
   machineKey,
@@ -91,8 +94,16 @@ export function PartnerPortal(props: {
       )}
       {banner?.kind === "paid" && (
         <Notice tone="good" onClose={() => setBanner(undefined)}>
-          {paidBooking?.status === "confirmed" ? (
+          {paidBooking?.status === "confirmed" && paidBooking.balancePaidAt ? (
+            <><strong>Balance received — your nets are confirmed.</strong> They&rsquo;re listed under Your bookings.</>
+          ) : paidBooking?.status === "confirmed" ? (
             <><strong>Payment received — your sessions are booked.</strong> They&rsquo;re listed under Your bookings.</>
+          ) : paidBooking?.status === "reserved" ? (
+            <>
+              <strong>Deposit received — your nets are reserved.</strong> Please pay the balance of{" "}
+              {formatPrice(paidBooking.totalPence - (paidBooking.depositPence ?? 0))} by midnight on{" "}
+              {paidBooking.balanceDueDate ? longDate(paidBooking.balanceDueDate) : "the due date"}.
+            </>
           ) : (
             <><strong>Thanks — we&rsquo;re confirming your payment.</strong> This usually takes a few seconds.</>
           )}
@@ -127,6 +138,7 @@ export function PartnerPortal(props: {
           key={block.id}
           block={block}
           onBooked={refreshMe}
+          bookings={bookings}
           lockedBy={blockUnlocked(block, bookings) ? undefined : props.blocks.find((b) => b.id === block.requiresBlock)?.label}
         />
       ))}
@@ -145,8 +157,18 @@ export function PartnerPortal(props: {
                   <li key={b.id} className="rounded-2xl bg-white p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-semibold">{block?.label ?? b.blockId}</p>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${b.status === "confirmed" ? "bg-[#e3f3e8] text-[#1d6b3a]" : "bg-[#fff4d6] text-[#7a5a00]"}`}>
-                        {b.status === "confirmed" ? "Paid" : `Awaiting payment${b.holdExpiresAt ? ` · held until ${new Date(b.holdExpiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}`}
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          b.status === "confirmed" ? "bg-[#e3f3e8] text-[#1d6b3a]" : b.status === "forfeited" ? "bg-[#fbeae8] text-[#8c1d18]" : b.status === "reserved" ? "bg-[#e6eefc] text-[#1d3f7a]" : "bg-[#fff4d6] text-[#7a5a00]"
+                        }`}
+                      >
+                        {b.status === "confirmed"
+                          ? "Paid"
+                          : b.status === "forfeited"
+                            ? "Balance not paid · nets released"
+                            : b.status === "reserved"
+                            ? "Deposit paid"
+                            : `Awaiting payment${b.holdExpiresAt ? ` · held until ${new Date(b.holdExpiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}`}
                       </span>
                     </div>
                     <ul className="mt-2 space-y-1 text-sm text-ink-muted">
@@ -158,6 +180,13 @@ export function PartnerPortal(props: {
                     </ul>
                     {b.machineCoach && <p className="mt-2 text-sm">Bowling machine operator (Level 2): {b.machineCoach}</p>}
                     <p className="mt-2 font-semibold">Total {formatPrice(b.totalPence)}</p>
+                    {b.plan === "deposit" && b.depositPence !== undefined && (
+                      <p className="mt-1 text-sm text-ink-muted">
+                        Deposit {formatPrice(b.depositPence)} paid · balance {formatPrice(b.totalPence - b.depositPence)}{" "}
+                        {b.balancePaidAt ? "paid" : b.status === "forfeited" ? "not paid by the deadline" : `due by midnight on ${b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}`}
+                      </p>
+                    )}
+                    {b.status === "reserved" && <PayBalance bookingId={b.id} amount={b.totalPence - (b.depositPence ?? 0)} />}
                   </li>
                 );
               })}
@@ -167,6 +196,31 @@ export function PartnerPortal(props: {
 
       <Documents documents={documents} onChange={refreshMe} />
     </main>
+  );
+}
+
+function PayBalance({ bookingId, amount }: { bookingId: string; amount: number }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const pay = async () => {
+    setBusy(true);
+    setMessage("");
+    const res = await fetch("/api/partners/balance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId }) });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.url) {
+      window.location.href = json.url;
+      return;
+    }
+    setBusy(false);
+    setMessage(json.message ?? "Something went wrong. Please try again.");
+  };
+  return (
+    <div className="mt-3">
+      <button type="button" disabled={busy} onClick={pay} className={buttonClass("dark")}>
+        {busy ? "Opening payment…" : `Pay balance ${formatPrice(amount)}`}
+      </button>
+      {message && <p className="mt-2 text-sm text-[#8c1d18]" role="alert">{message}</p>}
+    </div>
   );
 }
 
@@ -185,7 +239,7 @@ type Who = { ageGroup: string; ability: string; gender: string };
 type Selection = Record<string, { bowlingMachine: boolean } & Who>;
 const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
-function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBooked: () => void; lockedBy?: string }) {
+function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBlock; onBooked: () => void; bookings: NetBooking[]; lockedBy?: string }) {
   const [avail, setAvail] = useState<Availability | null>(null);
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<Selection>({});
@@ -194,6 +248,7 @@ function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBoo
   const [ownBalls, setOwnBalls] = useState(false);
   const [noVideo, setNoVideo] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [plan, setPlan] = useState<"full" | "deposit">("full");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const clearError = (k: string) => setErrors(({ [k]: _gone, ...rest }) => (void _gone, rest));
@@ -281,6 +336,10 @@ function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBoo
     .filter((i) => i.slot) as ({ key: string; slot: SlotTemplate; net: number; bowlingMachine: boolean } & Who)[];
   const total = items.reduce((n, i) => n + itemPricePence(i.slot, i.bowlingMachine), 0);
   const anyMachine = items.some((i) => i.bowlingMachine);
+  // Deposit option: the balance is due by midnight at the end of the partner's last paid session in the earlier block
+  const balanceDate = block.deposit ? lastSessionDate(block.deposit.dueAfterBlock, bookings) : undefined;
+  const depositPlan = plan === "deposit" && !!balanceDate;
+  const deposit = depositFor(block, total);
 
   const pay = async () => {
     setBusy(true);
@@ -293,6 +352,7 @@ function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBoo
         blockId: block.id,
         items: items.map((i) => ({ slotKey: i.key, bowlingMachine: i.bowlingMachine, ageGroup: i.ageGroup, ability: i.ability, gender: i.gender })),
         machineCoach: coach || undefined,
+        plan: depositPlan ? "deposit" : "full",
         ownBalls,
         noVideo,
         agreeTerms: agree,
@@ -469,6 +529,24 @@ function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBoo
           )}
           <p className="mt-4 flex justify-between text-lg font-semibold"><span>Total</span><span>{formatPrice(total)}</span></p>
 
+          {block.deposit && balanceDate && !lockedBy && items.length > 0 && (
+            <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
+              <legend className="sr-only">How would you like to pay?</legend>
+              <label className="flex cursor-pointer items-start gap-2">
+                <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                <span><strong>Pay in full</strong> — {formatPrice(total)} now. Your nets are confirmed.</span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-2">
+                <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                <span>
+                  <strong>Reserve with a {block.deposit.percent}% deposit</strong> — {formatPrice(deposit)} now. The balance of{" "}
+                  {formatPrice(total - deposit)} must be paid by midnight on {longDate(balanceDate)} (your last autumn session), or the nets are
+                  released and the deposit isn&rsquo;t refunded.
+                </span>
+              </label>
+            </fieldset>
+          )}
+
           {anyMachine && (
             <div className="mt-5 space-y-3 rounded-2xl bg-navy-900 p-4 text-sm">
               <p className="font-semibold text-gold">Bowling machine</p>
@@ -493,13 +571,13 @@ function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBoo
             {errors.noVideo && <p className="error-text">{errors.noVideo}</p>}
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Bookings are paid in full and non-refundable.</span>
+              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits, are non-refundable.</span>
             </label>
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
           </div>
 
           <button type="button" disabled={busy || items.length === 0} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
-            {busy ? "Holding your nets…" : `Book and pay ${items.length ? formatPrice(total) : ""}`}
+            {busy ? "Holding your nets…" : depositPlan ? `Pay deposit ${formatPrice(deposit)}` : `Book and pay ${items.length ? formatPrice(total) : ""}`}
           </button>
           <p className="mt-3 text-xs text-slate">Secure card payment by Stripe. Your slots are held for {PARTNER_HOLD_MINUTES} minutes while you pay.</p>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}

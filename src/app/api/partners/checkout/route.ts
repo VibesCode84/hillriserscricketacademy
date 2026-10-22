@@ -13,9 +13,9 @@ export async function POST(req: Request) {
   if (!partner) return NextResponse.json({ ok: false, message: "Please sign in again" }, { status: 401 });
   const parsed = await parseJson(req, partnerCheckoutSchema);
   if ("error" in parsed) return parsed.error;
-  const { blockId, items, machineCoach } = parsed.data;
+  const { blockId, items, machineCoach, plan } = parsed.data;
   const store = getPartnerStore();
-  const held = await store.reserve({ partnerId: partner.id, blockId, items, machineCoach });
+  const held = await store.reserve({ partnerId: partner.id, blockId, items, machineCoach, plan });
   if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: held.reason === "taken" ? 409 : 400 });
   try {
     const checkout = await createPartnerCheckout(held.booking, partner, baseUrl(req));
