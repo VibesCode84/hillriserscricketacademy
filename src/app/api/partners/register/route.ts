@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       { status: 409 },
     );
   }
-  const { partner, key } = await getPartnerStore().createPartner(input);
+  const { partner, key } = await getPartnerStore().createPartner({ ...input, orgName: input.orgName || input.contactName }); // sole traders needn't give one
   const portalLink = `${baseUrl(req)}/api/partners/access?key=${key}`;
   await sendPartnerWelcome(partner, portalLink).catch((err) => console.error("[hillrisers] partner welcome email failed", err));
   const res = NextResponse.json({ ok: true, portalLink });

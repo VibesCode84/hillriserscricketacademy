@@ -27,7 +27,7 @@ export function RegisterPartner() {
     const res = await fetch("/api/partners/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...fd, website: fd.website || undefined, about: fd.about || undefined, company: fd.company || undefined, agreeTerms: agree }),
+      body: JSON.stringify({ ...fd, orgName: fd.orgName || undefined, website: fd.website || undefined, about: fd.about || undefined, company: fd.company || undefined, agreeTerms: agree }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.ok) {
@@ -52,8 +52,8 @@ export function RegisterPartner() {
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        {field("orgName", "Organisation or trading name", { autoComplete: "organization" })}
-        {field("contactName", "Contact name", { autoComplete: "name" })}
+        {field("contactName", "Your name", { autoComplete: "name" })}
+        {field("orgName", "Organisation or trading name", { optional: true, autoComplete: "organization" })}
         {field("email", "Email", { type: "email", autoComplete: "email" })}
         {field("phone", "Phone", { type: "tel", autoComplete: "tel" })}
         {field("password", "Choose a password", { type: "password", autoComplete: "new-password", placeholder: "At least 8 characters" })}

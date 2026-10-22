@@ -191,8 +191,8 @@ export function fieldErrors(err: z.ZodError) {
 /* ── Delivery partner portal ────────────────────────────────────────────── */
 
 export const partnerRegistrationSchema = z.object({
-  orgName: z.string().trim().min(2, "Please enter your organisation or trading name").max(120),
-  contactName: z.string().trim().min(2, "Please enter a contact name").max(100),
+  orgName: optionalText(120),
+  contactName: z.string().trim().min(2, "Please enter your name").max(100),
   email: z.string().trim().email("Please enter a valid email").max(200),
   phone,
   type: z.string().trim().min(2, "Please choose an option").max(40),
