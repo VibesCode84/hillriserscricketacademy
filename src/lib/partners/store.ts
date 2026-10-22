@@ -8,6 +8,7 @@ import {
   depositFor,
   endOfDayLondon,
   findSlot,
+  firstSessionDate,
   getBlock,
   balanceReminderDates,
   itemPricePence,
@@ -89,6 +90,8 @@ export type NetBooking = {
   /** Paying in full (default) or reserving with a deposit */
   plan?: "full" | "deposit";
   depositPence?: number;
+  /** First autumn session date (ISO); balance reminders start two weeks after it */
+  firstSessionDate?: string;
   /** Last autumn session date (ISO); the balance is due by midnight at the end of it */
   balanceDueDate?: string;
   balanceDueAt?: string;
@@ -394,9 +397,12 @@ export class PartnerStore {
         return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
       }
       let balanceDueDate: string | undefined;
+      let firstSession: string | undefined;
       if (input.plan === "deposit") {
         if (!block.deposit) return { ok: false, reason: "invalid", message: `${block.label} must be paid in full.` };
-        balanceDueDate = lastSessionDate(block.deposit.dueAfterBlock, d.bookings.filter((b) => b.partnerId === input.partnerId));
+        const theirs = d.bookings.filter((b) => b.partnerId === input.partnerId);
+        balanceDueDate = lastSessionDate(block.deposit.dueAfterBlock, theirs);
+        firstSession = firstSessionDate(block.deposit.dueAfterBlock, theirs);
         if (!balanceDueDate || endOfDayLondon(balanceDueDate).getTime() <= Date.now()) {
           return { ok: false, reason: "invalid", message: "The deadline for a deposit has passed. Please pay in full." };
         }
@@ -441,6 +447,7 @@ export class PartnerStore {
           ? {
               plan: "deposit" as const,
               depositPence: depositFor(block, items.reduce((n, i) => n + i.pricePence, 0)),
+              firstSessionDate: firstSession,
               balanceDueDate,
               balanceDueAt: endOfDayLondon(balanceDueDate).toISOString(),
             }
@@ -512,7 +519,7 @@ export class PartnerStore {
     const due: { booking: NetBooking; date: string; finalDay: boolean }[] = [];
     for (const b of (await this.read()).bookings) {
       if (b.status !== "reserved" || !holds(b, at) || !b.paidAt || !b.balanceDueDate) continue;
-      for (const date of balanceReminderDates(londonDate(b.paidAt), b.balanceDueDate)) {
+      for (const date of balanceReminderDates(b.firstSessionDate ?? londonDate(b.paidAt), b.balanceDueDate, londonDate(b.paidAt))) {
         const sendAt = londonTime(date, REMINDER_HOUR).getTime();
         if (sendAt <= at && at - sendAt < 20 * 3_600_000 && !b.remindersSent?.includes(date)) {
           due.push({ booking: b, date, finalDay: date === b.balanceDueDate });

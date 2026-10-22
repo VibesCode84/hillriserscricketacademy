@@ -166,8 +166,9 @@ for (const [name, make] of [
     assert.ok(r.ok);
     await store.confirm(r.booking.id, "pi_dep");
     const booked = (await store.getBooking(r.booking.id))!;
-    const days = balanceReminderDates(londonDate(booked.paidAt!), booked.balanceDueDate!);
-    assert.equal(days.at(-1), "2026-12-12");
+    assert.equal(booked.firstSessionDate, "2026-11-07");
+    const days = balanceReminderDates(booked.firstSessionDate!, booked.balanceDueDate!, londonDate(booked.paidAt!));
+    assert.deepEqual(days, ["2026-11-21", "2026-11-28", "2026-12-05", "2026-12-09", "2026-12-10", "2026-12-12"]);
     const first = londonTime(days[0], 8).getTime();
     assert.equal((await store.dueBalanceReminders(first - 60_000)).length, 0);
     const due = await store.dueBalanceReminders(first + 3_600_000);
@@ -240,12 +241,13 @@ test("midnight UK time at the end of a date, in GMT and BST", () => {
   assert.equal(endOfDayLondon("2027-06-01").toISOString(), "2027-06-01T23:00:00.000Z");
 });
 
-test("balance reminders: two weeks after the deposit, weekly, then 3 days, 2 days and the final day; at 8am UK time", () => {
-  assert.deepEqual(balanceReminderDates("2026-10-22", "2026-12-12"), [
-    "2026-11-05", "2026-11-12", "2026-11-19", "2026-11-26", "2026-12-03", "2026-12-09", "2026-12-10", "2026-12-12",
+test("balance reminders: two weeks after the first autumn session, weekly, then 3 days, 2 days and the final day; at 8am UK time", () => {
+  // First session Thursday 5 November, last Sunday 13 December, deposit paid 22 October
+  assert.deepEqual(balanceReminderDates("2026-11-05", "2026-12-13", "2026-10-22"), [
+    "2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10", "2026-12-11", "2026-12-13",
   ]);
-  // Deposit in the final fortnight: only the final-week reminders
-  assert.deepEqual(balanceReminderDates("2026-12-05", "2026-12-13"), ["2026-12-10", "2026-12-11", "2026-12-13"]);
+  // Deposit paid late: only the reminders still to come
+  assert.deepEqual(balanceReminderDates("2026-11-05", "2026-12-13", "2026-12-04"), ["2026-12-10", "2026-12-11", "2026-12-13"]);
   assert.equal(londonTime("2026-11-05", 8).toISOString(), "2026-11-05T08:00:00.000Z");
   assert.equal(londonTime("2026-10-22", 8).toISOString(), "2026-10-22T07:00:00.000Z");
 });

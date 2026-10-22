@@ -132,18 +132,23 @@ export const itemPricePence = (s: SlotTemplate, bowlingMachine: boolean) =>
 export const depositFor = (block: PartnerBlock, totalPence: number) =>
   block.deposit ? Math.round((totalPence * block.deposit.percent) / 100) : totalPence;
 
-/** A partner's last paid session date (ISO) in a block — sets the deadline for a deposit balance */
-export function lastSessionDate(blockId: string, bookings: { blockId: string; status: string; items: { slotKey: string }[] }[]) {
-  let last: string | undefined;
+type BookingDates = { blockId: string; status: string; items: { slotKey: string }[] }[];
+
+/** A partner's paid session dates (ISO, sorted) in a block */
+function sessionDates(blockId: string, bookings: BookingDates) {
+  const dates = new Set<string>();
   for (const b of bookings) {
     if (b.blockId !== blockId || b.status !== "confirmed") continue;
-    for (const i of b.items) {
-      const d = findSlot(blockId, i.slotKey)?.slot.dates.at(-1);
-      if (d && (!last || d > last)) last = d;
-    }
+    for (const i of b.items) for (const d of findSlot(blockId, i.slotKey)?.slot.dates ?? []) dates.add(d);
   }
-  return last;
+  return [...dates].sort();
 }
+
+/** A partner's first paid session date in a block — balance reminders start two weeks after it */
+export const firstSessionDate = (blockId: string, bookings: BookingDates) => sessionDates(blockId, bookings)[0];
+
+/** A partner's last paid session date in a block — sets the deadline for a deposit balance */
+export const lastSessionDate = (blockId: string, bookings: BookingDates) => sessionDates(blockId, bookings).at(-1);
 
 /** Midnight UK time at the end of a date ("2026-12-13" → 14 Dec 00:00 London) */
 export function endOfDayLondon(iso: string) {
@@ -174,14 +179,15 @@ const addDays = (iso: string, n: number) => {
 export const REMINDER_HOUR = 8;
 
 /**
- * Days to remind a partner about a deposit balance: two weeks after the deposit, then weekly,
- * plus 3 days and 2 days before the deadline day and on the day itself (the last autumn session).
+ * Days to remind a partner about a deposit balance: two weeks after their first autumn session,
+ * then weekly, plus 3 days and 2 days before the deadline day and on the day itself (their last
+ * autumn session). Only days after the deposit was paid.
  */
-export function balanceReminderDates(depositDate: string, lastDate: string) {
+export function balanceReminderDates(firstSession: string, lastSession: string, depositDate: string) {
   const dates = new Set<string>();
-  for (let d = addDays(depositDate, 14); d < lastDate; d = addDays(d, 7)) dates.add(d);
-  for (const n of [3, 2, 0]) dates.add(addDays(lastDate, -n));
-  return [...dates].filter((d) => d > depositDate && d <= lastDate).sort();
+  for (let d = addDays(firstSession, 14); d < lastSession; d = addDays(d, 7)) dates.add(d);
+  for (const n of [3, 2, 0]) dates.add(addDays(lastSession, -n));
+  return [...dates].filter((d) => d > depositDate && d <= lastSession).sort();
 }
 
 /** "Sunday 13 December" */
