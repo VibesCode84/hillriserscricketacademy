@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const { blockId, items, machineCoach } = parsed.data;
   const store = getPartnerStore();
   const held = await store.reserve({ partnerId: partner.id, blockId, items, machineCoach });
-  if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: 409 });
+  if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: held.reason === "taken" ? 409 : 400 });
   try {
     const checkout = await createPartnerCheckout(held.booking, partner, baseUrl(req));
     await store.attachCheckout(held.booking.id, checkout.id);

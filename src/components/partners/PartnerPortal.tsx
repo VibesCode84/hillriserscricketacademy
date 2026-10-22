@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  blockUnlocked,
   BOWLING_MACHINE_PENCE,
   documentKinds,
   itemPricePence,
@@ -122,7 +123,12 @@ export function PartnerPortal(props: {
       </div>
 
       {props.blocks.map((block) => (
-        <BookingGrid key={block.id} block={block} onBooked={refreshMe} />
+        <BookingGrid
+          key={block.id}
+          block={block}
+          onBooked={refreshMe}
+          lockedBy={blockUnlocked(block, bookings) ? undefined : props.blocks.find((b) => b.id === block.requiresBlock)?.label}
+        />
       ))}
 
       <section className="mt-14">
@@ -179,7 +185,7 @@ type Who = { ageGroup: string; ability: string; gender: string };
 type Selection = Record<string, { bowlingMachine: boolean } & Who>;
 const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
-function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () => void }) {
+function BookingGrid({ block, onBooked, lockedBy }: { block: PartnerBlock; onBooked: () => void; lockedBy?: string }) {
   const [avail, setAvail] = useState<Availability | null>(null);
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<Selection>({});
@@ -321,6 +327,12 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
       <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
         {block.notes.map((n) => <li key={n}>{n}</li>)}
       </ul>
+      {lockedBy && (
+        <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
+          <strong>Book {lockedBy} first.</strong> {block.label} is only open to partners who have booked {lockedBy}. Once your payment
+          for {lockedBy} has gone through, you can choose your {block.label.toLowerCase()} nets here.
+        </p>
+      )}
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-6">
@@ -356,7 +368,7 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
                               <td key={n} className="px-2 py-1.5 text-center">
                                 <button
                                   type="button"
-                                  disabled={taken || !avail}
+                                  disabled={taken || !avail || !!lockedBy}
                                   onClick={() => toggleNet(s, n)}
                                   aria-pressed={on}
                                   aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? "booked" : on ? "selected" : "available"}`}

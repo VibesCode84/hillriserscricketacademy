@@ -3,6 +3,7 @@ import path from "node:path";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import {
+  blockUnlocked,
   findSlot,
   getBlock,
   itemPricePence,
@@ -194,7 +195,7 @@ export const holds = (b: NetBooking, at = Date.now()) =>
 
 export type ReserveResult =
   | { ok: true; booking: NetBooking }
-  | { ok: false; reason: "taken" | "invalid"; keys?: string[]; message: string };
+  | { ok: false; reason: "taken" | "invalid" | "locked"; keys?: string[]; message: string };
 
 export class PartnerStore {
   private queue: Promise<unknown> = Promise.resolve();
@@ -309,6 +310,10 @@ export class PartnerStore {
     return this.tx<ReserveResult>((d) => {
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
+      if (!blockUnlocked(block, d.bookings.filter((b) => b.partnerId === input.partnerId))) {
+        const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
+        return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
+      }
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();
       for (const it of input.items) {

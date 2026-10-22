@@ -35,6 +35,8 @@ export type PartnerBlock = {
   summary: string;
   notes: string[];
   slots: SlotTemplate[];
+  /** Only partners with a paid booking in this block can book this one */
+  requiresBlock?: string;
 };
 
 const hourly = (day: PartnerDay, from: string, to: string, nets: number[], dates: string[]): SlotTemplate[] => {
@@ -80,8 +82,10 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "spring-2027",
     label: "Spring block 2027",
+    requiresBlock: "autumn-2026",
     summary: "6 January to 28 March 2027 (11 weeks)",
     notes: [
+      "Open to partners who have booked the autumn block.",
       "No sessions in half term (15–21 February).",
       "Thursdays: two nets available.",
       "Includes the Easter weekend (27–28 March).",
@@ -96,6 +100,10 @@ export const partnerBlocks: PartnerBlock[] = [
 ];
 
 export const getBlock = (id: string) => partnerBlocks.find((b) => b.id === id);
+
+/** Whether a partner's bookings let them book this block (see requiresBlock) */
+export const blockUnlocked = (block: PartnerBlock, bookings: { blockId: string; status: string }[]) =>
+  !block.requiresBlock || bookings.some((b) => b.blockId === block.requiresBlock && b.status === "confirmed");
 
 /** One bookable net in one weekly slot, e.g. "autumn-2026:Saturday:14:30:n2" */
 export const slotKey = (blockId: string, s: Pick<SlotTemplate, "day" | "start">, net: number) => `${blockId}:${s.day}:${s.start}:n${net}`;

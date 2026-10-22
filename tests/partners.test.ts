@@ -106,6 +106,24 @@ for (const [name, make] of [
     await store.reviewDocument(doc.id, "approved");
     assert.equal((await store.documentsFor(a.id))[0].review, "approved");
   });
+  test(`${name}: spring can only be booked once the partner's autumn booking is paid`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const springSat = spring.slots.find((s) => s.day === "Saturday")!;
+    const { partner: a } = await store.createPartner(partner);
+    const { partner: b } = await store.createPartner({ ...partner, email: "other@example.com" });
+    const springItem = [{ slotKey: slotKey(spring.id, springSat, 1), bowlingMachine: false }];
+    const locked = await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem });
+    assert.ok(!locked.ok && locked.reason === "locked");
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
+    assert.ok(autumn.ok);
+    // A hold awaiting payment isn't enough
+    assert.equal((await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem })).ok, false);
+    await store.confirm(autumn.booking.id, "pi_1");
+    // Another partner's autumn booking doesn't unlock spring for them
+    assert.equal((await store.reserve({ partnerId: b.id, blockId: spring.id, items: springItem })).ok, false);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem })).ok);
+  });
 }
 
 test("checkout needs the no-video confirmation; bowling machine needs a Level 2 coach and own balls", () => {
