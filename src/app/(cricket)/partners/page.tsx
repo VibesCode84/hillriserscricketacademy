@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { BOWLING_MACHINE_PENCE, documentKinds, PARTNER_RATE_PENCE, partnerBlocks } from "@/data/partners";
-import { formatPrice } from "@/data/site";
+import { documentKinds, partnerBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink } from "@/components/partners/RegisterPartner";
 
@@ -24,12 +23,12 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           </div>
           <dl className="grid gap-4 self-end sm:grid-cols-2">
             <div className="rounded-2xl border border-gold/25 bg-navy-900 p-5">
-              <dt className="text-sm text-slate">Partner fee</dt>
-              <dd className="mt-1 font-serif text-3xl text-gold">{formatPrice(PARTNER_RATE_PENCE)}<span className="text-base text-slate"> per net per hour</span></dd>
+              <dt className="text-sm text-slate">Indoor nets</dt>
+              <dd className="mt-1 font-serif text-3xl text-gold">3<span className="text-base text-slate"> in the sports hall</span></dd>
             </div>
             <div className="rounded-2xl border border-gold/25 bg-navy-900 p-5">
               <dt className="text-sm text-slate">Bowling machine</dt>
-              <dd className="mt-1 font-serif text-3xl text-gold">+{formatPrice(BOWLING_MACHINE_PENCE)}<span className="text-base text-slate"> per hour</span></dd>
+              <dd className="mt-1 font-serif text-3xl text-gold">1<span className="text-base text-slate"> available to book</span></dd>
             </div>
           </dl>
         </div>
@@ -40,7 +39,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           <div>
             <h2 className="text-3xl">How it works</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
-              <li>Create your partner account below.</li>
+              <li>Create your partner account below. Partner fees are shown once you&rsquo;re signed in.</li>
               <li>Choose your nets and times on the live grid — each booking is the same slot every week of the block.</li>
               <li>Pay securely by card through Stripe. Your slots are held for 30 minutes while you pay.</li>
               <li>Upload your documents. You can book straight away; we check documents before your first session.</li>

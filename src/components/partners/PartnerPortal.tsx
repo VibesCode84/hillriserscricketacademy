@@ -10,6 +10,9 @@ import {
   machineKey,
   PARTNER_HOLD_MINUTES,
   PARTNER_RATE_PENCE,
+  sessionAbilities,
+  sessionAgeGroups,
+  sessionGenders,
   shortDate,
   slotKey,
   timeLabel,
@@ -162,7 +165,9 @@ function Notice({ tone, children, onClose }: { tone: "good" | "warn"; children: 
 
 /* ── Live booking grid ─────────────────────────────────────────────────── */
 
-type Selection = Record<string, { bowlingMachine: boolean }>;
+type Who = { ageGroup: string; ability: string; gender: string };
+type Selection = Record<string, { bowlingMachine: boolean } & Who>;
+const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
 function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () => void }) {
   const [avail, setAvail] = useState<Availability | null>(null);
@@ -194,7 +199,7 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
             delete next[key];
             lost = true;
           } else if (s && next[key].bowlingMachine && json.machines[machineKey(block.id, s)]) {
-            next[key] = { bowlingMachine: false };
+            next[key] = { ...next[key], bowlingMachine: false };
             lost = true;
           }
         }
@@ -229,7 +234,11 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
     setSelected((sel) => {
       const next = { ...sel };
       if (next[key]) delete next[key];
-      else next[key] = { bowlingMachine: false };
+      else {
+        // Start from the last session's details — partners often book several for the same group
+        const last = Object.values(next).at(-1);
+        next[key] = { bowlingMachine: false, ...(last ? { ageGroup: last.ageGroup, ability: last.ability, gender: last.gender } : noWho) };
+      }
       return next;
     });
   };
@@ -240,15 +249,20 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
       const next = { ...sel };
       for (const n of s.nets) {
         const key = slotKey(block.id, s, n);
-        if (next[key]) next[key] = { bowlingMachine: n === net };
+        if (next[key]) next[key] = { ...next[key], bowlingMachine: n === net };
       }
       return next;
     });
   };
 
+  const setWho = (key: string, idx: number, field: keyof Who, value: string) => {
+    setSelected((sel) => (sel[key] ? { ...sel, [key]: { ...sel[key], [field]: value } } : sel));
+    clearError(`items.${idx}.${field}`);
+  };
+
   const items = Object.entries(selected)
     .map(([key, v]) => ({ key, slot: parseKey(block, key), net: Number(key.split(":n").at(-1)), ...v }))
-    .filter((i) => i.slot) as { key: string; slot: SlotTemplate; net: number; bowlingMachine: boolean }[];
+    .filter((i) => i.slot) as ({ key: string; slot: SlotTemplate; net: number; bowlingMachine: boolean } & Who)[];
   const total = items.reduce((n, i) => n + itemPricePence(i.slot, i.bowlingMachine), 0);
   const anyMachine = items.some((i) => i.bowlingMachine);
 
@@ -261,7 +275,7 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         blockId: block.id,
-        items: items.map((i) => ({ slotKey: i.key, bowlingMachine: i.bowlingMachine })),
+        items: items.map((i) => ({ slotKey: i.key, bowlingMachine: i.bowlingMachine, ageGroup: i.ageGroup, ability: i.ability, gender: i.gender })),
         machineCoach: coach || undefined,
         ownBalls,
         noVideo,
@@ -386,18 +400,50 @@ function BookingGrid({ block, onBooked }: { block: PartnerBlock; onBooked: () =>
           {items.length === 0 ? (
             <p className="mt-3 text-sm text-slate">Choose available nets on the grid. Each one is booked for every week of the block.</p>
           ) : (
-            <ul className="mt-4 space-y-2 text-sm">
-              {items.map((i) => (
-                <li key={i.key} className="flex justify-between gap-3 border-b border-cream/10 pb-2">
-                  <span>
-                    {i.slot.day.slice(0, 3)} {timeLabel(i.slot.start)} · Net {i.net}
-                    {i.bowlingMachine && <span className="block text-xs text-gold">+ bowling machine</span>}
-                    <span className="block text-xs text-slate">{i.slot.dates.length} weeks</span>
-                  </span>
-                  <span className="font-semibold">{formatPrice(itemPricePence(i.slot, i.bowlingMachine))}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="mt-2 text-xs text-slate">For each session, tell us who you&rsquo;re providing for.</p>
+              <ul className="mt-3 space-y-3 text-sm">
+                {items.map((i, idx) => (
+                  <li key={i.key} className="border-b border-cream/10 pb-3">
+                    <div className="flex justify-between gap-3">
+                      <span>
+                        {i.slot.day.slice(0, 3)} {timeLabel(i.slot.start)} · Net {i.net}
+                        {i.bowlingMachine && <span className="block text-xs text-gold">+ bowling machine</span>}
+                        <span className="block text-xs text-slate">{i.slot.dates.length} weeks</span>
+                      </span>
+                      <span className="font-semibold">{formatPrice(itemPricePence(i.slot, i.bowlingMachine))}</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-1.5">
+                      {(
+                        [
+                          ["ageGroup", "Age group", sessionAgeGroups],
+                          ["ability", "Ability", sessionAbilities],
+                          ["gender", "Gender", sessionGenders],
+                        ] as const
+                      ).map(([field, label, options]) => {
+                        const err = errors[`items.${idx}.${field}`];
+                        return (
+                          <select
+                            key={field}
+                            value={i[field]}
+                            onChange={(e) => setWho(i.key, idx, field, e.target.value)}
+                            aria-label={`${i.slot.day} ${timeLabel(i.slot.start)} net ${i.net}: ${label}`}
+                            aria-invalid={!!err}
+                            className={`w-full min-w-0 rounded-lg border bg-navy-900 px-1.5 py-1.5 text-xs text-cream ${err ? "border-[#ff8a80]" : "border-cream/20"}`}
+                          >
+                            <option value="">{label}…</option>
+                            {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        );
+                      })}
+                    </div>
+                    {(["ageGroup", "ability", "gender"] as const).some((f) => errors[`items.${idx}.${f}`]) && (
+                      <p className="error-text">Please choose the age group, ability and gender.</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           <p className="mt-4 flex justify-between text-lg font-semibold"><span>Total</span><span>{formatPrice(total)}</span></p>
 

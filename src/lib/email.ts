@@ -189,7 +189,7 @@ ${signOff}
 
 export const emailConfigured = () => !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 
-type PartnerContact = { orgName: string; contactName: string; email: string; phone: string; type: string; sports: string };
+type PartnerContact = { orgName: string; contactName: string; email: string; phone: string; type: string };
 
 export async function sendPartnerWelcome(p: PartnerContact, portalLink: string) {
   await send({
@@ -211,7 +211,7 @@ ${signOff}
   });
   await notifyAcademy(
     `New delivery partner: ${p.orgName}`,
-    `${p.orgName} (${p.type}) — ${p.contactName} <${p.email}> ${p.phone}\nSports: ${p.sports}\n\nSee ${site.url}/admin/partners`,
+    `${p.orgName} (${p.type}) — ${p.contactName} <${p.email}> ${p.phone}\n\nSee ${site.url}/admin/partners`,
   );
 }
 

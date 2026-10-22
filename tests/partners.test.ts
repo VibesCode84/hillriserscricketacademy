@@ -25,7 +25,7 @@ const block = getBlock("autumn-2026")!;
 const sat = block.slots.find((s) => s.day === "Saturday" && s.start === "14:30")!;
 const wed = block.slots.find((s) => s.day === "Wednesday")!;
 const thu = block.slots.find((s) => s.day === "Thursday")!;
-const partner = { orgName: "Test CC", contactName: "Sam", email: "Sam@Example.com", phone: "07000 000000", type: "Club", sports: "Cricket" };
+const partner = { orgName: "Test CC", contactName: "Sam", email: "Sam@Example.com", phone: "07000 000000", type: "Club" };
 
 test("released slots: Wednesdays from 25 Nov, Thursdays two nets, Sundays 9am–5pm", () => {
   assert.deepEqual(wed.dates, ["2026-11-25", "2026-12-02", "2026-12-09"]);
@@ -109,12 +109,22 @@ for (const [name, make] of [
 }
 
 test("checkout needs the no-video confirmation; bowling machine needs a Level 2 coach and own balls", () => {
-  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], noVideo: true, agreeTerms: true };
+  const who = { ageGroup: "Under 11", ability: "Beginner", gender: "Mixed" };
+  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false, ...who }], noVideo: true, agreeTerms: true };
   assert.ok(partnerCheckoutSchema.safeParse(base).success);
   assert.ok(!partnerCheckoutSchema.safeParse({ ...base, noVideo: false }).success);
-  const machine = { ...base, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true }] };
+  const machine = { ...base, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true, ...who }] };
   const bad = partnerCheckoutSchema.safeParse(machine);
   assert.ok(!bad.success);
   assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["machineCoach", "ownBalls"]);
   assert.ok(partnerCheckoutSchema.safeParse({ ...machine, machineCoach: "Alex Smith", ownBalls: true }).success);
+});
+
+test("each booked session says who it's for", () => {
+  const item = { slotKey: slotKey(block.id, sat, 1), bowlingMachine: false };
+  const bad = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [item], noVideo: true, agreeTerms: true });
+  assert.ok(!bad.success);
+  assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["items.0.ability", "items.0.ageGroup", "items.0.gender"]);
+  const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], noVideo: true, agreeTerms: true });
+  assert.ok(ok.success);
 });

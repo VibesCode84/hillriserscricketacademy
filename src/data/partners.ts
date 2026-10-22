@@ -110,6 +110,11 @@ export const documentKinds = [
 ] as const;
 export type DocumentKind = (typeof documentKinds)[number]["value"];
 
+/** Who each booked session is for — partners choose one of each per net */
+export const sessionAgeGroups = ["Under 7", "Under 9", "Under 11", "Under 13", "Under 15", "Under 18", "Adults", "Mixed ages"] as const;
+export const sessionAbilities = ["Beginner", "Developing", "Intermediate", "Advanced", "Mixed abilities"] as const;
+export const sessionGenders = ["Female", "Male", "Mixed"] as const;
+
 export const partnerTypes = ["Coach", "Club", "School", "Coaching company", "Other"] as const;
 
 /** Uploads: up to 10 MB, PDF, images or Word documents */

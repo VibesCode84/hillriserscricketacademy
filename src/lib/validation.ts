@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { coachAvailabilityOptions, coachRoles, interestOptions, valuesOf } from "./interest-options";
 import { campDayOptions, campWeeks, holidayOptions, holidayPeriods, sessionTerms } from "../data/calendar";
+import { sessionAbilities, sessionAgeGroups, sessionGenders } from "../data/partners";
 
 const phone = z
   .string()
@@ -195,7 +196,6 @@ export const partnerRegistrationSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   phone,
   type: z.string().trim().min(2, "Please choose an option").max(40),
-  sports: z.string().trim().min(2, "Please tell us which sport(s)").max(120),
   website: optionalText(200),
   about: optionalText(1000),
   agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
@@ -206,7 +206,15 @@ export const partnerCheckoutSchema = z
   .object({
     blockId: z.string().min(1).max(60),
     items: z
-      .array(z.object({ slotKey: z.string().min(1).max(80), bowlingMachine: z.boolean().default(false) }))
+      .array(
+        z.object({
+          slotKey: z.string().min(1).max(80),
+          bowlingMachine: z.boolean().default(false),
+          ageGroup: z.enum(sessionAgeGroups, { errorMap: () => ({ message: "Choose an age group" }) }),
+          ability: z.enum(sessionAbilities, { errorMap: () => ({ message: "Choose an ability" }) }),
+          gender: z.enum(sessionGenders, { errorMap: () => ({ message: "Choose a gender" }) }),
+        }),
+      )
       .min(1, "Please choose at least one slot")
       .max(60),
     machineCoach: optionalText(100),

@@ -58,7 +58,6 @@ export function RegisterPartner() {
           </select>
           {errors.type && <p className="error-text">{errors.type}</p>}
         </div>
-        {field("sports", "Sport(s)", { placeholder: "e.g. cricket" })}
         {field("website", "Website", { optional: true, placeholder: "https://" })}
       </div>
       <div>

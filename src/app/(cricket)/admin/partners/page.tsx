@@ -87,7 +87,7 @@ export default async function AdminPartnersPage() {
             return (
               <article key={p.id} className="rounded-2xl border border-navy-950/10 bg-white p-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-xl">{p.orgName} <span className="text-sm font-normal text-ink-muted">· {p.type} · {p.sports}</span></h3>
+                  <h3 className="text-xl">{p.orgName} <span className="text-sm font-normal text-ink-muted">· {p.type}{p.sports ? ` · ${p.sports}` : ""}</span></h3>
                   <span className="text-xs text-ink-muted">Registered {new Date(p.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
                 <p className="mt-1 text-sm">{p.contactName} · <a className="underline" href={`mailto:${p.email}`}>{p.email}</a> · {p.phone}{p.website ? ` · ${p.website}` : ""}</p>
@@ -115,7 +115,7 @@ export default async function AdminPartnersPage() {
                       {theirs.map((b) => (
                         <li key={b.id}>
                           <span className={`mr-2 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[b.status]}`}>{b.status.replace("_", " ")}</span>
-                          {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}`).join(", ")} · {formatPrice(b.totalPence)}
+                          {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}${i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}`).join("; ")} · {formatPrice(b.totalPence)}
                           {b.machineCoach ? ` · machine coach: ${b.machineCoach}` : ""}
                         </li>
                       ))}

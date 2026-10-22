@@ -25,7 +25,8 @@ export type Partner = {
   email: string;
   phone: string;
   type: string;
-  sports: string;
+  /** No longer asked; kept for early registrations */
+  sports?: string;
   website?: string;
   about?: string;
   createdAt: string;
@@ -54,6 +55,10 @@ export type NetBookingItem = {
   net: number;
   weeks: number;
   bowlingMachine: boolean;
+  /** Who the session is for */
+  ageGroup?: string;
+  ability?: string;
+  gender?: string;
   pricePence: number;
 };
 
@@ -300,7 +305,7 @@ export class PartnerStore {
    * Holds the requested nets (and bowling machine) while the partner pays.
    * Atomic: either every item is free and all are held, or nothing changes.
    */
-  reserve(input: { partnerId: string; blockId: string; items: { slotKey: string; bowlingMachine: boolean }[]; machineCoach?: string }): Promise<ReserveResult> {
+  reserve(input: { partnerId: string; blockId: string; items: { slotKey: string; bowlingMachine: boolean; ageGroup?: string; ability?: string; gender?: string }[]; machineCoach?: string }): Promise<ReserveResult> {
     return this.tx<ReserveResult>((d) => {
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
@@ -318,7 +323,7 @@ export class PartnerStore {
           if (wanted.has(m)) return { ok: false, reason: "invalid", message: "There is one bowling machine, so it can only go on one net per time slot." };
           wanted.add(m);
         }
-        items.push({ slotKey: key, day: slot.day, start: slot.start, end: slot.end, net, weeks: slot.dates.length, bowlingMachine: it.bowlingMachine, pricePence: itemPricePence(slot, it.bowlingMachine) });
+        items.push({ slotKey: key, day: slot.day, start: slot.start, end: slot.end, net, weeks: slot.dates.length, bowlingMachine: it.bowlingMachine, ageGroup: it.ageGroup, ability: it.ability, gender: it.gender, pricePence: itemPricePence(slot, it.bowlingMachine) });
       }
       const at = Date.now();
       const clash = new Set<string>();
