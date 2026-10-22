@@ -196,10 +196,20 @@ export const partnerRegistrationSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   phone,
   type: z.string().trim().min(2, "Please choose an option").max(40),
+  password: z.string().min(8, "Please choose a password of at least 8 characters").max(200),
   website: optionalText(200),
   about: optionalText(1000),
   agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
   company: z.string().max(0).optional(),
+});
+
+export const partnerLoginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  password: z.string().min(1, "Please enter your password").max(200),
+});
+
+export const partnerPasswordSchema = z.object({
+  password: z.string().min(8, "Please choose a password of at least 8 characters").max(200),
 });
 
 export const partnerCheckoutSchema = z

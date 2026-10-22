@@ -9,9 +9,9 @@ import { site } from "@/data/site";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Book sessions" };
 
-export default async function PortalPage({ searchParams }: { searchParams: Promise<{ paid?: string; cancelled?: string; welcome?: string }> }) {
+export default async function PortalPage({ searchParams }: { searchParams: Promise<{ paid?: string; balance?: string; cancelled?: string; welcome?: string }> }) {
   const partner = await currentPartner();
-  if (!partner) redirect("/partners");
+  if (!partner) redirect("/partners#sign-in");
   const sp = await searchParams;
   const store = getPartnerStore();
   const [documents, bookings] = await Promise.all([store.documentsFor(partner.id), store.bookingsFor(partner.id)]);
@@ -19,7 +19,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
   if (sp.cancelled && bookings.some((b) => b.id === sp.cancelled)) await store.release(sp.cancelled, "cancelled");
   const key = (await cookies()).get(PARTNER_COOKIE)?.value;
   const banner = sp.paid
-    ? ({ kind: "paid", bookingId: sp.paid } as const)
+    ? ({ kind: "paid", bookingId: sp.paid, balance: !!sp.balance } as const)
     : sp.cancelled
       ? ({ kind: "cancelled", bookingId: sp.cancelled } as const)
       : sp.welcome
@@ -27,7 +27,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
         : undefined;
   return (
     <PartnerPortal
-      partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email }}
+      partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email, phone: partner.phone, hasPassword: !!partner.passwordHash }}
       documents={documents}
       bookings={sp.cancelled ? await store.bookingsFor(partner.id) : bookings}
       blocks={partnerBlocks}

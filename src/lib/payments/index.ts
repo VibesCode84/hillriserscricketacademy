@@ -169,7 +169,7 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
       metadata,
     },
     expires_at: expiresAt,
-    success_url: `${baseUrl}/partners/portal?paid=${booking.id}`,
+    success_url: `${baseUrl}/partners/portal?paid=${booking.id}${stage === "balance" ? "&balance=1" : ""}`,
     // Abandoning a balance payment leaves the reservation as it was
     cancel_url: stage === "balance" ? `${baseUrl}/partners/portal` : `${baseUrl}/partners/portal?cancelled=${booking.id}`,
   });

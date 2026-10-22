@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getPartnerStore } from "@/lib/partners/store";
 import { cookieOptions, PARTNER_COOKIE } from "@/lib/partners/session";
@@ -14,8 +15,9 @@ export async function GET(req: Request) {
   return res;
 }
 
-/** Sign out */
+/** Sign out (ends a password session; portal links keep working) */
 export async function DELETE() {
+  await getPartnerStore().endSession((await cookies()).get(PARTNER_COOKIE)?.value);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(PARTNER_COOKIE, "", { ...cookieOptions, maxAge: 0 });
   return res;

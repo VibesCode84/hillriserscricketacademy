@@ -2,7 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   // Cloudflare Worker for cricket.hillrisers.co.uk, built with OpenNext (@opennextjs/cloudflare)
   "name": "hillriserscricketacademy",
-  "main": ".open-next/worker.js",
+  // OpenNext's worker plus the daily balance-reminder cron
+  "main": "custom-worker.ts",
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -25,6 +26,10 @@
   ],
   // Keep variables set in the Cloudflare dashboard (ADMIN_PASSWORD etc.) on each deploy
   "keep_vars": true,
+  // Partner balance reminders: 07:00 and 08:00 UTC = 8am UK in BST and GMT (the run before 8am sends nothing)
+  "triggers": {
+    "crons": ["0 7 * * *", "0 8 * * *"]
+  },
   "observability": {
     "enabled": true
   }

@@ -2,16 +2,21 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { hashPassword, verifyPassword } from "./password";
 import {
   blockUnlocked,
   depositFor,
   endOfDayLondon,
   findSlot,
   getBlock,
+  balanceReminderDates,
   itemPricePence,
   lastSessionDate,
+  londonDate,
+  londonTime,
   machineKey,
   PARTNER_HOLD_MINUTES,
+  REMINDER_HOUR,
   slotKey,
   type DocumentKind,
   type PartnerDay,
@@ -24,6 +29,10 @@ export type Partner = {
   id: string;
   /** sha256 of the partner's private portal key */
   keyHash: string;
+  /** PBKDF2 password hash (see password.ts); partners from before accounts sign in by link until they set one */
+  passwordHash?: string;
+  /** sha256 of signed-in session tokens from password sign-ins (latest few) */
+  sessionHashes?: string[];
   orgName: string;
   contactName: string;
   email: string;
@@ -86,6 +95,8 @@ export type NetBooking = {
   balanceCheckoutId?: string;
   balancePaymentIntentId?: string;
   balancePaidAt?: string;
+  /** Balance reminder days already emailed (ISO dates) */
+  remindersSent?: string[];
   status: NetBookingStatus;
   holdExpiresAt?: string;
   checkoutId?: string;
@@ -247,20 +258,57 @@ export class PartnerStore {
 
   /* Partners */
 
-  async createPartner(input: Omit<Partner, "id" | "keyHash" | "createdAt">) {
+  async createPartner(input: Omit<Partner, "id" | "keyHash" | "createdAt" | "passwordHash" | "sessionHashes"> & { password?: string }) {
+    const { password, ...details } = input;
     const key = randomBytes(24).toString("base64url");
+    const passwordHash = password ? await hashPassword(password) : undefined;
     const partner = await this.tx((d) => {
-      const p: Partner = { ...input, email: input.email.trim().toLowerCase(), id: randomUUID(), keyHash: hashKey(key), createdAt: now() };
+      const p: Partner = { ...details, email: details.email.trim().toLowerCase(), id: randomUUID(), keyHash: hashKey(key), passwordHash, createdAt: now() };
       d.partners.push(p);
       return p;
     });
     return { partner, key };
   }
 
+  async partnerByEmail(email: string) {
+    return (await this.read()).partners.find((x) => x.email === email.trim().toLowerCase());
+  }
+
+  /** The signed-in partner, from a portal-link key or a password session token */
   async partnerByKey(key: string | undefined) {
     if (!key) return undefined;
     const h = hashKey(key);
-    return (await this.read()).partners.find((p) => p.keyHash === h);
+    return (await this.read()).partners.find((p) => p.keyHash === h || p.sessionHashes?.includes(h));
+  }
+
+  /** Email and password sign-in: returns a new session token for the cookie */
+  async login(email: string, password: string) {
+    const p = (await this.read()).partners.find((x) => x.email === email.trim().toLowerCase());
+    if (!p || !(await verifyPassword(password, p.passwordHash))) return undefined;
+    const token = randomBytes(24).toString("base64url");
+    await this.tx((d) => {
+      const x = d.partners.find((y) => y.id === p.id);
+      if (x) x.sessionHashes = [...(x.sessionHashes ?? []), hashKey(token)].slice(-10);
+    });
+    return { partner: p, token };
+  }
+
+  /** Signing out ends a password session (portal links keep working) */
+  endSession(token: string | undefined) {
+    if (!token) return Promise.resolve(undefined);
+    const h = hashKey(token);
+    return this.tx((d) => {
+      for (const p of d.partners) if (p.sessionHashes?.includes(h)) p.sessionHashes = p.sessionHashes.filter((x) => x !== h);
+    });
+  }
+
+  async setPassword(partnerId: string, password: string) {
+    const passwordHash = await hashPassword(password);
+    return this.tx((d) => {
+      const p = d.partners.find((x) => x.id === partnerId);
+      if (p) p.passwordHash = passwordHash;
+      return p;
+    });
   }
 
   /** Issues a new portal key (the old link stops working) */
@@ -453,6 +501,34 @@ export class PartnerStore {
       if (checkoutId && b.checkoutId && b.checkoutId !== checkoutId) return b;
       b.status = status;
       return b;
+    });
+  }
+
+  /**
+   * Balance reminders due now: reserved bookings with a reminder day whose 8am (UK) has passed
+   * within the last 20 hours and hasn't been sent. Older missed days are skipped, never sent late.
+   */
+  async dueBalanceReminders(at = Date.now()) {
+    const due: { booking: NetBooking; date: string; finalDay: boolean }[] = [];
+    for (const b of (await this.read()).bookings) {
+      if (b.status !== "reserved" || !holds(b, at) || !b.paidAt || !b.balanceDueDate) continue;
+      for (const date of balanceReminderDates(londonDate(b.paidAt), b.balanceDueDate)) {
+        const sendAt = londonTime(date, REMINDER_HOUR).getTime();
+        if (sendAt <= at && at - sendAt < 20 * 3_600_000 && !b.remindersSent?.includes(date)) {
+          due.push({ booking: b, date, finalDay: date === b.balanceDueDate });
+        }
+      }
+    }
+    return due;
+  }
+
+  /** Marks a reminder as sent; false if another run already claimed it */
+  claimReminder(bookingId: string, date: string) {
+    return this.tx((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      if (!b || b.status !== "reserved" || b.remindersSent?.includes(date)) return false;
+      b.remindersSent = [...(b.remindersSent ?? []), date];
+      return true;
     });
   }
 

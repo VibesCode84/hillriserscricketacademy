@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { documentKinds, partnerBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
-import { RegisterPartner, ResendLink } from "@/components/partners/RegisterPartner";
+import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
 
 export const dynamic = "force-dynamic";
 
@@ -84,10 +84,15 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <p className="mt-1 text-sm text-ink-muted">Takes a minute. You&rsquo;ll go straight to the booking grid.</p>
             <div className="mt-6"><RegisterPartner /></div>
           </div>
-          <div className="rounded-3xl bg-white p-6 md:p-8">
-            <h2 className="text-xl">Already registered?</h2>
-            <p className="mt-1 text-sm text-ink-muted">Use the private portal link we gave you, or get a new one by email.</p>
-            <div className="mt-4"><ResendLink /></div>
+          <div id="sign-in" className="scroll-mt-6 rounded-3xl bg-white p-6 md:p-8">
+            <h2 className="text-2xl">Already registered? Sign in</h2>
+            <p className="mt-1 text-sm text-ink-muted">See your bookings and payments, and pay any balance.</p>
+            <div className="mt-5"><SignIn /></div>
+            <div className="mt-8 border-t border-navy-950/10 pt-6">
+              <h3 className="text-lg">Forgotten your password, or haven&rsquo;t set one?</h3>
+              <p className="mt-1 text-sm text-ink-muted">We&rsquo;ll email you a link that signs you in. You can then set a new password under Account.</p>
+              <div className="mt-4"><ResendLink /></div>
+            </div>
           </div>
         </div>
       </section>

@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { endOfDayLondon, getBlock, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
+import { balanceReminderDates, endOfDayLondon, getBlock, londonDate, londonTime, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
 import { createD1PartnerStore, createFilePartnerStore, holds } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
@@ -154,6 +154,54 @@ for (const [name, make] of [
     assert.equal(paid.status, "confirmed");
     assert.ok(paid.balancePaidAt);
   });
+
+  test(`${name}: balance reminders go out once each, after 8am UK time, until the balance is paid`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const { partner: a } = await store.createPartner(partner);
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
+    assert.ok(autumn.ok);
+    await store.confirm(autumn.booking.id, "pi_a");
+    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], plan: "deposit" });
+    assert.ok(r.ok);
+    await store.confirm(r.booking.id, "pi_dep");
+    const booked = (await store.getBooking(r.booking.id))!;
+    const days = balanceReminderDates(londonDate(booked.paidAt!), booked.balanceDueDate!);
+    assert.equal(days.at(-1), "2026-12-12");
+    const first = londonTime(days[0], 8).getTime();
+    assert.equal((await store.dueBalanceReminders(first - 60_000)).length, 0);
+    const due = await store.dueBalanceReminders(first + 3_600_000);
+    assert.deepEqual(due.map((d) => d.date), [days[0]]);
+    assert.equal(await store.claimReminder(r.booking.id, days[0]), true);
+    assert.equal(await store.claimReminder(r.booking.id, days[0]), false);
+    assert.equal((await store.dueBalanceReminders(first + 3_600_000)).length, 0);
+    // A missed day isn't sent late
+    assert.equal((await store.dueBalanceReminders(londonTime(days[1], 8).getTime() + 21 * 3_600_000)).length, 0);
+    // Final day
+    const last = await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000);
+    assert.deepEqual(last.map((d) => [d.date, d.finalDay]), [["2026-12-12", true]]);
+    // Paid: no more reminders
+    await store.confirm(r.booking.id, "pi_bal", "balance");
+    assert.equal((await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000)).length, 0);
+  });
+
+  test(`${name}: password sign-in creates a session; signing out ends it; the portal link still works`, async () => {
+    const store = make();
+    const { partner: a, key } = await store.createPartner({ ...partner, password: "correct horse" });
+    assert.equal(await store.login("sam@example.com", "wrong password"), undefined);
+    assert.equal(await store.login("nobody@example.com", "correct horse"), undefined);
+    const s = await store.login(" SAM@example.com ", "correct horse");
+    assert.ok(s);
+    assert.equal((await store.partnerByKey(s.token))?.id, a.id);
+    await store.endSession(s.token);
+    assert.equal(await store.partnerByKey(s.token), undefined);
+    assert.equal((await store.partnerByKey(key))?.id, a.id);
+    // Partners from before accounts can set a password later
+    const { partner: b } = await store.createPartner({ ...partner, email: "old@example.com" });
+    assert.equal(await store.login("old@example.com", "anything at all"), undefined);
+    await store.setPassword(b.id, "new password 1");
+    assert.ok(await store.login("old@example.com", "new password 1"));
+  });
 }
 
 test("checkout needs the no-video confirmation; bowling machine needs a Level 2 coach and own balls", () => {
@@ -190,4 +238,14 @@ test("spring block: 11 weeks from 6 January, none in half term", () => {
 test("midnight UK time at the end of a date, in GMT and BST", () => {
   assert.equal(endOfDayLondon("2026-12-13").toISOString(), "2026-12-14T00:00:00.000Z");
   assert.equal(endOfDayLondon("2027-06-01").toISOString(), "2027-06-01T23:00:00.000Z");
+});
+
+test("balance reminders: two weeks after the deposit, weekly, then 3 days, 2 days and the final day; at 8am UK time", () => {
+  assert.deepEqual(balanceReminderDates("2026-10-22", "2026-12-12"), [
+    "2026-11-05", "2026-11-12", "2026-11-19", "2026-11-26", "2026-12-03", "2026-12-09", "2026-12-10", "2026-12-12",
+  ]);
+  // Deposit in the final fortnight: only the final-week reminders
+  assert.deepEqual(balanceReminderDates("2026-12-05", "2026-12-13"), ["2026-12-10", "2026-12-11", "2026-12-13"]);
+  assert.equal(londonTime("2026-11-05", 8).toISOString(), "2026-11-05T08:00:00.000Z");
+  assert.equal(londonTime("2026-10-22", 8).toISOString(), "2026-10-22T07:00:00.000Z");
 });

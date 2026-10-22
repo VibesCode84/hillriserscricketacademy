@@ -21,7 +21,10 @@ export default function PartnersLayout({ children }: { children: React.ReactNode
               <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-gold">Partner portal</span>
             </span>
           </Link>
-          <Link href="/partners/terms" className="text-sm text-slate hover:text-cream">Partner terms</Link>
+          <nav className="flex items-center gap-5 text-sm text-slate">
+            <Link href="/partners/terms" className="hover:text-cream">Partner terms</Link>
+            <Link href="/partners/portal" className="font-semibold text-cream hover:text-gold">My account</Link>
+          </nav>
         </div>
       </header>
       {children}

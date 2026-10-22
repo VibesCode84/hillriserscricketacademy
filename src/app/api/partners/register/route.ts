@@ -14,6 +14,12 @@ export async function POST(req: Request) {
   const { agreeTerms: _t, company, ...input } = parsed.data;
   void _t;
   if (company) return NextResponse.json({ ok: true });
+  if (await getPartnerStore().partnerByEmail(input.email)) {
+    return NextResponse.json(
+      { ok: false, message: "There's already an account with this email.", errors: { email: "There's already an account with this email — sign in instead." } },
+      { status: 409 },
+    );
+  }
   const { partner, key } = await getPartnerStore().createPartner(input);
   const portalLink = `${baseUrl(req)}/api/partners/access?key=${key}`;
   await sendPartnerWelcome(partner, portalLink).catch((err) => console.error("[hillrisers] partner welcome email failed", err));

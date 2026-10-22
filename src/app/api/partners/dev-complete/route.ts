@@ -15,5 +15,5 @@ export async function POST(req: Request) {
   if (parsed.data.outcome === "paid") await store.confirm(parsed.data.bookingId, `dev_pi_${stage}_${parsed.data.bookingId}`, stage);
   else if (stage === "initial") await store.release(parsed.data.bookingId, "cancelled");
   else return NextResponse.json({ ok: true, redirect: "/partners/portal" });
-  return NextResponse.json({ ok: true, redirect: `/partners/portal?${parsed.data.outcome === "paid" ? "paid" : "cancelled"}=${parsed.data.bookingId}` });
+  return NextResponse.json({ ok: true, redirect: `/partners/portal?${parsed.data.outcome === "paid" ? "paid" : "cancelled"}=${parsed.data.bookingId}${stage === "balance" ? "&balance=1" : ""}` });
 }

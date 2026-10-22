@@ -15,7 +15,13 @@ export function RegisterPartner() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
+    const { confirmPassword, ...fd } = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
+    if (fd.password !== confirmPassword) {
+      setErrors({ confirmPassword: "The passwords don't match" });
+      setMessage("Please check the highlighted fields");
+      setState("error");
+      return;
+    }
     setState("sending");
     setErrors({});
     const res = await fetch("/api/partners/register", {
@@ -50,6 +56,8 @@ export function RegisterPartner() {
         {field("contactName", "Contact name", { autoComplete: "name" })}
         {field("email", "Email", { type: "email", autoComplete: "email" })}
         {field("phone", "Phone", { type: "tel", autoComplete: "tel" })}
+        {field("password", "Choose a password", { type: "password", autoComplete: "new-password", placeholder: "At least 8 characters" })}
+        {field("confirmPassword", "Confirm password", { type: "password", autoComplete: "new-password" })}
         <div>
           <label htmlFor="pr-type" className="label">You are a…</label>
           <select id="pr-type" name="type" className="field" defaultValue="" aria-invalid={!!errors.type}>
@@ -83,6 +91,42 @@ export function RegisterPartner() {
   );
 }
 
+export function SignIn() {
+  const router = useRouter();
+  const [state, setState] = useState<"idle" | "sending" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setState("sending");
+    const fd = Object.fromEntries(new FormData(e.currentTarget).entries());
+    const res = await fetch("/api/partners/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fd) });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.ok) {
+      router.push("/partners/portal");
+      router.refresh();
+      return;
+    }
+    setMessage(json.message ?? json.errors?.email ?? json.errors?.password ?? "Something went wrong.");
+    setState("error");
+  };
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="si-email" className="label">Email</label>
+        <input id="si-email" name="email" type="email" required autoComplete="email" className="field" />
+      </div>
+      <div>
+        <label htmlFor="si-password" className="label">Password</label>
+        <input id="si-password" name="password" type="password" required autoComplete="current-password" className="field" />
+      </div>
+      {state === "error" && <p className="error-text" role="alert">{message}</p>}
+      <button type="submit" disabled={state === "sending"} className={buttonClass("dark")}>
+        {state === "sending" ? "Signing in…" : "Sign in"}
+      </button>
+    </form>
+  );
+}
+
 export function ResendLink() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -98,12 +142,12 @@ export function ResendLink() {
       setState("error");
     }
   };
-  if (state === "sent") return <p className="text-sm">If that email is registered, we&rsquo;ve sent a new portal link.</p>;
+  if (state === "sent") return <p className="text-sm">If that email is registered, we&rsquo;ve sent you a sign-in link.</p>;
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3 sm:flex-row">
       <label htmlFor="rl-email" className="sr-only">Email</label>
       <input id="rl-email" name="email" type="email" required placeholder="Your email" className="field sm:max-w-xs" />
-      <button type="submit" disabled={state === "sending"} className={buttonClass("dark")}>Email me a new link</button>
+      <button type="submit" disabled={state === "sending"} className={buttonClass("dark")}>Email me a sign-in link</button>
       {state === "error" && <p className="error-text" role="alert">{message}</p>}
     </form>
   );

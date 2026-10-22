@@ -154,6 +154,36 @@ export function endOfDayLondon(iso: string) {
   return new Date(next.getTime() - hour * 3_600_000);
 }
 
+/** A clock time in UK time on a date, e.g. londonTime("2026-11-05", 8) → 08:00 London */
+export function londonTime(iso: string, hour: number) {
+  const midday = new Date(`${iso}T12:00:00Z`);
+  const offset = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "numeric", hourCycle: "h23" }).format(midday)) - 12;
+  return new Date(Date.UTC(midday.getUTCFullYear(), midday.getUTCMonth(), midday.getUTCDate(), hour - offset));
+}
+
+/** The UK date (ISO) of an instant */
+export const londonDate = (at: Date | string) => new Date(at).toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+
+const addDays = (iso: string, n: number) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+/** Balance reminders are emailed at this hour (UK time) */
+export const REMINDER_HOUR = 8;
+
+/**
+ * Days to remind a partner about a deposit balance: two weeks after the deposit, then weekly,
+ * plus 3 days and 2 days before the deadline day and on the day itself (the last autumn session).
+ */
+export function balanceReminderDates(depositDate: string, lastDate: string) {
+  const dates = new Set<string>();
+  for (let d = addDays(depositDate, 14); d < lastDate; d = addDays(d, 7)) dates.add(d);
+  for (const n of [3, 2, 0]) dates.add(addDays(lastDate, -n));
+  return [...dates].filter((d) => d > depositDate && d <= lastDate).sort();
+}
+
 /** "Sunday 13 December" */
 export function longDate(iso: string) {
   return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });

@@ -198,7 +198,7 @@ export async function sendPartnerWelcome(p: PartnerContact, portalLink: string) 
 
 Thank you for registering ${p.orgName} with HillRisers.
 
-Your private portal link — keep it safe, it signs you in:
+Sign in any time at ${site.url}/partners with your email and the password you chose. This private link also signs you in — keep it safe:
 ${portalLink}
 
 In the portal you can upload your qualifications, DBS, safeguarding and insurance documents, and book your session slots for the season.
@@ -217,11 +217,47 @@ ${signOff}
 export async function sendPartnerLink(p: PartnerContact, portalLink: string) {
   await send({
     to: p.email,
-    subject: "Your new HillRisers portal link",
+    subject: "Sign in to your HillRisers partner account",
     text: `Hi ${p.contactName.split(" ")[0]},
 
-Here is your new portal link (any older link no longer works):
+Here is a link that signs you in to your HillRisers partner account (any older link no longer works):
 ${portalLink}
+
+Once you're in, you can set a new password under Account.
+
+${signOff}
+`,
+  });
+}
+
+type BalanceReminder = {
+  blockLabel: string;
+  balancePence: number;
+  /** Last autumn session (ISO date): the balance is due by midnight at the end of it */
+  dueDate: string;
+  nets: string[];
+  finalDay: boolean;
+};
+
+export async function sendBalanceReminder(p: PartnerContact, r: BalanceReminder) {
+  const when = new Date(`${r.dueDate}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const deadline = r.finalDay ? "by midnight tonight" : `by midnight on ${when}`;
+  await send({
+    to: p.email,
+    subject: `${r.finalDay ? "Final reminder" : "Reminder"}: ${r.blockLabel} balance of ${formatPrice(r.balancePence)} due ${deadline}`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Your ${r.blockLabel} nets are reserved with a deposit. To confirm them, please pay the balance of ${formatPrice(r.balancePence)} ${deadline}.
+
+Your reserved nets:
+${r.nets.map((n) => `• ${n}`).join("\n")}
+
+Pay the balance here (sign in with your email and password):
+${site.url}/partners/portal
+
+If the balance isn't paid ${deadline}, the nets will be released for other partners and the deposit won't be refunded.
+
+${contactLine()}
 
 ${signOff}
 `,
