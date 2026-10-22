@@ -57,7 +57,7 @@ const orgJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB" className={`${cormorant.variable} ${manrope.variable}`}>
+    <html lang="en-GB" className={`${cormorant.variable} ${manrope.variable}`} data-scroll-behavior="smooth">
       <body>
         <noscript>
           <style>{`.reveal{opacity:1!important;transform:none!important}`}</style>

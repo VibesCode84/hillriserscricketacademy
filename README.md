@@ -56,7 +56,7 @@ Cloudflare Workers Builds deploys every push to the connected branch. Its settin
 
 If pushes stop deploying, check the **Cloudflare Workers and Pages** GitHub app (GitHub → Settings → Applications → Configure) still has access to this repository; it is shared with other projects, and only repositories selected there can build.
 
-- `npm run build` runs `next build`, and on Cloudflare (where `WORKERS_CI` is set) also `opennextjs-cloudflare build --skipNextBuild`, which turns the build into a Worker in `.open-next/`. Elsewhere (local, Vercel) it is a plain `next build`.
+- `npm run build` runs `next build`, and on Cloudflare (where `WORKERS_CI` is set) also `opennextjs-cloudflare build --skipNextBuild` (with `--dangerouslyUseUnsupportedNextVersion`, because OpenNext now treats Next.js 15 as out of support — upgrading to Next.js 16 removes the need), which turns the build into a Worker in `.open-next/`. Elsewhere (local, Vercel) it is a plain `next build`.
 - `wrangler.jsonc` configures the Worker. Its `name` and the `WORKER_SELF_REFERENCE` service must both be `hillriserscricketacademy` (the Worker's name in Cloudflare).
 - `npm run preview` builds and runs the Worker locally; `npm run deploy` builds and deploys from your machine.
 
@@ -68,6 +68,18 @@ Submissions are stored, in order of preference, in Postgres (`DATABASE_URL`), in
 2. **Admin.** In **Workers & Pages → hillriserscricketacademy → Settings → Variables and secrets**, add `ADMIN_PASSWORD` (as a secret), then go to `/admin/bookings` (username `admin`). `keep_vars` in `wrangler.jsonc` keeps dashboard variables on each deploy.
 3. **Email (optional but recommended).** Add `RESEND_API_KEY` (secret), `EMAIL_FROM` (a sender on a domain verified in Resend, e.g. `hello@hillrisers.co.uk`) and `ACADEMY_NOTIFY_EMAIL` (where new registrations and coach applications are sent). Without these, emails are logged instead of sent.
 4. **Site URL.** Canonical URLs and email links use `NEXT_PUBLIC_SITE_URL` if set, otherwise `https://cricket.hillrisers.co.uk`.
+
+## Delivery partner portal (`/partners`)
+
+Coaches and delivery partners register, upload documents and book nets by the block, paying by Stripe. It isn't linked from the parent-facing site; share **cricket.hillrisers.co.uk/partners** with partners.
+
+- **What's released and prices:** `src/data/partners.ts` — blocks, days, times, nets and weeks; £17 per net per hour; bowling machine +£10 per hour (one machine, so one net per time slot). Edit this file to release the next block.
+- **Live availability:** the grid refreshes every 8 seconds. Nets are held for 30 minutes while a partner pays; an expired or cancelled payment frees them. Two partners can never book the same net (or the machine) — the hold is atomic.
+- **Documents:** qualifications, DBS, safeguarding, first aid and insurance (PDF, photo or Word, up to 10 MB). Stored in the D1 database. Partners can book straight away; review documents at `/admin/partners` (approve / reject with a note).
+- **Sign-in:** each partner has a private portal link (shown in the portal, and emailed once email is set up). "Email me a new link" issues a fresh one.
+- **Rules partners must accept:** partner terms (`src/data/partner-terms.ts`, draft), no filming or video, and for the bowling machine their own balls and a named Level 2 coach operating it.
+- **Payments:** set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` on the Worker, and point a Stripe webhook at `/api/stripe/webhook` with `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`. Without Stripe, partners see "Online payment isn't switched on yet" (locally, a test checkout is used instead).
+- **Admin:** `/admin/partners` — live net grid with who has booked what, partners, documents and bookings, and a CSV download.
 
 ## Booking engine (switched off until trial booking opens)
 

@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 /** Root layout for the HillRisers landing page (hillrisers.co.uk) — no cricket academy header or footer */
 export default function HubLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-GB" className={`${cormorant.variable} ${manrope.variable}`}>
+    <html lang="en-GB" className={`${cormorant.variable} ${manrope.variable}`} data-scroll-behavior="smooth">
       <body className="bg-navy-950">{children}</body>
     </html>
   );

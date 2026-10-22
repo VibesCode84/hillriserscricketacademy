@@ -186,3 +186,40 @@ export function fieldErrors(err: z.ZodError) {
   }
   return out;
 }
+
+/* ── Delivery partner portal ────────────────────────────────────────────── */
+
+export const partnerRegistrationSchema = z.object({
+  orgName: z.string().trim().min(2, "Please enter your organisation or trading name").max(120),
+  contactName: z.string().trim().min(2, "Please enter a contact name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  phone,
+  type: z.string().trim().min(2, "Please choose an option").max(40),
+  sports: z.string().trim().min(2, "Please tell us which sport(s)").max(120),
+  website: optionalText(200),
+  about: optionalText(1000),
+  agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
+  company: z.string().max(0).optional(),
+});
+
+export const partnerCheckoutSchema = z
+  .object({
+    blockId: z.string().min(1).max(60),
+    items: z
+      .array(z.object({ slotKey: z.string().min(1).max(80), bowlingMachine: z.boolean().default(false) }))
+      .min(1, "Please choose at least one slot")
+      .max(60),
+    machineCoach: optionalText(100),
+    ownBalls: z.boolean().default(false),
+    noVideo: z.boolean().default(false),
+    agreeTerms: z.boolean().default(false),
+  })
+  // All checks in one pass, so every missing item is shown at once
+  .superRefine((v, ctx) => {
+    if (!v.noVideo) ctx.addIssue({ code: "custom", path: ["noVideo"], message: "Please confirm that no filming or video recording will take place" });
+    if (!v.agreeTerms) ctx.addIssue({ code: "custom", path: ["agreeTerms"], message: "Please accept the partner terms" });
+    if (!v.items.some((i) => i.bowlingMachine)) return;
+    if (!v.machineCoach || v.machineCoach.length < 2)
+      ctx.addIssue({ code: "custom", path: ["machineCoach"], message: "Please name the Level 2 coach who will operate the bowling machine" });
+    if (!v.ownBalls) ctx.addIssue({ code: "custom", path: ["ownBalls"], message: "Please confirm you will supply your own balls" });
+  });

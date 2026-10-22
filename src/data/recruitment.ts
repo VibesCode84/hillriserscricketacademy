@@ -6,3 +6,5 @@
 export const COACH_PAGE_KEY = process.env.COACH_PAGE_KEY || "join-3uixtrgp";
 export const RECRUITMENT_PREFIX = "/team/";
 export const coachPagePath = `${RECRUITMENT_PREFIX}${COACH_PAGE_KEY}`;
+/** Delivery partner portal: standalone pages without the parent-facing header/footer */
+export const PARTNERS_PREFIX = "/partners";

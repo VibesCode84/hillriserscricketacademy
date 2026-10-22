@@ -89,6 +89,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
           <a href={`/api/admin/export${sessionFilter ? `?sessionId=${sessionFilter}` : ""}`} className="rounded-full bg-navy-950 px-5 py-2.5 text-sm font-semibold text-cream">
             Export CSV
           </a>
+          <Link href="/admin/partners" className="rounded-full border border-navy-950/20 px-5 py-2.5 text-sm font-semibold">Delivery partners</Link>
           <Link href="/" className="rounded-full border border-navy-950/20 px-5 py-2.5 text-sm font-semibold">View site</Link>
         </div>
       </header>

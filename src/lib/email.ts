@@ -184,3 +184,47 @@ ${signOff}
 `,
   });
 }
+
+/* ── Delivery partner portal ────────────────────────────────────────────── */
+
+export const emailConfigured = () => !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
+
+type PartnerContact = { orgName: string; contactName: string; email: string; phone: string; type: string; sports: string };
+
+export async function sendPartnerWelcome(p: PartnerContact, portalLink: string) {
+  await send({
+    to: p.email,
+    subject: "Your HillRisers partner portal",
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Thank you for registering ${p.orgName} with HillRisers.
+
+Your private portal link — keep it safe, it signs you in:
+${portalLink}
+
+In the portal you can upload your qualifications, DBS, safeguarding and insurance documents, and book nets for the season.
+
+${contactLine()}
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `New delivery partner: ${p.orgName}`,
+    `${p.orgName} (${p.type}) — ${p.contactName} <${p.email}> ${p.phone}\nSports: ${p.sports}\n\nSee ${site.url}/admin/partners`,
+  );
+}
+
+export async function sendPartnerLink(p: PartnerContact, portalLink: string) {
+  await send({
+    to: p.email,
+    subject: "Your new HillRisers portal link",
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Here is your new portal link (any older link no longer works):
+${portalLink}
+
+${signOff}
+`,
+  });
+}

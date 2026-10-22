@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { getStore } from "@/lib/booking";
 import { confirmPaidBooking } from "@/lib/booking/confirm";
 import { getStripe } from "@/lib/payments";
+import { getPartnerStore } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,26 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(await req.text(), signature, secret);
+    event = await stripe.webhooks.constructEventAsync(await req.text(), signature, secret);
   } catch (err) {
     console.warn("[hillrisers] webhook signature verification failed", (err as Error).message);
     return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
+  // Delivery partner net hire (metadata.kind === "partner")
+  if (event.type.startsWith("checkout.session.")) {
+    const cs = event.data.object as Stripe.Checkout.Session;
+    if (cs.metadata?.kind === "partner" && cs.metadata.partnerBookingId) {
+      const partners = getPartnerStore();
+      const id = cs.metadata.partnerBookingId;
+      if ((event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") && cs.payment_status === "paid") {
+        const pi = typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id;
+        await partners.confirm(id, pi);
+      } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
+        await partners.release(id, "expired", cs.id);
+      }
+      return NextResponse.json({ received: true });
+    }
   }
 
   const store = getStore();

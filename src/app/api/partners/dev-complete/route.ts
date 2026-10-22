@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { parseJson } from "@/lib/http";
+import { devPaymentsEnabled } from "@/lib/payments";
+import { getPartnerStore } from "@/lib/partners/store";
+
+/** Development only: stands in for Stripe's webhook so the journey can be tried without keys */
+export async function POST(req: Request) {
+  if (!devPaymentsEnabled()) return NextResponse.json({ ok: false }, { status: 404 });
+  const parsed = await parseJson(req, z.object({ bookingId: z.string().uuid(), outcome: z.enum(["paid", "cancel"]) }));
+  if ("error" in parsed) return parsed.error;
+  const store = getPartnerStore();
+  if (parsed.data.outcome === "paid") await store.confirm(parsed.data.bookingId, `dev_pi_${parsed.data.bookingId}`);
+  else await store.release(parsed.data.bookingId, "cancelled");
+  return NextResponse.json({ ok: true, redirect: `/partners/portal?${parsed.data.outcome === "paid" ? "paid" : "cancelled"}=${parsed.data.bookingId}` });
+}
