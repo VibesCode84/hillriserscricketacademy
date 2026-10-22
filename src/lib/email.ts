@@ -263,3 +263,60 @@ ${signOff}
 `,
   });
 }
+
+type PaidBooking = {
+  stage: "full" | "deposit" | "balance";
+  blockLabel: string;
+  /** "Saturday 2:30–3:30pm, net 1 (Under 11, Beginner, Mixed) — 6 weeks, 7 Nov – 12 Dec" */
+  nets: string[];
+  paidPence: number;
+  totalPence: number;
+  balancePence?: number;
+  /** Long date of the balance deadline day, for deposits */
+  balanceDue?: string;
+  machineCoach?: string;
+  reference: string;
+};
+
+/** Sent when Stripe confirms a partner payment: in full, a deposit, or a balance */
+export async function sendPartnerBookingConfirmation(p: PartnerContact, b: PaidBooking) {
+  const heading =
+    b.stage === "deposit"
+      ? `Deposit received: your ${b.blockLabel} nets are reserved`
+      : b.stage === "balance"
+        ? `Balance received: your ${b.blockLabel} nets are confirmed`
+        : `Booking confirmed: ${b.blockLabel}`;
+  const payment =
+    b.stage === "deposit"
+      ? `We've received your deposit of ${formatPrice(b.paidPence)}. The balance of ${formatPrice(b.balancePence ?? 0)} must be paid by midnight on ${b.balanceDue} — after that the nets are released and the deposit isn't refunded. We'll send reminders, and you can pay any time from your account.`
+      : b.stage === "balance"
+        ? `We've received your balance payment of ${formatPrice(b.paidPence)}. Your booking (${formatPrice(b.totalPence)} in total) is now paid in full.`
+        : `We've received your payment of ${formatPrice(b.paidPence)}. Your booking is paid in full.`;
+  await send({
+    to: p.email,
+    subject: `${heading} (ref ${b.reference})`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+${payment}
+
+${b.blockLabel} — your nets at ${site.venue.name}:
+${b.nets.map((n) => `• ${n}`).join("\n")}
+${b.machineCoach ? `\nBowling machine operator (Level 2): ${b.machineCoach}. Please bring your own balls.\n` : ""}
+Booking reference: ${b.reference}
+
+Please remember:
+• No filming or video recording of any kind at the venue, including on phones.
+• Upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
+
+See your bookings and payment history: ${site.url}/partners/portal
+
+${contactLine()}
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `Partner payment: ${p.orgName} — ${b.blockLabel} ${b.stage === "full" ? "" : `(${b.stage}) `}${formatPrice(b.paidPence)}`,
+    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n${heading}\n\n${b.nets.join("\n")}\n\nPaid now: ${formatPrice(b.paidPence)} · Booking total: ${formatPrice(b.totalPence)}${b.stage === "deposit" ? ` · Balance ${formatPrice(b.balancePence ?? 0)} due by midnight ${b.balanceDue}` : ""}\nRef ${b.reference}\n\nSee ${site.url}/admin/partners`,
+  );
+}
