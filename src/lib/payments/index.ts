@@ -165,7 +165,7 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
     price_data: {
       currency: "gbp",
       unit_amount: fee,
-      product_data: { name: "Card processing fee", description: "Covers the card charge. Pay by bank transfer for no fee." },
+      product_data: { name: "Card processing fee" },
     },
   });
   const expiresAt = Math.floor(Date.now() / 1000) + PARTNER_HOLD_MINUTES * 60;

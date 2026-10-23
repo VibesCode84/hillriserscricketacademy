@@ -89,8 +89,7 @@ export function PartnerPortal(props: {
           separate session rate.
         </p>
         <p className="mt-3 max-w-3xl leading-relaxed text-ink-muted">
-          <strong className="text-navy-950">Bank transfer is free.</strong> Paying by card adds a card processing fee to cover the card
-          charge. The fee is shown before you pay.
+          <strong className="text-navy-950">Bank transfer is free.</strong> Card payments include a card processing fee, shown before you pay.
           {!bankTransferEnabled() && " Bank transfer will be available shortly; until then bookings are paid by card."}
         </p>
       </div>
@@ -445,7 +444,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                   </label>
                 </>
               ) : (
-                <p>Card payment, plus a {formatPrice(fee)} card processing fee to cover the card charge.</p>
+                <p>Card payment, plus a {formatPrice(fee)} card processing fee.</p>
               )}
             </fieldset>
           )}
