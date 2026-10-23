@@ -29,7 +29,7 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
             Elite cricket coaching, built around <em className="font-normal italic text-gold-soft">your child.</em>
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate md:text-xl">
-            The very best coaches from the area, in small groups, with coaching shaped around every cricket-loving boy and girl aged 4–15.
+            The very best coaches from the area, in small groups, with coaching shaped around every cricketer&rsquo;s needs.
             Tell us when your child can attend and what they want from cricket — we&rsquo;ll build the timetable around you.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">

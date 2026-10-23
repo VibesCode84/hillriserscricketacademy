@@ -14,21 +14,21 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
   const partner = await currentPartner();
   if (!partner) redirect("/partners#sign-in");
   const sp = await searchParams;
+  // Payments now land on the account page (older links may still arrive here)
+  if (sp.paid) redirect(`/partners/account?paid=${encodeURIComponent(sp.paid)}${sp.balance ? "&balance=1" : ""}`);
   const store = getPartnerStore();
   const [documents, bookings] = await Promise.all([store.documentsFor(partner.id), store.bookingsFor(partner.id)]);
   // A cancelled Stripe checkout releases its hold straight away
   if (sp.cancelled && bookings.some((b) => b.id === sp.cancelled)) await store.release(sp.cancelled, "cancelled");
   const key = (await cookies()).get(PARTNER_COOKIE)?.value;
-  const banner = sp.paid
-    ? ({ kind: "paid", bookingId: sp.paid, balance: !!sp.balance } as const)
-    : sp.cancelled
-      ? ({ kind: "cancelled", bookingId: sp.cancelled } as const)
-      : sp.welcome
+  const banner = sp.cancelled
+    ? ({ kind: "cancelled" } as const)
+    : sp.welcome
         ? ({ kind: "welcome" } as const)
         : undefined;
   return (
     <PartnerPortal
-      partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email, phone: partner.phone, hasPassword: !!partner.passwordHash }}
+      partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName }}
       documents={documents}
       bookings={sp.cancelled ? await store.bookingsFor(partner.id) : bookings}
       blocks={partnerBlocks.filter((b) => !b.test || isTestPartner(partner.email))}

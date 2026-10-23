@@ -251,8 +251,8 @@ Your ${r.blockLabel} nets are reserved with a deposit. To confirm them, please p
 Your reserved nets:
 ${r.nets.map((n) => `• ${n}`).join("\n")}
 
-Pay the balance here (sign in with your email and password):
-${site.url}/partners/portal
+Pay the balance from your account (sign in with your email and password):
+${site.url}/partners/account
 
 If the balance isn't paid ${deadline}, the nets will be released for other partners and the deposit won't be refunded.
 
@@ -307,7 +307,7 @@ Please remember:
 • No filming or video recording of any kind at the venue, including on phones.
 • Upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
 
-See your bookings and payment history: ${site.url}/partners/portal
+See your bookings and payment history: ${site.url}/partners/account
 
 ${contactLine()}
 

@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const key = url.searchParams.get("key") ?? "";
   const partner = await getPartnerStore().partnerByKey(key);
-  const res = NextResponse.redirect(new URL(partner ? "/partners/portal" : "/partners?link=invalid", url));
+  const res = NextResponse.redirect(new URL(partner ? "/partners/account" : "/partners?link=invalid", url));
   if (partner) res.cookies.set(PARTNER_COOKIE, key, cookieOptions);
   return res;
 }

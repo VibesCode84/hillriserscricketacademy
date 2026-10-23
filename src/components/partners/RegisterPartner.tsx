@@ -102,7 +102,7 @@ export function SignIn() {
     const res = await fetch("/api/partners/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fd) });
     const json = await res.json().catch(() => ({}));
     if (res.ok && json.ok) {
-      router.push("/partners/portal");
+      router.push("/partners/account");
       router.refresh();
       return;
     }

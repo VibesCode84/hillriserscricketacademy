@@ -6,7 +6,7 @@ import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/Regis
 export const dynamic = "force-dynamic";
 
 export default async function PartnersHome({ searchParams }: { searchParams: Promise<{ link?: string }> }) {
-  if (await currentPartner()) redirect("/partners/portal");
+  if (await currentPartner()) redirect("/partners/account");
   const { link } = await searchParams;
   return (
     <div>
