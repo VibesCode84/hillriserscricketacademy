@@ -137,8 +137,8 @@ for (const [name, make] of [
     await store.confirm(autumn.booking.id, "pi_a");
     const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, springSat, 1), bowlingMachine: false }], plan: "deposit" });
     assert.ok(r.ok);
-    assert.equal(r.booking.totalPence, 11 * 1880);
-    assert.equal(r.booking.depositPence, Math.round(11 * 1880 * 0.25));
+    assert.equal(r.booking.totalPence, 12 * 1880);
+    assert.equal(r.booking.depositPence, Math.round(12 * 1880 * 0.25));
     assert.equal(r.booking.balanceDueDate, "2026-12-12");
     assert.equal(r.booking.balanceDueAt, "2026-12-13T00:00:00.000Z");
     await store.confirm(r.booking.id, "pi_dep");
@@ -297,11 +297,11 @@ test("each booked session says who it's for", () => {
   assert.ok(ok.success);
 });
 
-test("spring block: 11 weeks from 6 January, none in half term", () => {
+test("spring block: 12 weeks from 6 January, including half term", () => {
   const spring = partnerBlocks.find((b) => b.id === "spring-2027")!;
   for (const s of spring.slots) {
-    assert.equal(s.dates.length, 11);
-    assert.ok(s.dates.every((d) => d < "2027-02-15" || d > "2027-02-21"));
+    assert.equal(s.dates.length, 12);
+    assert.ok(s.dates.some((d) => d >= "2027-02-15" && d <= "2027-02-21"));
   }
   assert.equal(spring.slots.find((s) => s.day === "Wednesday")!.dates[0], "2027-01-06");
   assert.equal(spring.slots.find((s) => s.day === "Sunday")!.dates.at(-1), "2027-03-28");

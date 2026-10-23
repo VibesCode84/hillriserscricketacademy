@@ -62,12 +62,11 @@ const thursdays = ["2026-11-05", "2026-11-12", "2026-11-19", "2026-11-26", "2026
 const saturdays = ["2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"];
 const sundays = ["2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13"];
 
-/** Spring 2027: 11 weeks, 4 January – 28 March, skipping half term (15–21 February) */
+/** Spring 2027: 12 weeks, 4 January – 28 March, including half term (15–21 February) */
 const springWeek = (first: string) => {
   const out: string[] = [];
   for (let d = new Date(`${first}T12:00:00Z`); d <= new Date("2027-03-28T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 7)) {
-    const iso = d.toISOString().slice(0, 10);
-    if (iso < "2027-02-15" || iso > "2027-02-21") out.push(iso);
+    out.push(d.toISOString().slice(0, 10));
   }
   return out;
 };
@@ -93,11 +92,10 @@ export const partnerBlocks: PartnerBlock[] = [
     label: "Spring block 2027",
     requiresBlock: "autumn-2026",
     deposit: { percent: 25, dueAfterBlock: "autumn-2026" },
-    summary: "6 January to 28 March 2027 (11 weeks)",
+    summary: "6 January to 28 March 2027 (12 weeks, including half term)",
     notes: [
       "Open to partners who have booked the autumn block.",
       "Pay in full or reserve with a deposit.",
-      "No sessions in half term (15–21 February).",
       "Includes the Easter weekend (27–28 March).",
     ],
     slots: [
