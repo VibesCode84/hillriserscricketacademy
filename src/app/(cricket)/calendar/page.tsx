@@ -29,8 +29,7 @@ export default function CalendarPage() {
         title="The year at a glance."
         intro={
           <p>
-            Term dates, school holidays and closures at John Lyon School for 2026/27. Our programmes and holiday plans are still taking shape — tell us
-            what you&rsquo;d like and we&rsquo;ll build around you.
+            Term dates, school holidays and closures at John Lyon School for 2026/27.
           </p>
         }
         actions={
@@ -78,8 +77,7 @@ export default function CalendarPage() {
         </div>
 
         <p className="mt-12 max-w-3xl text-sm leading-relaxed text-ink-muted">
-          Dates may change. We&rsquo;ll give registered families plenty of notice of any change, and confirm holiday arrangements before
-          booking opens.
+          Dates may change.
         </p>
       </Section>
       <CTASection />

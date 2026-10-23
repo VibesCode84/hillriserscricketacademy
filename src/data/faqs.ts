@@ -8,27 +8,23 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "When does HillRisers start?",
-        a: "HillRisers' own programmes at John Lyon School are coming soon. Register your interest and tell us what your child wants and which sessions they can make — we'll be in touch when programmes are ready.",
-      },
-      {
-        q: "Why isn't there a timetable yet?",
-        a: "We're building it around the families who register. Tell us when your child can attend, how long they'd like sessions to be and what they want from cricket, and we'll plan the timetable around the answers.",
+        a: "Soon. Register your interest and we'll be in touch when programmes are ready.",
       },
       {
         q: "Do sessions run in the school holidays?",
-        a: "We're planning holiday camps (part-day and full-day), and weekly sessions may carry on in their normal slot too — we'll decide from what families tell us on the interest form. We're closed from 21 December to 3 January. See the 2026/27 calendar for dates.",
+        a: "We're planning part-day and full-day holiday camps. We're closed from 21 December to 3 January — see the 2026/27 calendar.",
       },
       {
         q: "Is my child good enough?",
-        a: "If they enjoy cricket, yes. Players are placed by ability, not just age, and move up when they're ready — from complete beginners to club and representative players.",
+        a: "If they enjoy cricket, yes. Players are placed by ability, from complete beginners to club and representative players.",
       },
       {
         q: "Which group should my child join?",
-        a: "You don't need to decide. Tell us about your child on the interest form and we'll suggest the right group.",
+        a: "You don't need to decide — we'll suggest the right group.",
       },
       {
         q: "Are girls welcome?",
-        a: "Yes. There's a girls-only pathway (Girls Development and Girls Performance), and girls are welcome in every mixed group too.",
+        a: "Yes — in every group, and in our girls-only groups.",
       },
     ],
   },
@@ -37,23 +33,23 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "How does it work?",
-        a: `Register your interest and tell us what your child wants from cricket and which days they can make. We'll shape the programmes around what families tell us and be in touch when they're ready.`,
+        a: "Register your interest and we'll be in touch when programmes are ready.",
       },
       {
         q: "Can my child try a session first?",
-        a: "Yes. Your child can try a session before you commit.",
+        a: "Yes.",
       },
       {
         q: "How much does it cost?",
-        a: "Registering your interest is free and there's no commitment. We'll share full details, including fees, when programmes are ready.",
+        a: "Registering is free. We'll share fees when programmes are ready.",
       },
       {
         q: "How long are sessions?",
-        a: "Session lengths and times will be set from what families tell us. Early Risers is planned as short sessions on Sunday mornings.",
+        a: "To be confirmed. Early Risers is planned for Sunday mornings.",
       },
       {
         q: "How big are the groups?",
-        a: "Small. Every programme has a maximum of six players per net, and each net has its own coach. Early Risers is our only larger group, with a maximum of 16.",
+        a: "A maximum of six players per net, each net with its own coach. Early Risers: up to 16.",
       },
     ],
   },

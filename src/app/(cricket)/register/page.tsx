@@ -28,7 +28,6 @@ export default function RegisterPage() {
             <ul className="mt-4 space-y-3 text-[0.95rem] text-cream/85">
               {[
                 "Shape the timetable — days, times and session lengths",
-                "Tell us what your child wants from their cricket",
                 "No payment and no commitment",
                 "Add every child in one go",
               ].map((x) => (

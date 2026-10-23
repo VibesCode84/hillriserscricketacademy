@@ -30,13 +30,12 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-slate md:text-xl">
             The very best coaches from the area, in small groups, with coaching shaped around every cricketer&rsquo;s needs.
-            Tell us when your child can attend and what they want from cricket — we&rsquo;ll build the timetable around you.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>
             <ButtonLink href="/how-booking-works" variant="secondary">How it works</ButtonLink>
           </div>
-          <p className="mt-4 text-sm text-slate">HillRisers programmes are coming soon. Tell us what your child wants and which sessions they can make, and we&rsquo;ll be in touch.</p>
+          <p className="mt-4 text-sm text-slate">Programmes coming soon.</p>
           <div className="mt-10 border-t border-cream/10 pt-6">{trust}</div>
         </div>
 

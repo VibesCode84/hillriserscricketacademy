@@ -120,13 +120,13 @@ export function PartnerAccount(props: {
                     {stage === "balance" ? (
                       <>
                         Deposit {formatPrice(b.depositPence ?? 0)} paid. Balance of <strong>{formatPrice(amount)}</strong> due by midnight on{" "}
-                        {b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}, or the nets are released and the deposit isn&rsquo;t refunded.
+                        {b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}.
                       </>
                     ) : (
                       <>
                         Awaiting bank transfer of <strong>{formatPrice(amount)}</strong>
                         {b.plan === "deposit" ? " (deposit)" : ""}
-                        {b.holdExpiresAt ? ` by ${dueText(b.holdExpiresAt)}` : ""}. Your nets are held until then.
+                        {b.holdExpiresAt ? ` by ${dueText(b.holdExpiresAt)}` : ""}.
                       </>
                     )}
                   </p>
@@ -134,7 +134,7 @@ export function PartnerAccount(props: {
                     <p className="mt-2 text-sm">
                       Invoice{" "}
                       <Link href={`/partners/invoice/${invoice.number}`} className="font-semibold underline underline-offset-4">{invoice.number}</Link>
-                      {" "}— pay by bank transfer with reference <strong>{invoice.number}</strong> by {dueText(invoice.dueAt)}.
+                      {" "}(use this as the payment reference).
                     </p>
                   )}
                   <PayOptions bookingId={b.id} stage={stage} amount={amount} hasInvoice={!!invoice} />
@@ -308,7 +308,6 @@ function Account({ partner }: { partner: Profile }) {
               <dd className="text-right font-semibold">{v}</dd>
             </div>
           ))}
-          <p className="mt-3 text-ink-muted">To change these details, email HillRisers.</p>
         </dl>
         <form onSubmit={onSubmit} className="space-y-4 rounded-2xl bg-white p-5">
           <h3 className="text-xl">{hasPassword ? "Change your password" : "Set a password"}</h3>

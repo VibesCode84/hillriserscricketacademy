@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "When will the girls' sessions run?",
-    a: "We're building the timetable around the families who register, so tell us when your daughter can attend on the interest form.",
+    a: "To be confirmed.",
   },
 ];
 

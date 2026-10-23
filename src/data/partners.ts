@@ -96,7 +96,7 @@ export const partnerBlocks: PartnerBlock[] = [
     summary: "6 January to 28 March 2027 (11 weeks)",
     notes: [
       "Open to partners who have booked the autumn block.",
-      "Pay in full, or reserve with a deposit and pay the balance by midnight after your last autumn session.",
+      "Pay in full or reserve with a deposit.",
       "No sessions in half term (15–21 February).",
       "Includes the Easter weekend (27–28 March).",
     ],

@@ -11,7 +11,6 @@ import {
   documentKinds,
   itemPricePence,
   machineKey,
-  PARTNER_HOLD_MINUTES,
   PARTNER_RATE_PENCE,
   sessionAbilities,
   sessionAgeGroups,
@@ -271,8 +270,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
       </ul>
       {lockedBy && (
         <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
-          <strong>Book {lockedBy} first.</strong> {block.label} is only open to partners who have booked {lockedBy}. Once your payment
-          for {lockedBy} has gone through, you can choose your {block.label.toLowerCase()} nets here.
+          <strong>Book {lockedBy} first.</strong>
         </p>
       )}
 
@@ -362,10 +360,9 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
         <aside className="self-start rounded-3xl bg-navy-950 p-6 text-cream lg:sticky lg:top-6">
           <h3 className="text-2xl">Your selection</h3>
           {items.length === 0 ? (
-            <p className="mt-3 text-sm text-slate">Choose available nets on the grid. Each one is booked for every week of the block.</p>
+            <p className="mt-3 text-sm text-slate">Choose nets on the grid.</p>
           ) : (
             <>
-              <p className="mt-2 text-xs text-slate">For each session, tell us who you&rsquo;re providing for.</p>
               <ul className="mt-3 space-y-3 text-sm">
                 {items.map((i, idx) => (
                   <li key={i.key} className="border-b border-cream/10 pb-3">
@@ -416,14 +413,13 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
               <legend className="sr-only">How would you like to pay?</legend>
               <label className="flex cursor-pointer items-start gap-2">
                 <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-                <span><strong>Pay in full</strong> — {formatPrice(total)}. Your nets are confirmed once paid.</span>
+                <span><strong>Pay in full</strong> — {formatPrice(total)}</span>
               </label>
               <label className="flex cursor-pointer items-start gap-2">
                 <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
                 <span>
-                  <strong>Reserve with a {block.deposit.percent}% deposit</strong> — {formatPrice(deposit)}. The balance of{" "}
-                  {formatPrice(total - deposit)} must be paid by midnight on {longDate(balanceDate)} (your last autumn session), or the nets are
-                  released and the deposit isn&rsquo;t refunded.
+                  <strong>{block.deposit.percent}% deposit</strong> — {formatPrice(deposit)}, balance of {formatPrice(total - deposit)} due by midnight
+                  on {longDate(balanceDate)}
                 </span>
               </label>
             </fieldset>
@@ -436,11 +432,11 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                 <>
                   <label className="flex cursor-pointer items-start gap-2">
                     <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-                    <span><strong>Bank transfer — no fee.</strong> We email you an invoice for {formatPrice(dueNow)}, payable within 24 hours. Your nets are held until then.</span>
+                    <span><strong>Bank transfer — no fee.</strong> Invoice payable within 24 hours.</span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-2">
                     <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-                    <span><strong>Card — plus a {formatPrice(fee)} card processing fee.</strong> Confirmed straight away.</span>
+                    <span><strong>Card — plus a {formatPrice(fee)} card processing fee.</strong></span>
                   </label>
                 </>
               ) : (
@@ -487,11 +483,6 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                   ? `Pay ${depositPlan ? "deposit " : ""}${formatPrice(dueNow + fee)} by card`
                   : `Book and get invoice for ${formatPrice(dueNow)}`}
           </button>
-          <p className="mt-3 text-xs text-slate">
-            {byCard
-              ? `Secure card payment by Stripe (includes the ${items.length ? formatPrice(fee) : ""} card processing fee). Your slots are held for ${PARTNER_HOLD_MINUTES} minutes while you pay.`
-              : "No fee. Your slots are held for 24 hours while you pay by bank transfer; unpaid invoices release the nets."}
-          </p>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>
       </div>
@@ -532,8 +523,7 @@ function Documents({ documents, onChange }: { documents: PartnerDocument[]; onCh
     <section className="mt-14">
       <h2 className="text-3xl">Your documents</h2>
       <p className="mt-2 max-w-2xl text-ink-muted">
-        Upload documents for everyone who will coach in your sessions. You can book straight away; HillRisers checks documents before your first
-        session.
+        For everyone coaching in your sessions.
       </p>
       {missing.length > 0 && (
         <p className="mt-3 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">Still needed: {missing.map((m) => m.label.replace(/ \(.*\)/, "")).join(", ")}.</p>

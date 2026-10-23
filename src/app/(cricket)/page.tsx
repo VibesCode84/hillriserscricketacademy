@@ -28,7 +28,7 @@ const pillars = [
   },
   {
     title: "Built around each child",
-    body: "Players are placed by ability, not just age, and move up when they're ready. Tell us what your child wants from cricket and we'll plan around it.",
+    body: "Players are placed by ability, not just age, and move up when they're ready.",
     icon: "M4 18c4-1 7-4 9-7s4-5 7-6M15 5h5v5",
   },
   {
@@ -139,8 +139,7 @@ export default function HomePage() {
             <p className="eyebrow">Girls cricket</p>
             <p className="mt-3 font-serif text-3xl text-cream">Girls-only groups, too.</p>
             <p className="mt-2 max-w-2xl text-slate">
-              Alongside our mixed groups we&rsquo;re planning Girls Development (8–11) and Girls Performance (11–15), with the same
-              coaching. Girls are welcome in every mixed group as well.
+              Girls Development (8–11) and Girls Performance (11–15), alongside our mixed groups.
             </p>
           </div>
           <ButtonLink href="/girls" variant="secondary" className="shrink-0">Girls cricket</ButtonLink>

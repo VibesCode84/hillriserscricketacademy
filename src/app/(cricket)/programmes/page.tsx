@@ -22,7 +22,7 @@ const notes = [
     b: `Every programme is coached in small groups: a maximum of ${groupSizes.perNet} players per net, each with its own coach. Early Risers is our only larger group (maximum ${groupSizes.earlyRisers}).`,
   },
   { t: "Fielding every session", b: "Every session includes fielding, whatever the programme." },
-  { t: "Session length", b: "Sessions may run for 1 hour, 90 minutes or 2 hours — we'll decide using what families tell us." },
+  { t: "Session length", b: "1 hour, 90 minutes or 2 hours." },
 ];
 
 export default function ProgrammesPage() {

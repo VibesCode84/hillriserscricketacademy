@@ -38,17 +38,15 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           <div>
             <h2 className="text-3xl">How it works</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
-              <li>Create your partner account below. Partner fees are shown once you&rsquo;re signed in.</li>
-              <li>Choose your nets and times on the live grid — each booking is the same slot every week of the block.</li>
-              <li>Pay securely by card through Stripe. Your slots are held for 30 minutes while you pay.</li>
-              <li>Upload your documents. You can book straight away; we check documents before your first session.</li>
+              <li>Create an account.</li>
+              <li>Choose your nets — the same slot every week of the block.</li>
+              <li>Pay by bank transfer (no fee) or card.</li>
+              <li>Upload your documents.</li>
             </ol>
           </div>
           <div>
             <h2 className="text-2xl">Sessions available</h2>
-            <p className="mt-1 text-sm text-ink-muted">
-              Hourly slots in the John Lyon School sports hall. Each booking is the same slot every week of the block.
-            </p>
+            <p className="mt-1 text-sm text-ink-muted">Hourly slots in the John Lyon School sports hall.</p>
             <div className="mt-4 space-y-6">
               {releasedBlocks.map((block) => (
                 <div key={block.id} className="overflow-hidden rounded-2xl bg-white">
@@ -117,7 +115,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <div className="mt-5"><SignIn /></div>
             <div className="mt-8 border-t border-navy-950/10 pt-6">
               <h3 className="text-lg">Forgotten your password, or haven&rsquo;t set one?</h3>
-              <p className="mt-1 text-sm text-ink-muted">We&rsquo;ll email you a link that signs you in. You can then set a new password under Account.</p>
+              <p className="mt-1 text-sm text-ink-muted">We&rsquo;ll email you a sign-in link.</p>
               <div className="mt-4"><ResendLink /></div>
             </div>
           </div>

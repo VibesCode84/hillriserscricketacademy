@@ -52,8 +52,7 @@ export default function TermsPage() {
 
       <h2 id="booking">3. Booking</h2>
       <p>
-        Fees, trial sessions, payment and cancellation terms will be set out in full, and shared with registered families, before booking
-        opens. Nothing is payable until you choose to book.
+        Fees, payment and cancellation terms will be published before booking opens.
       </p>
 
       <h2 id="safeguarding">4. Safeguarding and photography</h2>

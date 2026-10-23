@@ -6,7 +6,7 @@
  * homepage, terms and emails read from this file.
  */
 export const keyDates: { date: string; label: string; detail?: string }[] = [
-  { date: "Now", label: "Register your interest", detail: "Free, with no commitment — tell us what your child wants and which sessions they can make" },
+  { date: "Now", label: "Register your interest", detail: "Free, with no commitment" },
   { date: "Next", label: "We shape our programmes", detail: "Around what families tell us" },
   { date: "Then", label: "We'll be in touch", detail: "With programme details when they're ready" },
 ];

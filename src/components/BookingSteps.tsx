@@ -4,11 +4,11 @@ import { Reveal } from "./Reveal";
 export const bookingSteps = [
   {
     t: "Register your interest",
-    b: "Tell us what your child wants from cricket and which sessions they can make. It takes a few minutes, it's free and there's no commitment.",
+    b: "What your child wants from cricket and which sessions they can make. Free, no commitment.",
   },
   {
     t: "We shape the programmes",
-    b: "We plan groups, days and times around what registered families tell us.",
+    b: "Groups, days and times planned around your answers.",
   },
   {
     t: "We'll be in touch",
