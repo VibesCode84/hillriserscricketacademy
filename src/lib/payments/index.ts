@@ -141,7 +141,7 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
   const single = (name: string, amount: number) => [
     { quantity: 1, price_data: { currency: "gbp", unit_amount: amount, product_data: { name, description: `${nets} · ${site.venue.name}`.slice(0, 500) } } },
   ];
-  const line_items =
+  const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
     stage === "balance"
       ? single(`${label} — balance`, booking.totalPence - (booking.depositPence ?? 0))
       : booking.plan === "deposit"
