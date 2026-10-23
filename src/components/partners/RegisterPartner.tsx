@@ -56,7 +56,7 @@ export function RegisterPartner() {
         {field("orgName", "Organisation or trading name", { optional: true, autoComplete: "organization" })}
         {field("email", "Email", { type: "email", autoComplete: "email" })}
         {field("phone", "Phone", { type: "tel", autoComplete: "tel" })}
-        {field("password", "Choose a password", { type: "password", autoComplete: "new-password", placeholder: "At least 8 characters" })}
+        {field("password", "Choose a password", { type: "password", autoComplete: "new-password", placeholder: "At least 10 characters" })}
         {field("confirmPassword", "Confirm password", { type: "password", autoComplete: "new-password" })}
         <div>
           <label htmlFor="pr-type" className="label">You are a…</label>

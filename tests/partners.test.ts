@@ -48,9 +48,9 @@ for (const [name, make] of [
 ] as const) {
   test(`${name}: a net can only be booked once, even when two partners try at the same time`, async () => {
     const store = make();
-    const { partner: a, key } = await store.createPartner(partner);
+    const { partner: a, token } = await store.createPartner(partner);
     const { partner: b } = await store.createPartner({ ...partner, orgName: "Other" });
-    assert.equal((await store.partnerByKey(key))?.id, a.id);
+    assert.equal((await store.partnerBySession(token))?.id, a.id);
     assert.equal(a.email, "sam@example.com");
     const k = slotKey(block.id, sat, 2);
     const [r1, r2] = await Promise.all([
@@ -257,22 +257,34 @@ for (const [name, make] of [
     assert.equal((await store.taken(t.id)).size, 0);
   });
 
-  test(`${name}: password sign-in creates a session; signing out ends it; the portal link still works`, async () => {
+  test(`${name}: password sign-in, lockout, sign-in links and password changes`, async () => {
     const store = make();
-    const { partner: a, key } = await store.createPartner({ ...partner, password: "correct horse" });
-    assert.equal(await store.login("sam@example.com", "wrong password"), undefined);
-    assert.equal(await store.login("nobody@example.com", "correct horse"), undefined);
-    const s = await store.login(" SAM@example.com ", "correct horse");
-    assert.ok(s);
-    assert.equal((await store.partnerByKey(s.token))?.id, a.id);
+    const { partner: a, token: first } = await store.createPartner({ ...partner, password: "correct horse battery" });
+    assert.equal((await store.login("nobody@example.com", "correct horse battery")).ok, false);
+    const s = await store.login(" SAM@example.com ", "correct horse battery");
+    assert.ok(s.ok);
+    assert.equal((await store.partnerBySession(s.token))?.id, a.id);
     await store.endSession(s.token);
-    assert.equal(await store.partnerByKey(s.token), undefined);
-    assert.equal((await store.partnerByKey(key))?.id, a.id);
-    // Partners from before accounts can set a password later
-    const { partner: b } = await store.createPartner({ ...partner, email: "old@example.com" });
-    assert.equal(await store.login("old@example.com", "anything at all"), undefined);
-    await store.setPassword(b.id, "new password 1");
-    assert.ok(await store.login("old@example.com", "new password 1"));
+    assert.equal(await store.partnerBySession(s.token), undefined);
+    // Five wrong passwords lock the account, even against the right one
+    for (let i = 0; i < 4; i++) assert.deepEqual(await store.login("sam@example.com", "wrong"), { ok: false, locked: false });
+    assert.deepEqual(await store.login("sam@example.com", "wrong"), { ok: false, locked: true });
+    assert.deepEqual(await store.login("sam@example.com", "correct horse battery"), { ok: false, locked: true });
+    // A sign-in link works once
+    const link = await store.issueSignInLink("sam@example.com");
+    assert.ok(link);
+    const viaLink = await store.useSignInLink(link.key);
+    assert.ok(viaLink && (await store.partnerBySession(viaLink.token))?.id === a.id);
+    assert.equal(await store.useSignInLink(link.key), undefined);
+    // ...and the link cleared the lockout
+    assert.ok((await store.login("sam@example.com", "correct horse battery")).ok);
+    // Changing the password signs out every other device
+    const changed = await store.setPassword(a.id, "new password 123");
+    assert.ok(changed);
+    assert.equal(await store.partnerBySession(first), undefined);
+    assert.equal(await store.partnerBySession(viaLink.token), undefined);
+    assert.equal((await store.partnerBySession(changed.token))?.id, a.id);
+    assert.ok((await store.login("sam@example.com", "new password 123")).ok);
   });
 }
 

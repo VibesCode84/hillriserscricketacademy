@@ -29,12 +29,16 @@ import type { D1Database } from "../booking/d1-store";
 
 export type Partner = {
   id: string;
-  /** sha256 of the partner's private portal key */
-  keyHash: string;
-  /** PBKDF2 password hash (see password.ts); partners from before accounts sign in by link until they set one */
+  /** sha256 of the current emailed sign-in link's key: single use, expires after SIGN_IN_LINK_MINUTES */
+  keyHash?: string;
+  keyExpiresAt?: string;
+  /** PBKDF2 password hash (see password.ts) */
   passwordHash?: string;
-  /** sha256 of signed-in session tokens from password sign-ins (latest few) */
-  sessionHashes?: string[];
+  /** Signed-in devices: sha256 of each session token (expire after SESSION_DAYS) */
+  sessions?: { hash: string; createdAt: string }[];
+  /** Wrong-password lockout */
+  failedLogins?: number;
+  lockedUntil?: string;
   orgName: string;
   contactName: string;
   email: string;
@@ -233,6 +237,26 @@ class D1Backend implements Backend {
 /* ── The store ─────────────────────────────────────────────────────────── */
 
 export const hashKey = (key: string) => createHash("sha256").update(key).digest("hex");
+
+/** Signed-in sessions last this long */
+export const SESSION_DAYS = 60;
+/** Emailed sign-in links work once, within this time */
+export const SIGN_IN_LINK_MINUTES = 60;
+/** Wrong passwords before a lockout, and how long it lasts */
+export const MAX_FAILED_LOGINS = 5;
+export const LOCKOUT_MINUTES = 15;
+
+const newToken = () => randomBytes(24).toString("base64url");
+const liveSessions = (p: Partner, at = Date.now()) => (p.sessions ?? []).filter((s) => Date.parse(s.createdAt) + SESSION_DAYS * 86_400_000 > at);
+
+/** Adds a signed-in session for a partner (keeps the latest 10 live ones) and returns its token */
+function addSession(p: Partner) {
+  const token = newToken();
+  p.sessions = [...liveSessions(p), { hash: hashKey(token), createdAt: new Date().toISOString() }].slice(-10);
+  return token;
+}
+
+export type LoginResult = { ok: true; partner: Partner; token: string } | { ok: false; locked: boolean };
 const now = () => new Date().toISOString();
 
 /** A slot is taken by a confirmed booking or by a payment hold that hasn't expired */
@@ -316,68 +340,100 @@ export class PartnerStore {
 
   /* Partners */
 
-  async createPartner(input: Omit<Partner, "id" | "keyHash" | "createdAt" | "passwordHash" | "sessionHashes"> & { password?: string }) {
+  /** Creates a partner and signs them in: returns a session token for the cookie */
+  async createPartner(input: Omit<Partner, "id" | "createdAt" | "keyHash" | "keyExpiresAt" | "passwordHash" | "sessions" | "failedLogins" | "lockedUntil"> & { password?: string }) {
     const { password, ...details } = input;
-    const key = randomBytes(24).toString("base64url");
     const passwordHash = password ? await hashPassword(password) : undefined;
-    const partner = await this.tx((d) => {
-      const p: Partner = { ...details, email: details.email.trim().toLowerCase(), id: randomUUID(), keyHash: hashKey(key), passwordHash, createdAt: now() };
+    return this.tx((d) => {
+      const p: Partner = { ...details, email: details.email.trim().toLowerCase(), id: randomUUID(), passwordHash, createdAt: now() };
+      const token = addSession(p);
       d.partners.push(p);
-      return p;
+      return { partner: p, token };
     });
-    return { partner, key };
   }
 
   async partnerByEmail(email: string) {
     return (await this.read()).partners.find((x) => x.email === email.trim().toLowerCase());
   }
 
-  /** The signed-in partner, from a portal-link key or a password session token */
-  async partnerByKey(key: string | undefined) {
-    if (!key) return undefined;
-    const h = hashKey(key);
-    return (await this.read()).partners.find((p) => p.keyHash === h || p.sessionHashes?.includes(h));
+  /** The signed-in partner, from a live session token */
+  async partnerBySession(token: string | undefined) {
+    if (!token) return undefined;
+    const h = hashKey(token);
+    return (await this.read()).partners.find((p) => liveSessions(p).some((s) => s.hash === h));
   }
 
-  /** Email and password sign-in: returns a new session token for the cookie */
-  async login(email: string, password: string) {
-    const p = (await this.read()).partners.find((x) => x.email === email.trim().toLowerCase());
-    if (!p || !(await verifyPassword(password, p.passwordHash))) return undefined;
-    const token = randomBytes(24).toString("base64url");
-    await this.tx((d) => {
+  /**
+   * Email and password sign-in. After MAX_FAILED_LOGINS wrong passwords the account is locked for
+   * LOCKOUT_MINUTES (an emailed sign-in link still works).
+   */
+  async login(email: string, password: string): Promise<LoginResult> {
+    const p = await this.partnerByEmail(email);
+    if (!p) return { ok: false, locked: false };
+    if (p.lockedUntil && Date.parse(p.lockedUntil) > Date.now()) return { ok: false, locked: true };
+    const ok = await verifyPassword(password, p.passwordHash);
+    return this.tx<LoginResult>((d) => {
       const x = d.partners.find((y) => y.id === p.id);
-      if (x) x.sessionHashes = [...(x.sessionHashes ?? []), hashKey(token)].slice(-10);
+      if (!x) return { ok: false, locked: false };
+      if (!ok) {
+        x.failedLogins = (x.failedLogins ?? 0) + 1;
+        if (x.failedLogins >= MAX_FAILED_LOGINS) {
+          x.lockedUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60_000).toISOString();
+          x.failedLogins = 0;
+          return { ok: false, locked: true };
+        }
+        return { ok: false, locked: false };
+      }
+      x.failedLogins = 0;
+      x.lockedUntil = undefined;
+      return { ok: true, partner: x, token: addSession(x) };
     });
-    return { partner: p, token };
   }
 
-  /** Signing out ends a password session (portal links keep working) */
+  /** Signing out ends this device's session */
   endSession(token: string | undefined) {
     if (!token) return Promise.resolve(undefined);
     const h = hashKey(token);
     return this.tx((d) => {
-      for (const p of d.partners) if (p.sessionHashes?.includes(h)) p.sessionHashes = p.sessionHashes.filter((x) => x !== h);
+      for (const p of d.partners) if (p.sessions?.some((s) => s.hash === h)) p.sessions = p.sessions.filter((s) => s.hash !== h);
     });
   }
 
+  /**
+   * Sets a new password and signs out every other device (and cancels any sign-in link).
+   * Returns a fresh session token for this device.
+   */
   async setPassword(partnerId: string, password: string) {
     const passwordHash = await hashPassword(password);
     return this.tx((d) => {
       const p = d.partners.find((x) => x.id === partnerId);
-      if (p) p.passwordHash = passwordHash;
-      return p;
+      if (!p) return undefined;
+      Object.assign(p, { passwordHash, sessions: [], keyHash: undefined, keyExpiresAt: undefined, failedLogins: 0, lockedUntil: undefined });
+      return { partner: p, token: addSession(p) };
     });
   }
 
-  /** Issues a new portal key (the old link stops working) */
-  async rotateKey(email: string) {
-    const key = randomBytes(24).toString("base64url");
+  /** Issues a single-use sign-in link key, valid for SIGN_IN_LINK_MINUTES (any earlier link stops working) */
+  async issueSignInLink(email: string) {
+    const key = newToken();
     const partner = await this.tx((d) => {
       const p = d.partners.find((x) => x.email === email.trim().toLowerCase());
-      if (p) p.keyHash = hashKey(key);
+      if (p) Object.assign(p, { keyHash: hashKey(key), keyExpiresAt: new Date(Date.now() + SIGN_IN_LINK_MINUTES * 60_000).toISOString() });
       return p;
     });
     return partner ? { partner, key } : undefined;
+  }
+
+  /** Uses up a sign-in link: returns a session token, or undefined if it's wrong, used or expired */
+  useSignInLink(key: string | undefined) {
+    if (!key) return Promise.resolve(undefined);
+    const h = hashKey(key);
+    return this.tx((d) => {
+      const p = d.partners.find((x) => x.keyHash === h);
+      if (!p || !p.keyExpiresAt || Date.parse(p.keyExpiresAt) <= Date.now()) return undefined;
+      Object.assign(p, { keyHash: undefined, keyExpiresAt: undefined, failedLogins: 0, lockedUntil: undefined });
+      return { partner: p, token: addSession(p) };
+    });
   }
 
   async listPartners() {

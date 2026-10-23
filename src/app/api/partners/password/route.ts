@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseJson } from "@/lib/http";
-import { currentPartner } from "@/lib/partners/session";
+import { cookieOptions, currentPartner, PARTNER_COOKIE } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
 import { partnerPasswordSchema } from "@/lib/validation";
 
@@ -12,6 +12,9 @@ export async function POST(req: Request) {
   if (!partner) return NextResponse.json({ ok: false, message: "Please sign in again" }, { status: 401 });
   const parsed = await parseJson(req, partnerPasswordSchema);
   if ("error" in parsed) return parsed.error;
-  await getPartnerStore().setPassword(partner.id, parsed.data.password);
-  return NextResponse.json({ ok: true });
+  // Signs out every other device; this one gets a fresh session
+  const updated = await getPartnerStore().setPassword(partner.id, parsed.data.password);
+  const res = NextResponse.json({ ok: true });
+  if (updated) res.cookies.set(PARTNER_COOKIE, updated.token, cookieOptions);
+  return res;
 }

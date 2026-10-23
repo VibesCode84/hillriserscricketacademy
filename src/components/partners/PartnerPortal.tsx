@@ -39,7 +39,6 @@ export function PartnerPortal(props: {
   documents: PartnerDocument[];
   bookings: NetBooking[];
   blocks: PartnerBlock[];
-  portalLink?: string;
   banner?: { kind: "cancelled" | "welcome" };
 }) {
   const [documents, setDocuments] = useState(props.documents);
@@ -71,13 +70,6 @@ export function PartnerPortal(props: {
         </Notice>
       )}
 
-      {props.portalLink && (
-        <details className="mt-6 rounded-2xl bg-white p-5 text-sm">
-          <summary className="cursor-pointer font-semibold">Your private portal link</summary>
-          <p className="mt-2 text-ink-muted">This link signs you in on any device. Keep it private.</p>
-          <input readOnly value={props.portalLink} onFocus={(e) => e.currentTarget.select()} className="field mt-3 font-mono text-xs" aria-label="Portal link" />
-        </details>
-      )}
 
       <div className="mt-8 rounded-2xl border border-gold/30 bg-white p-5 md:p-6">
         <h2 className="text-2xl">Block bookings only</h2>

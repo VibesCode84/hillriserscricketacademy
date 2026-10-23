@@ -196,7 +196,7 @@ export const partnerRegistrationSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   phone,
   type: z.string().trim().min(2, "Please choose an option").max(40),
-  password: z.string().min(8, "Please choose a password of at least 8 characters").max(200),
+  password: z.string().min(10, "Please choose a password of at least 10 characters").max(200),
   website: optionalText(200),
   about: optionalText(1000),
   agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
@@ -209,7 +209,7 @@ export const partnerLoginSchema = z.object({
 });
 
 export const partnerPasswordSchema = z.object({
-  password: z.string().min(8, "Please choose a password of at least 8 characters").max(200),
+  password: z.string().min(10, "Please choose a password of at least 10 characters").max(200),
 });
 
 export const partnerCheckoutSchema = z

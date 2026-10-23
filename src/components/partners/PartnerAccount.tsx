@@ -316,7 +316,7 @@ function Account({ partner }: { partner: Profile }) {
           )}
           <div>
             <label htmlFor="acc-password" className="label">New password</label>
-            <input id="acc-password" name="password" type="password" required minLength={8} autoComplete="new-password" className="field" placeholder="At least 8 characters" />
+            <input id="acc-password" name="password" type="password" required minLength={10} autoComplete="new-password" className="field" placeholder="At least 10 characters" />
           </div>
           <div>
             <label htmlFor="acc-confirm" className="label">Confirm new password</label>

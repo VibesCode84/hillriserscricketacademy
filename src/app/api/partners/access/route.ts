@@ -5,17 +5,16 @@ import { cookieOptions, PARTNER_COOKIE } from "@/lib/partners/session";
 
 export const dynamic = "force-dynamic";
 
-/** Private portal link: /api/partners/access?key=… signs the partner in on this device */
+/** Emailed sign-in link: /api/partners/access?key=… works once, within an hour, and signs the partner in on this device */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const key = url.searchParams.get("key") ?? "";
-  const partner = await getPartnerStore().partnerByKey(key);
-  const res = NextResponse.redirect(new URL(partner ? "/partners/account" : "/partners?link=invalid", url));
-  if (partner) res.cookies.set(PARTNER_COOKIE, key, cookieOptions);
+  const session = await getPartnerStore().useSignInLink(url.searchParams.get("key") ?? "");
+  const res = NextResponse.redirect(new URL(session ? "/partners/account" : "/partners?link=invalid", url));
+  if (session) res.cookies.set(PARTNER_COOKIE, session.token, cookieOptions);
   return res;
 }
 
-/** Sign out (ends a password session; portal links keep working) */
+/** Sign out (ends this device's session) */
 export async function DELETE() {
   await getPartnerStore().endSession((await cookies()).get(PARTNER_COOKIE)?.value);
   const res = NextResponse.json({ ok: true });

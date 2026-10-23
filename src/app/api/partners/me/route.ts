@@ -10,8 +10,6 @@ export async function GET() {
   if (!partner) return NextResponse.json({ ok: false }, { status: 401 });
   const store = getPartnerStore();
   const [documents, bookings] = await Promise.all([store.documentsFor(partner.id), store.bookingsFor(partner.id)]);
-  const { keyHash: _k, passwordHash, sessionHashes: _s, ...profile } = partner;
-  void _k;
-  void _s;
-  return NextResponse.json({ ok: true, partner: { ...profile, hasPassword: !!passwordHash }, documents, bookings });
+  const profile = { id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email, phone: partner.phone, type: partner.type };
+  return NextResponse.json({ ok: true, partner: { ...profile, hasPassword: !!partner.passwordHash }, documents, bookings });
 }

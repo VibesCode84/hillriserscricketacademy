@@ -101,7 +101,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
         <div className="space-y-6">
           {link === "invalid" && (
             <p className="rounded-2xl border border-[#8c1d18]/30 bg-[#fbeae8] p-4 text-sm text-[#8c1d18]" role="alert">
-              That portal link isn&rsquo;t valid any more. Ask for a new one below.
+              That sign-in link has expired or been used. Ask for a new one below.
             </p>
           )}
           <div className="rounded-3xl bg-white p-6 shadow-[0_30px_70px_-45px_rgba(7,24,47,0.45)] md:p-9">

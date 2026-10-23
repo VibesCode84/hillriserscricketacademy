@@ -190,7 +190,7 @@ export const emailConfigured = () => !!(process.env.RESEND_API_KEY && process.en
 
 type PartnerContact = { orgName: string; contactName: string; email: string; phone: string; type: string };
 
-export async function sendPartnerWelcome(p: PartnerContact, portalLink: string) {
+export async function sendPartnerWelcome(p: PartnerContact) {
   await send({
     to: p.email,
     subject: "Your HillRisers partner portal",
@@ -198,8 +198,7 @@ export async function sendPartnerWelcome(p: PartnerContact, portalLink: string) 
 
 Thank you for registering ${p.orgName} with HillRisers.
 
-Sign in any time at ${site.url}/partners with your email and the password you chose. This private link also signs you in — keep it safe:
-${portalLink}
+Sign in any time at ${site.url}/partners with your email and the password you chose.
 
 In the portal you can upload your qualifications, DBS, safeguarding and insurance documents, and book your session slots for the season.
 
@@ -220,10 +219,10 @@ export async function sendPartnerLink(p: PartnerContact, portalLink: string) {
     subject: "Sign in to your HillRisers partner account",
     text: `Hi ${p.contactName.split(" ")[0]},
 
-Here is a link that signs you in to your HillRisers partner account (any older link no longer works):
+Sign in to your HillRisers partner account:
 ${portalLink}
 
-Once you're in, you can set a new password under Account.
+This link works once and expires in 1 hour. You can then set a new password under Account.
 
 ${signOff}
 `,

@@ -3,11 +3,11 @@ import { partnerRegistrationSchema } from "@/lib/validation";
 import { getPartnerStore } from "@/lib/partners/store";
 import { cookieOptions, PARTNER_COOKIE } from "@/lib/partners/session";
 import { sendPartnerWelcome } from "@/lib/email";
-import { baseUrl, parseJson } from "@/lib/http";
+import { parseJson } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 
-/** Creates a partner account and signs them in (private key in an httpOnly cookie) */
+/** Creates a partner account and signs them in (session token in an httpOnly cookie) */
 export async function POST(req: Request) {
   const parsed = await parseJson(req, partnerRegistrationSchema);
   if ("error" in parsed) return parsed.error;
@@ -20,10 +20,9 @@ export async function POST(req: Request) {
       { status: 409 },
     );
   }
-  const { partner, key } = await getPartnerStore().createPartner({ ...input, orgName: input.orgName || input.contactName }); // sole traders needn't give one
-  const portalLink = `${baseUrl(req)}/api/partners/access?key=${key}`;
-  await sendPartnerWelcome(partner, portalLink).catch((err) => console.error("[hillrisers] partner welcome email failed", err));
-  const res = NextResponse.json({ ok: true, portalLink });
-  res.cookies.set(PARTNER_COOKIE, key, cookieOptions);
+  const { partner, token } = await getPartnerStore().createPartner({ ...input, orgName: input.orgName || input.contactName }); // sole traders needn't give one
+  await sendPartnerWelcome(partner).catch((err) => console.error("[hillrisers] partner welcome email failed", err));
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(PARTNER_COOKIE, token, cookieOptions);
   return res;
 }
