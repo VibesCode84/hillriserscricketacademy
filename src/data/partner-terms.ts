@@ -1,4 +1,4 @@
-import { INVOICE_DUE_HOURS, STRIPE_FIXED_PENCE, STRIPE_PERCENT } from "./invoicing";
+import { INVOICE_DUE_HOURS } from "./invoicing";
 import { getBlock } from "./partners";
 
 const springDeposit = getBlock("spring-2027")?.deposit?.percent ?? 25;
@@ -6,7 +6,7 @@ const springDeposit = getBlock("spring-2027")?.deposit?.percent ?? 25;
 /** Draft delivery partner terms for coaches and delivery partners — to be reviewed by HillRisers */
 export const partnerTerms = [
   { t: "Block bookings", b: `Sessions are booked in blocks: the same net, at the same time, every week of the block. We only accept block bookings, and the block rate is shown in the partner portal. The autumn block is paid in full when you book.` },
-  { t: "Paying", b: `You can pay by bank transfer or by card. Bank transfer has no fee: we email an invoice that must be paid within ${INVOICE_DUE_HOURS} hours, and your nets are held until then. If payment hasn't arrived by the due time, the nets are released. Card payments include a card processing fee that covers the card charge (Stripe's ${STRIPE_PERCENT}% + ${STRIPE_FIXED_PENCE}p, so HillRisers receives the full price). Only UK cards are accepted. Card processing fees are not refundable, and if a card payment is disputed without good reason you are responsible for any charges that result.` },
+  { t: "Paying", b: `You can pay by bank transfer or by card. Bank transfer has no fee: we email an invoice that must be paid within ${INVOICE_DUE_HOURS} hours, and your nets are held until then. You can have one unpaid invoice at a time. If payment hasn't arrived by the due time, the nets are released. Card payments include a card processing fee to cover the card charge, shown before you pay. Only UK cards are accepted. Card processing fees are not refundable, and if a card payment is disputed without good reason you are responsible for any charges that result.` },
   { t: "Spring: deposit or pay in full", b: `The spring block is only open to partners who have booked and paid for the autumn block. You can pay for spring in full when you book, or reserve your nets with a ${springDeposit}% deposit. If you pay a deposit, the balance must be paid in full by midnight (UK time) on the day of your final autumn session. If it isn't paid by then, your spring nets are released and the deposit is not refunded.` },
   { t: "Bowling machine", b: `The bowling machine is charged per hour on top of the net. There is one machine, so it can be booked on one net per time slot. You must supply your own balls, and the machine must be operated by a coach holding at least an ECB Level 2 (or equivalent) qualification.` },
   { t: "No filming or video", b: "No filming or video recording of any kind is permitted at the venue, including on phones. This applies to coaches, players and anyone attending." },

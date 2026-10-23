@@ -26,6 +26,7 @@ export async function POST(req: Request) {
     if (!bankTransferEnabled()) return NextResponse.json({ ok: false, message: "Bank transfer isn't available yet. Please pay by card." }, { status: 400 });
     const invoice = await store.issueBalanceInvoice(booking.id, partner.id);
     if (!invoice) return NextResponse.json({ ok: false, message: "We couldn't issue an invoice for this booking." }, { status: 400 });
+    if ("error" in invoice) return NextResponse.json({ ok: false, message: invoice.error }, { status: 409 });
     if (invoice.issuedAt > new Date(Date.now() - 60_000).toISOString()) await sendInvoice(booking, invoice);
     return NextResponse.json({ ok: true, url: `/partners/account?invoice=${invoice.number}` });
   }

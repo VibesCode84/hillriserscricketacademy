@@ -209,6 +209,18 @@ for (const [name, make] of [
     assert.ok(r2.ok && r2.booking.invoices?.[0].number === "HR-0002");
   });
 
+  test(`${name}: one unpaid invoice at a time (card is still allowed)`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], method: "bank" });
+    assert.ok(first.ok);
+    const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "bank" });
+    assert.ok(!second.ok && second.message.includes("HR-0001"));
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "card" })).ok);
+    await store.markBankPaid(first.booking.id, "initial");
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: false }], method: "bank" })).ok);
+  });
+
   test(`${name}: a card payment records its card fee; spring balance can be invoiced`, async () => {
     const store = make();
     const spring = getBlock("spring-2027")!;
@@ -224,9 +236,10 @@ for (const [name, make] of [
     assert.ok((await store.markBankPaid(dep.booking.id, "initial")).ok);
     assert.equal((await store.getBooking(dep.booking.id))?.status, "reserved");
     const inv = await store.issueBalanceInvoice(dep.booking.id, a.id);
-    assert.ok(inv && inv.stage === "balance" && inv.amountPence === dep.booking.totalPence - dep.booking.depositPence!);
+    assert.ok(inv && !("error" in inv) && inv.stage === "balance" && inv.amountPence === dep.booking.totalPence - dep.booking.depositPence!);
     // Asking again reuses the open invoice
-    assert.equal((await store.issueBalanceInvoice(dep.booking.id, a.id))?.number, inv.number);
+    const again = await store.issueBalanceInvoice(dep.booking.id, a.id);
+    assert.ok(again && !("error" in again) && again.number === inv.number);
     assert.equal((await store.findInvoice(inv.number))?.booking.id, dep.booking.id);
     const done = await store.markBankPaid(dep.booking.id, "balance");
     assert.ok(done.ok && done.booking.status === "confirmed" && done.booking.balanceMethod === "bank");

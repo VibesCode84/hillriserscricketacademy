@@ -249,6 +249,21 @@ export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "
 const view = (b: NetBooking): NetBooking =>
   balanceOverdue(b) ? { ...b, status: "forfeited" } : b.status === "pending_payment" && !holds(b) ? { ...b, status: "expired" } : b;
 
+/** A partner's unpaid, unexpired invoice, if any — partners can have one at a time */
+function openInvoice(d: Data, partnerId: string) {
+  for (const b of d.bookings) {
+    if (b.partnerId !== partnerId) continue;
+    for (const i of b.invoices ?? []) {
+      if (i.paidAt || Date.parse(i.dueAt) <= Date.now()) continue;
+      if ((i.stage === "initial" && b.status === "pending_payment") || (i.stage === "balance" && b.status === "reserved")) return i;
+    }
+  }
+  return undefined;
+}
+
+const unpaidMessage = (i: PartnerInvoice) =>
+  `You already have an unpaid invoice (${i.number}). Please pay it, or pay it by card from My account, before requesting another — or pay this booking by card.`;
+
 function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, dueAt: string): PartnerInvoice {
   d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
   return { number: invoiceNumber(d.invoiceSeq), stage, amountPence, issuedAt: now(), dueAt };
@@ -438,6 +453,10 @@ export class PartnerStore {
         const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
         return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
       }
+      if (input.method === "bank") {
+        const open = openInvoice(d, input.partnerId);
+        if (open) return { ok: false, reason: "invalid", message: unpaidMessage(open) };
+      }
       let balanceDueDate: string | undefined;
       let firstSession: string | undefined;
       if (input.plan === "deposit") {
@@ -557,11 +576,13 @@ export class PartnerStore {
 
   /** A bank-transfer invoice for a deposit balance (reuses an unexpired one) */
   issueBalanceInvoice(bookingId: string, partnerId: string) {
-    return this.tx<PartnerInvoice | undefined>((d) => {
+    return this.tx<PartnerInvoice | { error: string } | undefined>((d) => {
       const b = d.bookings.find((x) => x.id === bookingId && x.partnerId === partnerId);
       if (!b || b.status !== "reserved" || !holds(b) || !b.balanceDueAt) return undefined;
       const open = b.invoices?.find((i) => i.stage === "balance" && !i.paidAt && Date.parse(i.dueAt) > Date.now());
       if (open) return open;
+      const other = openInvoice(d, partnerId);
+      if (other) return { error: unpaidMessage(other) };
       const due = Math.min(Date.now() + INVOICE_DUE_HOURS * 3_600_000, Date.parse(b.balanceDueAt));
       const inv = newInvoice(d, "balance", b.totalPence - (b.depositPence ?? 0), new Date(due).toISOString());
       b.invoices = [...(b.invoices ?? []), inv];

@@ -24,7 +24,7 @@ import {
 } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import type { NetBooking, PartnerDocument } from "@/lib/partners/store";
-import { bankTransferEnabled, cardFeePence, STRIPE_FIXED_PENCE, STRIPE_PERCENT } from "@/data/invoicing";
+import { bankTransferEnabled, cardFeePence } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 import { AccountHeader, Notice } from "./PartnerAccount";
 
@@ -89,8 +89,8 @@ export function PartnerPortal(props: {
           separate session rate.
         </p>
         <p className="mt-3 max-w-3xl leading-relaxed text-ink-muted">
-          <strong className="text-navy-950">Bank transfer is free.</strong> Paying by card adds a card processing fee that covers the card
-          charge (Stripe&rsquo;s {STRIPE_PERCENT}% + {STRIPE_FIXED_PENCE}p). The fee is shown before you pay.
+          <strong className="text-navy-950">Bank transfer is free.</strong> Paying by card adds a card processing fee to cover the card
+          charge. The fee is shown before you pay.
           {!bankTransferEnabled() && " Bank transfer will be available shortly; until then bookings are paid by card."}
         </p>
       </div>
