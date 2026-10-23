@@ -3,6 +3,7 @@ import path from "node:path";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hashPassword, verifyPassword } from "./password";
+import { INVOICE_DUE_HOURS, invoiceNumber } from "../../data/invoicing";
 import {
   blockUnlocked,
   depositFor,
@@ -76,6 +77,18 @@ export type NetBookingItem = {
   pricePence: number;
 };
 
+export type PaymentMethod = "card" | "bank";
+
+/** A bank-transfer invoice for the first payment (in full or deposit) or a deposit balance */
+export type PartnerInvoice = {
+  number: string;
+  stage: "initial" | "balance";
+  amountPence: number;
+  issuedAt: string;
+  dueAt: string;
+  paidAt?: string;
+};
+
 /** reserved = deposit paid, balance still due; forfeited = balance missed its deadline (shown, never stored) */
 export type NetBookingStatus = "pending_payment" | "reserved" | "confirmed" | "cancelled" | "expired" | "forfeited";
 
@@ -89,6 +102,12 @@ export type NetBooking = {
   totalPence: number;
   /** Paying in full (default) or reserving with a deposit */
   plan?: "full" | "deposit";
+  /** How the first payment was (or is being) made; card adds a card processing fee */
+  method?: PaymentMethod;
+  cardFeePence?: number;
+  balanceMethod?: PaymentMethod;
+  balanceCardFeePence?: number;
+  invoices?: PartnerInvoice[];
   depositPence?: number;
   /** First autumn session date (ISO); balance reminders start two weeks after it */
   firstSessionDate?: string;
@@ -108,7 +127,7 @@ export type NetBooking = {
   paidAt?: string;
 };
 
-type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[] };
+type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; invoiceSeq?: number };
 const empty = (): Data => ({ partners: [], documents: [], bookings: [] });
 
 /* ── Storage backends: a versioned JSON document plus file blobs ───────── */
@@ -226,8 +245,29 @@ export const holds = (b: NetBooking, at = Date.now()) =>
 /** Deposit paid but the balance missed its deadline: the nets are released and the deposit kept */
 export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "reserved" && !holds(b, at);
 
-/** How a booking reads now: a reservation past its balance deadline shows as forfeited */
-const view = (b: NetBooking): NetBooking => (balanceOverdue(b) ? { ...b, status: "forfeited" } : b);
+/** How a booking reads now: a lapsed reservation shows as forfeited, a lapsed hold as expired */
+const view = (b: NetBooking): NetBooking =>
+  balanceOverdue(b) ? { ...b, status: "forfeited" } : b.status === "pending_payment" && !holds(b) ? { ...b, status: "expired" } : b;
+
+function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, dueAt: string): PartnerInvoice {
+  d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
+  return { number: invoiceNumber(d.invoiceSeq), stage, amountPence, issuedAt: now(), dueAt };
+}
+
+/** Records a payment: the first one (in full → confirmed, deposit → reserved) or a balance (→ confirmed) */
+function settle(b: NetBooking, stage: "initial" | "balance", p: { method: PaymentMethod; paymentIntentId?: string; cardFeePence?: number }) {
+  const at = now();
+  if (stage === "balance") {
+    if (b.status !== "reserved") return b;
+    Object.assign(b, { status: "confirmed", balancePaidAt: at, balancePaymentIntentId: p.paymentIntentId, balanceMethod: p.method, balanceCardFeePence: p.cardFeePence });
+  } else {
+    if (b.status === "confirmed" || b.status === "reserved") return b;
+    Object.assign(b, { status: b.plan === "deposit" ? "reserved" : "confirmed", paidAt: at, paymentIntentId: p.paymentIntentId, method: p.method, cardFeePence: p.cardFeePence, holdExpiresAt: undefined });
+  }
+  // A card payment settles any open invoice for the same payment too
+  for (const inv of b.invoices ?? []) if (inv.stage === stage && !inv.paidAt) inv.paidAt = at;
+  return b;
+}
 
 /** Balance still to pay on a reserved booking */
 export const balanceDue = (b: NetBooking) => b.totalPence - (b.depositPence ?? b.totalPence);
@@ -389,6 +429,7 @@ export class PartnerStore {
     items: { slotKey: string; bowlingMachine: boolean; ageGroup?: string; ability?: string; gender?: string }[];
     machineCoach?: string;
     plan?: "full" | "deposit";
+    method?: PaymentMethod;
   }): Promise<ReserveResult> {
     return this.tx<ReserveResult>((d) => {
       const block = getBlock(input.blockId);
@@ -453,10 +494,15 @@ export class PartnerStore {
               balanceDueAt: endOfDayLondon(balanceDueDate).toISOString(),
             }
           : { plan: "full" as const }),
+        method: input.method ?? "card",
         status: "pending_payment",
-        holdExpiresAt: new Date(at + PARTNER_HOLD_MINUTES * 60_000).toISOString(),
+        // A bank transfer holds the nets until the invoice is due; a card payment for the checkout window
+        holdExpiresAt: new Date(at + (input.method === "bank" ? INVOICE_DUE_HOURS * 3_600_000 : PARTNER_HOLD_MINUTES * 60_000)).toISOString(),
         createdAt: now(),
       };
+      if (input.method === "bank") {
+        booking.invoices = [newInvoice(d, "initial", booking.plan === "deposit" ? booking.depositPence! : booking.totalPence, booking.holdExpiresAt!)];
+      }
       d.bookings.push(booking);
       return { ok: true, booking };
     });
@@ -482,30 +528,61 @@ export class PartnerStore {
    * Called from the Stripe webhook (or dev checkout) once a payment is confirmed.
    * "initial" is the first payment (in full, or the deposit); "balance" settles a deposit.
    */
-  confirm(bookingId: string, paymentIntentId?: string, stage: "initial" | "balance" = "initial") {
+  confirm(bookingId: string, paymentIntentId?: string, stage: "initial" | "balance" = "initial", cardFeePence?: number) {
     return this.tx((d) => {
       const b = d.bookings.find((x) => x.id === bookingId);
-      if (!b) return b;
-      if (stage === "balance") {
-        if (b.status !== "reserved") return b;
-        b.status = "confirmed";
-        b.balancePaidAt = now();
-        b.balancePaymentIntentId = paymentIntentId;
-        return b;
-      }
-      if (b.status === "confirmed" || b.status === "reserved") return b;
-      b.status = b.plan === "deposit" ? "reserved" : "confirmed";
-      b.paidAt = now();
-      b.paymentIntentId = paymentIntentId;
-      b.holdExpiresAt = undefined;
-      return b;
+      return b && settle(b, stage, { method: "card", paymentIntentId, cardFeePence });
     });
+  }
+
+  /**
+   * Admin: a bank transfer has arrived. If the invoice's hold has lapsed, it only goes through
+   * while the nets are still free (otherwise the money should be refunded).
+   */
+  markBankPaid(bookingId: string, stage: "initial" | "balance") {
+    return this.tx<{ ok: true; booking: NetBooking } | { ok: false; message: string }>((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      if (!b) return { ok: false, message: "Booking not found." };
+      const awaiting = stage === "initial" ? b.status === "pending_payment" : b.status === "reserved";
+      if (!awaiting) return { ok: false, message: stage === "initial" ? "This booking isn't awaiting payment." : "There's no balance outstanding on this booking." };
+      if (!holds(b)) {
+        const others = d.bookings.filter((x) => x.id !== b.id && x.blockId === b.blockId && holds(x));
+        const clash = b.items.some((i) => others.some((o) => o.items.some((j) => j.slotKey === i.slotKey || (i.bowlingMachine && j.bowlingMachine && machineKey(b.blockId, i) === machineKey(b.blockId, j)))));
+        if (clash && !getBlock(b.blockId)?.test) return { ok: false, message: "The payment deadline passed and some of these nets have since been booked by someone else. Please refund the transfer." };
+      }
+      settle(b, stage, { method: "bank" });
+      return { ok: true, booking: b };
+    });
+  }
+
+  /** A bank-transfer invoice for a deposit balance (reuses an unexpired one) */
+  issueBalanceInvoice(bookingId: string, partnerId: string) {
+    return this.tx<PartnerInvoice | undefined>((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId && x.partnerId === partnerId);
+      if (!b || b.status !== "reserved" || !holds(b) || !b.balanceDueAt) return undefined;
+      const open = b.invoices?.find((i) => i.stage === "balance" && !i.paidAt && Date.parse(i.dueAt) > Date.now());
+      if (open) return open;
+      const due = Math.min(Date.now() + INVOICE_DUE_HOURS * 3_600_000, Date.parse(b.balanceDueAt));
+      const inv = newInvoice(d, "balance", b.totalPence - (b.depositPence ?? 0), new Date(due).toISOString());
+      b.invoices = [...(b.invoices ?? []), inv];
+      return inv;
+    });
+  }
+
+  async findInvoice(number: string) {
+    for (const b of (await this.read()).bookings) {
+      const invoice = b.invoices?.find((i) => i.number === number);
+      if (invoice) return { booking: view(b), invoice };
+    }
+    return undefined;
   }
 
   release(bookingId: string, status: "cancelled" | "expired", checkoutId?: string) {
     return this.tx((d) => {
       const b = d.bookings.find((x) => x.id === bookingId);
       if (!b || b.status !== "pending_payment") return b;
+      // A bank-transfer booking keeps its nets until the invoice is due, even if a card attempt is abandoned
+      if (b.method === "bank") return b;
       if (checkoutId && b.checkoutId && b.checkoutId !== checkoutId) return b;
       b.status = status;
       return b;

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function PartnersLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-cream text-navy-950">
-      <header className="bg-navy-950">
+      <header className="bg-navy-950 print:hidden">
         <div className="container-x flex items-center justify-between py-5">
           <Link href="/partners" className="inline-flex items-center gap-3">
             <Crest className="h-9 w-auto" />
@@ -28,7 +28,7 @@ export default function PartnersLayout({ children }: { children: React.ReactNode
         </div>
       </header>
       {children}
-      <footer className="container-x border-t border-navy-950/10 py-8 text-sm text-ink-muted">
+      <footer className="container-x border-t border-navy-950/10 py-8 text-sm text-ink-muted print:hidden">
         HillRisers CIC · John Lyon School, Harrow on the Hill ·{" "}
         <a href={`mailto:${site.email}`} className="underline underline-offset-4">{site.email}</a>
       </footer>

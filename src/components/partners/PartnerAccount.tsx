@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { longDate, timeLabel, type PartnerBlock } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import type { NetBooking } from "@/lib/partners/store";
+import { bankTransferEnabled, cardFeePence, ukDateTime } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 
 type Profile = { id: string; orgName: string; contactName: string; email: string; phone: string; hasPassword: boolean };
@@ -43,7 +44,7 @@ export function PartnerAccount(props: {
   partner: Profile;
   bookings: NetBooking[];
   blocks: PartnerBlock[];
-  banner?: { kind: "paid"; bookingId: string; balance?: boolean };
+  banner?: { kind: "paid"; bookingId: string; balance?: boolean } | { kind: "invoice"; number: string };
 }) {
   const [bookings, setBookings] = useState(props.bookings);
   const [banner, setBanner] = useState(props.banner);
@@ -69,14 +70,21 @@ export function PartnerAccount(props: {
     return () => clearInterval(t);
   }, [banner, refreshMe]);
 
-  const paidBooking = banner ? bookings.find((b) => b.id === banner.bookingId) : undefined;
-  const outstanding = bookings.filter((b) => b.status === "reserved");
+  const paidBooking = banner?.kind === "paid" ? bookings.find((b) => b.id === banner.bookingId) : undefined;
+  const outstanding = bookings.filter((b) => b.status === "reserved" || (b.status === "pending_payment" && b.method === "bank"));
+  const issued = banner?.kind === "invoice" ? bookings.flatMap((b) => b.invoices ?? []).find((i) => i.number === banner.number) : undefined;
   const label = (id: string) => props.blocks.find((b) => b.id === id)?.label ?? id;
 
   return (
     <div className="container-x py-10 md:py-14">
       <AccountHeader partner={props.partner} current="account" />
 
+      {banner?.kind === "invoice" && (
+        <Notice tone="good" onClose={() => setBanner(undefined)}>
+          <strong>Invoice {banner.number} is on its way to your email.</strong>{" "}
+          {issued ? `Please pay ${formatPrice(issued.amountPence)} by bank transfer by ${dueText(issued.dueAt)}, using ${issued.number} as the reference.` : ""}
+        </Notice>
+      )}
       {banner?.kind === "paid" && (
         <Notice tone="good" onClose={() => setBanner(undefined)}>
           {paidBooking?.status === "confirmed" && paidBooking.balancePaidAt ? (
@@ -96,23 +104,43 @@ export function PartnerAccount(props: {
       )}
 
       <section className="mt-10">
-        <h2 className="text-3xl">Balance outstanding</h2>
+        <h2 className="text-3xl">To pay</h2>
         {outstanding.length === 0 ? (
           <p className="mt-3 text-ink-muted">Nothing to pay — you&rsquo;re all up to date.</p>
         ) : (
           <ul className="mt-4 grid gap-3">
-            {outstanding.map((b) => (
-              <li key={b.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#1d3f7a]/20 bg-[#e6eefc] p-5">
-                <div>
+            {outstanding.map((b) => {
+              const stage = b.status === "reserved" ? "balance" : "initial";
+              const amount = stage === "balance" ? b.totalPence - (b.depositPence ?? 0) : b.plan === "deposit" ? (b.depositPence ?? b.totalPence) : b.totalPence;
+              const invoice = b.invoices?.find((i) => i.stage === stage && !i.paidAt);
+              return (
+                <li key={b.id} className="rounded-2xl border border-[#1d3f7a]/20 bg-[#e6eefc] p-5">
                   <p className="font-semibold">{label(b.blockId)}</p>
                   <p className="mt-1 text-sm text-[#1d3f7a]">
-                    Deposit {formatPrice(b.depositPence ?? 0)} paid. Balance of <strong>{formatPrice(b.totalPence - (b.depositPence ?? 0))}</strong> due by
-                    midnight on {b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}, or the nets are released and the deposit isn&rsquo;t refunded.
+                    {stage === "balance" ? (
+                      <>
+                        Deposit {formatPrice(b.depositPence ?? 0)} paid. Balance of <strong>{formatPrice(amount)}</strong> due by midnight on{" "}
+                        {b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}, or the nets are released and the deposit isn&rsquo;t refunded.
+                      </>
+                    ) : (
+                      <>
+                        Awaiting bank transfer of <strong>{formatPrice(amount)}</strong>
+                        {b.plan === "deposit" ? " (deposit)" : ""}
+                        {b.holdExpiresAt ? ` by ${dueText(b.holdExpiresAt)}` : ""}. Your nets are held until then.
+                      </>
+                    )}
                   </p>
-                </div>
-                <PayBalance bookingId={b.id} amount={b.totalPence - (b.depositPence ?? 0)} />
-              </li>
-            ))}
+                  {invoice && (
+                    <p className="mt-2 text-sm">
+                      Invoice{" "}
+                      <Link href={`/partners/invoice/${invoice.number}`} className="font-semibold underline underline-offset-4">{invoice.number}</Link>
+                      {" "}— pay by bank transfer with reference <strong>{invoice.number}</strong> by {dueText(invoice.dueAt)}.
+                    </p>
+                  )}
+                  <PayOptions bookingId={b.id} stage={stage} amount={amount} hasInvoice={!!invoice} />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -142,7 +170,9 @@ export function PartnerAccount(props: {
                             ? "Balance not paid · nets released"
                             : b.status === "reserved"
                             ? "Deposit paid"
-                            : `Awaiting payment${b.holdExpiresAt ? ` · held until ${new Date(b.holdExpiresAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}`}
+                            : b.method === "bank"
+                              ? `Awaiting bank transfer${b.holdExpiresAt ? ` · due ${dueText(b.holdExpiresAt)}` : ""}`
+                              : `Awaiting payment${b.holdExpiresAt ? ` · held until ${ukDateTime(b.holdExpiresAt, "short")}` : ""}`}
                       </span>
                     </div>
                     <ul className="mt-2 space-y-1 text-sm text-ink-muted">
@@ -181,9 +211,25 @@ function PaymentHistory({ bookings, blocks }: { bookings: NetBooking[]; blocks: 
   const rows = bookings
     .flatMap((b) => [
       ...(b.paidAt
-        ? [{ at: b.paidAt, what: `${label(b.blockId)} — ${b.plan === "deposit" ? "deposit" : "paid in full"}`, pence: b.plan === "deposit" ? (b.depositPence ?? 0) : b.totalPence, ref: b.paymentIntentId }]
+        ? [
+            {
+              at: b.paidAt,
+              what: `${label(b.blockId)} — ${b.plan === "deposit" ? "deposit" : "paid in full"}${via(b.method, b.cardFeePence)}`,
+              pence: (b.plan === "deposit" ? (b.depositPence ?? 0) : b.totalPence) + (b.cardFeePence ?? 0),
+              ref: b.method === "bank" ? b.invoices?.find((i) => i.stage === "initial")?.number : b.paymentIntentId,
+            },
+          ]
         : []),
-      ...(b.balancePaidAt ? [{ at: b.balancePaidAt, what: `${label(b.blockId)} — balance`, pence: b.totalPence - (b.depositPence ?? 0), ref: b.balancePaymentIntentId }] : []),
+      ...(b.balancePaidAt
+        ? [
+            {
+              at: b.balancePaidAt,
+              what: `${label(b.blockId)} — balance${via(b.balanceMethod, b.balanceCardFeePence)}`,
+              pence: b.totalPence - (b.depositPence ?? 0) + (b.balanceCardFeePence ?? 0),
+              ref: b.balanceMethod === "bank" ? b.invoices?.find((i) => i.stage === "balance")?.number : b.balancePaymentIntentId,
+            },
+          ]
+        : []),
     ])
     .sort((a, b) => b.at.localeCompare(a.at));
   return (
@@ -288,26 +334,41 @@ function Account({ partner }: { partner: Profile }) {
   );
 }
 
-export function PayBalance({ bookingId, amount }: { bookingId: string; amount: number }) {
-  const [busy, setBusy] = useState(false);
+const via = (method: string | undefined, fee: number | undefined) =>
+  method === "bank" ? " (bank transfer)" : fee ? ` (card, incl. ${formatPrice(fee)} card fee)` : "";
+
+const dueText = (iso: string) => ukDateTime(iso, "short");
+
+/** Ways to settle an outstanding payment: bank transfer (invoice, no fee) or card (plus the card fee) */
+function PayOptions({ bookingId, stage, amount, hasInvoice }: { bookingId: string; stage: "initial" | "balance"; amount: number; hasInvoice: boolean }) {
+  const [busy, setBusy] = useState<"" | "card" | "bank">("");
   const [message, setMessage] = useState("");
-  const pay = async () => {
-    setBusy(true);
+  const go = async (method: "card" | "bank") => {
+    setBusy(method);
     setMessage("");
-    const res = await fetch("/api/partners/balance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId }) });
+    const url = stage === "balance" ? "/api/partners/balance" : "/api/partners/pay-card";
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, method }) });
     const json = await res.json().catch(() => ({}));
     if (res.ok && json.url) {
       window.location.href = json.url;
       return;
     }
-    setBusy(false);
+    setBusy("");
     setMessage(json.message ?? "Something went wrong. Please try again.");
   };
+  const fee = cardFeePence(amount);
   return (
-    <div>
-      <button type="button" disabled={busy} onClick={pay} className={buttonClass("dark")}>
-        {busy ? "Opening payment…" : `Pay balance ${formatPrice(amount)}`}
-      </button>
+    <div className="mt-4">
+      <div className="flex flex-wrap gap-3">
+        {stage === "balance" && bankTransferEnabled() && !hasInvoice && (
+          <button type="button" disabled={!!busy} onClick={() => go("bank")} className={buttonClass("dark")}>
+            {busy === "bank" ? "Issuing invoice…" : `Pay ${formatPrice(amount)} by bank transfer (no fee)`}
+          </button>
+        )}
+        <button type="button" disabled={!!busy} onClick={() => go("card")} className={stage === "balance" && !hasInvoice ? buttonClass("dark") : "rounded-full border border-navy-950/25 bg-white px-5 py-2.5 text-sm font-semibold"}>
+          {busy === "card" ? "Opening payment…" : `${hasInvoice || stage === "initial" ? "Pay by card instead" : "Pay by card"}: ${formatPrice(amount + fee)} (incl. ${formatPrice(fee)} card fee)`}
+        </button>
+      </div>
       {message && <p className="mt-2 text-sm text-[#8c1d18]" role="alert">{message}</p>}
     </div>
   );

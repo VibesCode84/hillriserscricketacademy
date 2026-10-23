@@ -4,6 +4,8 @@ import { documentKinds, getBlock, longDate, machineKey, releasedBlocks, slotKey,
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
+import { MarkPaid } from "@/components/admin/MarkPaid";
+import { daysAgo, ukDateTime } from "@/data/invoicing";
 import { Crest } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
@@ -39,13 +41,53 @@ export default async function AdminPartnersPage() {
         </p>
       )}
 
+      {(() => {
+        const since = daysAgo(30);
+        const awaiting = bookings.flatMap((b) =>
+          (b.invoices ?? [])
+            .filter((i) => !i.paidAt && i.issuedAt > since && ["pending_payment", "expired", "reserved", "forfeited"].includes(b.status))
+            .map((i) => ({ b, i, partner: partners.find((p) => p.id === b.partnerId) })),
+        );
+        return (
+          <section className="mt-10">
+            <h2 className="text-2xl">Awaiting bank transfer</h2>
+            {awaiting.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">No unpaid invoices.</p>
+            ) : (
+              <div className="mt-4 overflow-x-auto rounded-2xl border border-navy-950/10 bg-white">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-navy-950/10 text-xs uppercase tracking-wider text-ink-muted">
+                    <tr><th className="px-4 py-3">Invoice</th><th className="px-4 py-3">Partner</th><th className="px-4 py-3">For</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3">Due</th><th className="px-4 py-3" /></tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy-950/10">
+                    {awaiting.map(({ b, i, partner }) => (
+                      <tr key={i.number}>
+                        <td className="px-4 py-3 font-mono"><Link href={`/admin/partners/invoice/${i.number}`} className="underline">{i.number}</Link></td>
+                        <td className="px-4 py-3">{partner?.orgName ?? "?"}</td>
+                        <td className="px-4 py-3">{getBlock(b.blockId)?.label} — {i.stage === "balance" ? "balance" : b.plan === "deposit" ? "deposit" : "in full"}</td>
+                        <td className="px-4 py-3 text-right font-semibold">{formatPrice(i.amountPence)}</td>
+                        <td className="px-4 py-3">
+                          {ukDateTime(i.dueAt, "short")}
+                          {(b.status === "expired" || b.status === "forfeited") && <span className="ml-2 rounded-full bg-[#fbeae8] px-2 py-0.5 text-xs font-semibold text-[#8c1d18]">overdue · nets released</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right"><MarkPaid bookingId={b.id} stage={i.stage} label={`${i.number} (${formatPrice(i.amountPence)})`} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        );
+      })()}
+
       {releasedBlocks.map((block) => {
         const taken = new Map<string, string>();
         for (const b of bookings) {
           if (b.blockId !== block.id || !holds(b)) continue;
           const name = partners.find((p) => p.id === b.partnerId)?.orgName ?? "?";
           for (const i of b.items) {
-            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (paying…)" : b.status === "reserved" ? " (deposit)" : ""}`);
+            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? (b.method === "bank" ? " (invoice due)" : " (paying…)") : b.status === "reserved" ? " (deposit)" : ""}`);
             if (i.bowlingMachine) taken.set(machineKey(block.id, i), name);
           }
         }

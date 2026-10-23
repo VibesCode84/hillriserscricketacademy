@@ -5,6 +5,7 @@ import type { Booking, Parent, Player } from "../booking/types";
 import { STRIPE_CHECKOUT_MINUTES } from "../booking";
 import type { NetBooking, Partner } from "../partners/store";
 import { getBlock, PARTNER_HOLD_MINUTES, timeLabel } from "../../data/partners";
+import { cardFeePence } from "../../data/invoicing";
 
 /**
  * Payment layer. Stripe is replaceable: the rest of the app only talks to
@@ -156,8 +157,19 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
               },
             },
           }));
+  // Card payments carry a processing fee so Stripe's charge doesn't come out of the booking price
+  const base = stage === "balance" ? booking.totalPence - (booking.depositPence ?? 0) : booking.plan === "deposit" ? (booking.depositPence ?? booking.totalPence) : booking.totalPence;
+  const fee = cardFeePence(base);
+  line_items.push({
+    quantity: 1,
+    price_data: {
+      currency: "gbp",
+      unit_amount: fee,
+      product_data: { name: "Card processing fee", description: "Covers the card charge. Pay by bank transfer for no fee." },
+    },
+  });
   const expiresAt = Math.floor(Date.now() / 1000) + PARTNER_HOLD_MINUTES * 60;
-  const metadata = { kind: "partner", partnerBookingId: booking.id, partnerId: partner.id, stage };
+  const metadata = { kind: "partner", partnerBookingId: booking.id, partnerId: partner.id, stage, cardFeePence: String(fee) };
   const checkout = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: partner.email,
@@ -171,7 +183,7 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
     expires_at: expiresAt,
     success_url: `${baseUrl}/partners/account?paid=${booking.id}${stage === "balance" ? "&balance=1" : ""}`,
     // Abandoning a balance payment leaves the reservation as it was
-    cancel_url: stage === "balance" ? `${baseUrl}/partners/account` : `${baseUrl}/partners/portal?cancelled=${booking.id}`,
+    cancel_url: stage === "balance" || booking.method === "bank" ? `${baseUrl}/partners/account` : `${baseUrl}/partners/portal?cancelled=${booking.id}`,
   });
   if (!checkout.url) throw new Error("Stripe did not return a checkout URL");
   return { id: checkout.id, url: checkout.url, expiresAt: new Date(expiresAt * 1000).toISOString() };

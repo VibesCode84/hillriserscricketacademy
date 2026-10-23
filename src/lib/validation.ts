@@ -229,6 +229,7 @@ export const partnerCheckoutSchema = z
       .max(60),
     machineCoach: optionalText(100),
     plan: z.enum(["full", "deposit"]).default("full"),
+    method: z.enum(["card", "bank"]).default("card"),
     ownBalls: z.boolean().default(false),
     noVideo: z.boolean().default(false),
     agreeTerms: z.boolean().default(false),

@@ -186,6 +186,52 @@ for (const [name, make] of [
     assert.equal((await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000)).length, 0);
   });
 
+  test(`${name}: bank transfer holds nets for 24 hours with an invoice; marking it paid confirms the booking`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
+    const item = [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }];
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: item, method: "bank" });
+    assert.ok(r.ok);
+    const hold = Date.parse(r.booking.holdExpiresAt!) - Date.now();
+    assert.ok(hold > 23.9 * 3_600_000 && hold <= 24 * 3_600_000);
+    assert.equal(r.booking.invoices?.[0].number, "HR-0001");
+    assert.equal(r.booking.invoices?.[0].amountPence, 6 * 1880);
+    // Held for others; abandoning a card attempt doesn't release it
+    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
+    await store.release(r.booking.id, "cancelled");
+    assert.equal((await store.getBooking(r.booking.id))?.status, "pending_payment");
+    const paid = await store.markBankPaid(r.booking.id, "initial");
+    assert.ok(paid.ok && paid.booking.status === "confirmed" && paid.booking.method === "bank");
+    assert.ok((await store.getBooking(r.booking.id))?.invoices?.[0].paidAt);
+    // Numbers keep counting
+    const r2 = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "bank" });
+    assert.ok(r2.ok && r2.booking.invoices?.[0].number === "HR-0002");
+  });
+
+  test(`${name}: a card payment records its card fee; spring balance can be invoiced`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const { partner: a } = await store.createPartner(partner);
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
+    assert.ok(autumn.ok);
+    await store.confirm(autumn.booking.id, "pi_a", "initial", 193);
+    const got = (await store.getBooking(autumn.booking.id))!;
+    assert.equal(got.method, "card");
+    assert.equal(got.cardFeePence, 193);
+    const dep = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], plan: "deposit", method: "bank" });
+    assert.ok(dep.ok && dep.booking.invoices?.[0].amountPence === dep.booking.depositPence);
+    assert.ok((await store.markBankPaid(dep.booking.id, "initial")).ok);
+    assert.equal((await store.getBooking(dep.booking.id))?.status, "reserved");
+    const inv = await store.issueBalanceInvoice(dep.booking.id, a.id);
+    assert.ok(inv && inv.stage === "balance" && inv.amountPence === dep.booking.totalPence - dep.booking.depositPence!);
+    // Asking again reuses the open invoice
+    assert.equal((await store.issueBalanceInvoice(dep.booking.id, a.id))?.number, inv.number);
+    assert.equal((await store.findInvoice(inv.number))?.booking.id, dep.booking.id);
+    const done = await store.markBankPaid(dep.booking.id, "balance");
+    assert.ok(done.ok && done.booking.status === "confirmed" && done.booking.balanceMethod === "bank");
+  });
+
   test(`${name}: the Stripe test booking costs £1 and never fills up`, async () => {
     const store = make();
     const t = getBlock("stripe-test")!;
@@ -268,4 +314,22 @@ test("the Stripe test booking is only for test accounts", async () => {
   const { isTestPartner } = await import("../src/lib/partners/test-access");
   assert.ok(isTestPartner("Office@HillRisers.co.uk"));
   assert.ok(!isTestPartner("someone@example.com"));
+});
+
+test("card processing fee: grossed up so 1.5% + 20p of the total still leaves the full price", async () => {
+  const { cardFeePence } = await import("../src/data/invoicing");
+  for (const price of [100, 5170, 11280, 20680, 112800]) {
+    const total = price + cardFeePence(price);
+    const stripe = Math.round(total * 0.015) + 20;
+    assert.ok(total - stripe >= price, `${price}: ${total - stripe}`);
+    assert.ok(total - stripe - price <= 1, `${price} overcharged`);
+  }
+  assert.equal(cardFeePence(11280), 193);
+});
+
+test("UK date and time labels, in GMT and BST", async () => {
+  const { ukDateTime } = await import("../src/data/invoicing");
+  assert.equal(ukDateTime("2026-10-24T07:40:00Z"), "8:40am, Saturday 24 October");
+  assert.equal(ukDateTime("2026-11-07T20:05:00Z", "short"), "8:05pm Sat 7 Nov");
+  assert.equal(ukDateTime("2026-12-13T00:00:00Z"), "12:00am, Sunday 13 December");
 });

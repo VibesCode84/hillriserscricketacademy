@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       const stage = cs.metadata.stage === "balance" ? "balance" : "initial";
       if ((event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") && cs.payment_status === "paid") {
         const pi = typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id;
-        await confirmPartnerPayment(id, pi, stage);
+        const fee = Number(cs.metadata.cardFeePence);
+        await confirmPartnerPayment(id, pi, stage, Number.isFinite(fee) ? fee : undefined);
       } else if ((event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") && stage === "initial") {
         // An abandoned balance payment leaves the reservation in place until its deadline
         await partners.release(id, "expired", cs.id);

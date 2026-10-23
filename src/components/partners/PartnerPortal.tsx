@@ -24,6 +24,7 @@ import {
 } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import type { NetBooking, PartnerDocument } from "@/lib/partners/store";
+import { bankTransferEnabled, cardFeePence, STRIPE_FIXED_PENCE, STRIPE_PERCENT } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 import { AccountHeader, Notice } from "./PartnerAccount";
 
@@ -87,6 +88,11 @@ export function PartnerPortal(props: {
           {formatPrice(BOWLING_MACHINE_PENCE)} per hour on top. We don&rsquo;t take one-off or weekly bookings, so there&rsquo;s no
           separate session rate.
         </p>
+        <p className="mt-3 max-w-3xl leading-relaxed text-ink-muted">
+          <strong className="text-navy-950">Bank transfer is free.</strong> Paying by card adds a card processing fee that covers the card
+          charge (Stripe&rsquo;s {STRIPE_PERCENT}% + {STRIPE_FIXED_PENCE}p). The fee is shown before you pay.
+          {!bankTransferEnabled() && " Bank transfer will be available shortly; until then bookings are paid by card."}
+        </p>
       </div>
 
       {props.blocks.map((block) => (
@@ -121,6 +127,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
   const [noVideo, setNoVideo] = useState(false);
   const [agree, setAgree] = useState(false);
   const [plan, setPlan] = useState<"full" | "deposit">("full");
+  const [method, setMethod] = useState<"bank" | "card">(bankTransferEnabled() ? "bank" : "card");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const clearError = (k: string) => setErrors(({ [k]: _gone, ...rest }) => (void _gone, rest));
@@ -212,6 +219,9 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
   const balanceDate = block.deposit ? lastSessionDate(block.deposit.dueAfterBlock, bookings) : undefined;
   const depositPlan = plan === "deposit" && !!balanceDate;
   const deposit = depositFor(block, total);
+  const dueNow = depositPlan ? deposit : total;
+  const byCard = method === "card" || !bankTransferEnabled();
+  const fee = cardFeePence(dueNow);
 
   const pay = async () => {
     setBusy(true);
@@ -225,6 +235,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
         items: items.map((i) => ({ slotKey: i.key, bowlingMachine: i.bowlingMachine, ageGroup: i.ageGroup, ability: i.ability, gender: i.gender })),
         machineCoach: coach || undefined,
         plan: depositPlan ? "deposit" : "full",
+        method: byCard ? "card" : "bank",
         ownBalls,
         noVideo,
         agreeTerms: agree,
@@ -406,16 +417,36 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
               <legend className="sr-only">How would you like to pay?</legend>
               <label className="flex cursor-pointer items-start gap-2">
                 <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-                <span><strong>Pay in full</strong> — {formatPrice(total)} now. Your nets are confirmed.</span>
+                <span><strong>Pay in full</strong> — {formatPrice(total)}. Your nets are confirmed once paid.</span>
               </label>
               <label className="flex cursor-pointer items-start gap-2">
                 <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
                 <span>
-                  <strong>Reserve with a {block.deposit.percent}% deposit</strong> — {formatPrice(deposit)} now. The balance of{" "}
+                  <strong>Reserve with a {block.deposit.percent}% deposit</strong> — {formatPrice(deposit)}. The balance of{" "}
                   {formatPrice(total - deposit)} must be paid by midnight on {longDate(balanceDate)} (your last autumn session), or the nets are
                   released and the deposit isn&rsquo;t refunded.
                 </span>
               </label>
+            </fieldset>
+          )}
+
+          {items.length > 0 && !lockedBy && (
+            <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
+              <legend className="mb-2 font-semibold text-gold">Payment method</legend>
+              {bankTransferEnabled() ? (
+                <>
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                    <span><strong>Bank transfer — no fee.</strong> We email you an invoice for {formatPrice(dueNow)}, payable within 24 hours. Your nets are held until then.</span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                    <span><strong>Card — plus a {formatPrice(fee)} card processing fee.</strong> Confirmed straight away.</span>
+                  </label>
+                </>
+              ) : (
+                <p>Card payment, plus a {formatPrice(fee)} card processing fee to cover the card charge.</p>
+              )}
             </fieldset>
           )}
 
@@ -443,15 +474,25 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
             {errors.noVideo && <p className="error-text">{errors.noVideo}</p>}
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
-              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits, are non-refundable.</span>
+              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits and card fees, are non-refundable.</span>
             </label>
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
           </div>
 
           <button type="button" disabled={busy || items.length === 0} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
-            {busy ? "Holding your nets…" : depositPlan ? `Pay deposit ${formatPrice(deposit)}` : `Book and pay ${items.length ? formatPrice(total) : ""}`}
+            {busy
+              ? "Holding your nets…"
+              : !items.length
+                ? "Book and pay"
+                : byCard
+                  ? `Pay ${depositPlan ? "deposit " : ""}${formatPrice(dueNow + fee)} by card`
+                  : `Book and get invoice for ${formatPrice(dueNow)}`}
           </button>
-          <p className="mt-3 text-xs text-slate">Secure card payment by Stripe. Your slots are held for {PARTNER_HOLD_MINUTES} minutes while you pay.</p>
+          <p className="mt-3 text-xs text-slate">
+            {byCard
+              ? `Secure card payment by Stripe (includes the ${items.length ? formatPrice(fee) : ""} card processing fee). Your slots are held for ${PARTNER_HOLD_MINUTES} minutes while you pay.`
+              : "No fee. Your slots are held for 24 hours while you pay by bank transfer; unpaid invoices release the nets."}
+          </p>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>
       </div>
