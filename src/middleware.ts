@@ -26,17 +26,24 @@ export function middleware(req: NextRequest) {
 }
 
 function adminAuth(req: NextRequest) {
-  const password = process.env.ADMIN_PASSWORD;
-  const username = process.env.ADMIN_USERNAME ?? "admin";
+  // Trimmed: a pasted secret often picks up a trailing space or newline
+  const password = process.env.ADMIN_PASSWORD?.trim();
+  const username = (process.env.ADMIN_USERNAME?.trim() || "admin").toLowerCase();
   if (!password) {
     return new NextResponse("Admin area disabled. Set ADMIN_PASSWORD to enable it.", { status: 503 });
   }
   const header = req.headers.get("authorization") ?? "";
   const [scheme, encoded] = header.split(" ");
   if (scheme === "Basic" && encoded) {
-    const decoded = atob(encoded);
+    // Browsers send UTF-8, so passwords with symbols such as £ decode correctly
+    let decoded = "";
+    try {
+      decoded = new TextDecoder().decode(Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0)));
+    } catch {
+      decoded = "";
+    }
     const i = decoded.indexOf(":");
-    if (i > -1 && timingSafeEqual(decoded.slice(0, i), username) && timingSafeEqual(decoded.slice(i + 1), password)) {
+    if (i > -1 && timingSafeEqual(decoded.slice(0, i).trim().toLowerCase(), username) && timingSafeEqual(decoded.slice(i + 1).trim(), password)) {
       return NextResponse.next();
     }
   }
