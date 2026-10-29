@@ -94,8 +94,8 @@ export function PartnerAccount(props: {
           ) : paidBooking?.status === "reserved" && !banner.balance ? (
             <>
               <strong>Deposit received — your nets are reserved.</strong> Please pay the balance of{" "}
-              {formatPrice(paidBooking.totalPence - (paidBooking.depositPence ?? 0))} by midnight on{" "}
-              {paidBooking.balanceDueDate ? longDate(paidBooking.balanceDueDate) : "the due date"}.
+              {formatPrice(paidBooking.totalPence - (paidBooking.depositPence ?? 0))} by {balanceDueText(paidBooking)}
+              {paidBooking.holding ? " — your invoice is on its way by email." : "."}
             </>
           ) : (
             <><strong>Thanks — we&rsquo;re confirming your payment.</strong> This usually takes a few seconds.</>
@@ -119,8 +119,8 @@ export function PartnerAccount(props: {
                   <p className="mt-1 text-sm text-[#1d3f7a]">
                     {stage === "balance" ? (
                       <>
-                        Deposit {formatPrice(b.depositPence ?? 0)} paid. Balance of <strong>{formatPrice(amount)}</strong> due by midnight on{" "}
-                        {b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}.
+                        {b.holding ? "Holding deposit" : "Deposit"} {formatPrice(b.depositPence ?? 0)} paid. Balance of <strong>{formatPrice(amount)}</strong> due by{" "}
+                        {balanceDueText(b)}.
                       </>
                     ) : (
                       <>
@@ -186,8 +186,8 @@ export function PartnerAccount(props: {
                     <p className="mt-2 font-semibold">Total {formatPrice(b.totalPence)}</p>
                     {b.plan === "deposit" && b.depositPence !== undefined && (
                       <p className="mt-1 text-sm text-ink-muted">
-                        Deposit {formatPrice(b.depositPence)} paid · balance {formatPrice(b.totalPence - b.depositPence)}{" "}
-                        {b.balancePaidAt ? "paid" : b.status === "forfeited" ? "not paid by the deadline" : `due by midnight on ${b.balanceDueDate ? longDate(b.balanceDueDate) : "the due date"}`}
+                        {b.holding ? "Holding deposit" : "Deposit"} {formatPrice(b.depositPence)} paid · balance {formatPrice(b.totalPence - b.depositPence)}{" "}
+                        {b.balancePaidAt ? "paid" : b.status === "forfeited" ? "not paid by the deadline" : `due by ${balanceDueText(b)}`}
                       </p>
                     )}
                   </li>
@@ -214,7 +214,7 @@ function PaymentHistory({ bookings, blocks }: { bookings: NetBooking[]; blocks: 
         ? [
             {
               at: b.paidAt,
-              what: `${label(b.blockId)} — ${b.plan === "deposit" ? "deposit" : "paid in full"}${via(b.method, b.cardFeePence)}`,
+              what: `${label(b.blockId)} — ${b.holding ? "holding deposit" : b.plan === "deposit" ? "deposit" : "paid in full"}${via(b.method, b.cardFeePence)}`,
               pence: (b.plan === "deposit" ? (b.depositPence ?? 0) : b.totalPence) + (b.cardFeePence ?? 0),
               ref: b.method === "bank" ? b.invoices?.find((i) => i.stage === "initial")?.number : b.paymentIntentId,
             },
@@ -337,6 +337,10 @@ const via = (method: string | undefined, fee: number | undefined) =>
   method === "bank" ? " (bank transfer)" : fee ? ` (card, incl. ${formatPrice(fee)} card fee)` : "";
 
 const dueText = (iso: string) => ukDateTime(iso, "short");
+
+/** A holding deposit's balance is due by a time; a spring deposit's by midnight after the last autumn session */
+const balanceDueText = (b: NetBooking) =>
+  b.holding && b.balanceDueAt ? dueText(b.balanceDueAt) : b.balanceDueDate ? `midnight on ${longDate(b.balanceDueDate)}` : "the due date";
 
 /** Ways to settle an outstanding payment: bank transfer (invoice, no fee) or card (plus the card fee) */
 function PayOptions({ bookingId, stage, amount, hasInvoice }: { bookingId: string; stage: "initial" | "balance"; amount: number; hasInvoice: boolean }) {

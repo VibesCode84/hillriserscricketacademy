@@ -1,4 +1,4 @@
-import { bankDetails, company, isPast, ukDateTime } from "@/data/invoicing";
+import { bankDetails, company, INVOICE_DUE_HOURS, isPast, ukDateTime } from "@/data/invoicing";
 import { findSlot, getBlock, shortDate, timeLabel } from "@/data/partners";
 import { formatPrice, site } from "@/data/site";
 import type { NetBooking, Partner, PartnerInvoice } from "@/lib/partners/store";
@@ -22,7 +22,7 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
   const status = invoice.paidAt ? "Paid" : isPast(invoice.dueAt) ? "Overdue" : "Due";
   const rows =
     invoice.stage === "balance"
-      ? [{ key: "balance", text: `Balance for ${block} nets`, detail: `Booking total ${formatPrice(booking.totalPence)}, deposit ${formatPrice(booking.depositPence ?? 0)} paid`, pence: invoice.amountPence }]
+      ? [{ key: "balance", text: `Balance for ${block} nets`, detail: `Booking total ${formatPrice(booking.totalPence)}, ${booking.holding ? "holding deposit" : "deposit"} ${formatPrice(booking.depositPence ?? 0)} paid`, pence: invoice.amountPence }]
       : booking.plan === "deposit"
         ? [{ key: "deposit", text: `Deposit to reserve ${block} nets`, detail: `Booking total ${formatPrice(booking.totalPence)}; balance due later`, pence: invoice.amountPence }]
         : nets;
@@ -60,7 +60,8 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
           </div>
           <dl className="space-y-1 sm:text-right">
             <div><dt className="inline text-ink-muted">Issued: </dt><dd className="inline">{when(invoice.issuedAt)}</dd></div>
-            <div><dt className="inline text-ink-muted">Due: </dt><dd className="inline font-semibold">{ukDateTime(invoice.dueAt)}</dd></div>
+            <div><dt className="inline text-ink-muted">Due: </dt><dd className="inline font-semibold">On receipt</dd></div>
+            <div><dt className="inline text-ink-muted">Pay by: </dt><dd className="inline font-semibold">{ukDateTime(invoice.dueAt)}</dd></div>
             <div><dt className="inline text-ink-muted">Booking ref: </dt><dd className="inline font-mono">{booking.id.slice(0, 8).toUpperCase()}</dd></div>
           </dl>
         </section>
@@ -101,7 +102,7 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
         )}
 
         <section className="mt-8 rounded-2xl bg-cream-200 p-6 text-sm print:border print:border-navy-950/20 print:bg-transparent">
-          <p className="font-semibold">Pay by bank transfer within 24 hours — no fee</p>
+          <p className="font-semibold">Pay by bank transfer within {INVOICE_DUE_HOURS} hours — no fee</p>
           <dl className="mt-3 grid gap-x-6 gap-y-1 sm:grid-cols-[auto_1fr]">
             <dt className="text-ink-muted">Account name</dt><dd className="font-semibold">{bankDetails.accountName ?? "—"}</dd>
             <dt className="text-ink-muted">Sort code</dt><dd className="font-mono font-semibold">{bankDetails.sortCode ?? "—"}</dd>

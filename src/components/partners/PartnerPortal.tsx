@@ -23,7 +23,7 @@ import {
 } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import type { NetBooking, PartnerDocument } from "@/lib/partners/store";
-import { bankTransferEnabled, cardFeePence } from "@/data/invoicing";
+import { bankTransferEnabled, cardFeePence, INVOICE_DUE_HOURS } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 import { AccountHeader, Notice } from "./PartnerAccount";
 
@@ -212,6 +212,10 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
   const dueNow = depositPlan ? deposit : total;
   const byCard = method === "card" || !bankTransferEnabled();
   const fee = cardFeePence(dueNow);
+  // Bank transfer on a block with a holding deposit: the deposit is paid by card first
+  const holdingPct = !byCard && !depositPlan ? block.holdingDeposit : undefined;
+  const holdDeposit = holdingPct ? Math.round((total * holdingPct) / 100) : 0;
+  const holdFee = cardFeePence(holdDeposit);
 
   const pay = async () => {
     setBusy(true);
@@ -424,7 +428,18 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                 <>
                   <label className="flex cursor-pointer items-start gap-2">
                     <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-                    <span><strong>Bank transfer — no fee.</strong> Invoice payable within 24 hours.</span>
+                    <span>
+                      {block.holdingDeposit && !depositPlan ? (
+                        <>
+                          <strong>Bank transfer.</strong> {block.holdingDeposit}% holding deposit by card now, then an invoice for the balance, payable within{" "}
+                          {INVOICE_DUE_HOURS} hours (no fee).
+                        </>
+                      ) : (
+                        <>
+                          <strong>Bank transfer — no fee.</strong> Invoice payable within {INVOICE_DUE_HOURS} hours.
+                        </>
+                      )}
+                    </span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-2">
                     <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
@@ -473,7 +488,9 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                 ? "Book and pay"
                 : byCard
                   ? `Pay ${depositPlan ? "deposit " : ""}${formatPrice(dueNow + fee)} by card`
-                  : `Book and get invoice for ${formatPrice(dueNow)}`}
+                  : holdingPct
+                    ? `Pay holding deposit ${formatPrice(holdDeposit + holdFee)} by card`
+                    : `Book and get invoice for ${formatPrice(dueNow)}`}
           </button>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>

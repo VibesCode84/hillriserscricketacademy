@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const store = getPartnerStore();
   const held = await store.reserve({ partnerId: partner.id, blockId, items, machineCoach, plan, method });
   if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: held.reason === "taken" ? 409 : 400 });
-  if (method === "bank") {
+  if (method === "bank" && !held.booking.holding) {
     const invoice = held.booking.invoices![0];
     await sendInvoice(held.booking, invoice);
     return NextResponse.json({ ok: true, url: `/partners/account?invoice=${invoice.number}` });

@@ -1,5 +1,6 @@
 import { findSlot, getBlock, longDate, shortDate, timeLabel } from "../../data/partners";
 import { sendPartnerBookingConfirmation, sendPartnerInvoice } from "../email";
+import { ukDateTime } from "../../data/invoicing";
 import { getPartnerStore, type NetBooking, type PartnerInvoice } from "./store";
 
 /**
@@ -10,7 +11,12 @@ export async function confirmPartnerPayment(bookingId: string, paymentIntentId: 
   const store = getPartnerStore();
   const before = await store.getBooking(bookingId);
   const after = await store.confirm(bookingId, paymentIntentId, stage, cardFeePence);
-  if (after && before && before.status !== after.status) await sendConfirmation(after, stage);
+  if (after && before && before.status !== after.status) {
+    await sendConfirmation(after, stage);
+    // A holding deposit has just been paid: send the invoice for the balance
+    const invoice = after.holding && stage === "initial" ? after.invoices?.find((i) => i.stage === "balance" && !i.paidAt) : undefined;
+    if (invoice) await sendInvoice(after, invoice);
+  }
   return after;
 }
 
@@ -52,7 +58,9 @@ function describe(b: NetBooking, stage: "initial" | "balance") {
     paidPence: kind === "deposit" ? (b.depositPence ?? b.totalPence) : kind === "balance" ? b.totalPence - (b.depositPence ?? 0) : b.totalPence,
     totalPence: b.totalPence,
     balancePence: kind === "deposit" ? b.totalPence - (b.depositPence ?? 0) : undefined,
-    balanceDue: kind === "deposit" && b.balanceDueDate ? longDate(b.balanceDueDate) : undefined,
+    balanceDue:
+      kind !== "deposit" ? undefined : b.holding && b.balanceDueAt ? ukDateTime(b.balanceDueAt) : b.balanceDueDate ? `midnight on ${longDate(b.balanceDueDate)}` : undefined,
+    holding: !!b.holding,
     machineCoach: b.machineCoach,
     method: (stage === "balance" ? b.balanceMethod : b.method) ?? "card",
     cardFeePence: stage === "balance" ? b.balanceCardFeePence : b.cardFeePence,

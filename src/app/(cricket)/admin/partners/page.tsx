@@ -64,7 +64,7 @@ export default async function AdminPartnersPage() {
                       <tr key={i.number}>
                         <td className="px-4 py-3 font-mono"><Link href={`/admin/partners/invoice/${i.number}`} className="underline">{i.number}</Link></td>
                         <td className="px-4 py-3">{partner?.orgName ?? "?"}</td>
-                        <td className="px-4 py-3">{getBlock(b.blockId)?.label} — {i.stage === "balance" ? "balance" : b.plan === "deposit" ? "deposit" : "in full"}</td>
+                        <td className="px-4 py-3">{getBlock(b.blockId)?.label} — {i.stage === "balance" ? (b.holding ? "balance after holding deposit" : "balance") : b.plan === "deposit" ? "deposit" : "in full"}</td>
                         <td className="px-4 py-3 text-right font-semibold">{formatPrice(i.amountPence)}</td>
                         <td className="px-4 py-3">
                           {ukDateTime(i.dueAt, "short")}
@@ -162,7 +162,7 @@ export default async function AdminPartnersPage() {
                           {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}${i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}`).join("; ")} · {formatPrice(b.totalPence)}
                           {b.machineCoach ? ` · machine coach: ${b.machineCoach}` : ""}
                           {b.plan === "deposit" && b.depositPence !== undefined
-                            ? ` · deposit ${formatPrice(b.depositPence)}, balance ${formatPrice(b.totalPence - b.depositPence)} ${b.balancePaidAt ? "paid" : `due by midnight ${b.balanceDueDate ? longDate(b.balanceDueDate) : ""}`}`
+                            ? ` · ${b.holding ? "holding deposit" : "deposit"} ${formatPrice(b.depositPence)}, balance ${formatPrice(b.totalPence - b.depositPence)} ${b.balancePaidAt ? "paid" : `due by ${b.holding && b.balanceDueAt ? ukDateTime(b.balanceDueAt, "short") : `midnight ${b.balanceDueDate ? longDate(b.balanceDueDate) : ""}`}`}`
                             : ""}
                         </li>
                       ))}

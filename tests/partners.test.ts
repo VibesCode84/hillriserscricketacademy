@@ -186,27 +186,45 @@ for (const [name, make] of [
     assert.equal((await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000)).length, 0);
   });
 
-  test(`${name}: bank transfer holds nets for 24 hours with an invoice; marking it paid confirms the booking`, async () => {
+  test(`${name}: autumn by bank transfer: 25% holding deposit by card, then an invoice for the balance`, async () => {
     const store = make();
     const { partner: a } = await store.createPartner(partner);
     const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
     const item = [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }];
     const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: item, method: "bank" });
-    assert.ok(r.ok);
+    assert.ok(r.ok && r.booking.holding && r.booking.method === "card");
+    assert.equal(r.booking.depositPence, Math.round(6 * 1880 * 0.25));
+    assert.equal(r.booking.invoices, undefined);
+    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
+    await store.confirm(r.booking.id, "pi_hold", "initial", 63);
+    const held = (await store.getBooking(r.booking.id))!;
+    assert.equal(held.status, "reserved");
+    const inv = held.invoices?.[0];
+    assert.ok(inv && inv.number === "HR-0001" && inv.stage === "balance" && inv.amountPence === 6 * 1880 - held.depositPence!);
+    const window = Date.parse(held.balanceDueAt!) - Date.now();
+    assert.ok(window > 23.9 * 3_600_000 && window <= 24 * 3_600_000);
+    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
+    const paid = await store.markBankPaid(r.booking.id, "balance");
+    assert.ok(paid.ok && paid.booking.status === "confirmed" && paid.booking.balanceMethod === "bank");
+    assert.ok((await store.getBooking(r.booking.id))?.invoices?.[0].paidAt);
+  });
+
+  test(`${name}: spring by bank transfer is invoiced straight away and held for 24 hours`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const { partner: a } = await store.createPartner(partner);
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
+    assert.ok(autumn.ok);
+    await store.confirm(autumn.booking.id, "pi_a");
+    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], method: "bank" });
+    assert.ok(r.ok && !r.booking.holding);
     const hold = Date.parse(r.booking.holdExpiresAt!) - Date.now();
     assert.ok(hold > 23.9 * 3_600_000 && hold <= 24 * 3_600_000);
-    assert.equal(r.booking.invoices?.[0].number, "HR-0001");
-    assert.equal(r.booking.invoices?.[0].amountPence, 6 * 1880);
-    // Held for others; abandoning a card attempt doesn't release it
-    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
+    assert.equal(r.booking.invoices?.[0].amountPence, 12 * 1880);
     await store.release(r.booking.id, "cancelled");
     assert.equal((await store.getBooking(r.booking.id))?.status, "pending_payment");
     const paid = await store.markBankPaid(r.booking.id, "initial");
     assert.ok(paid.ok && paid.booking.status === "confirmed" && paid.booking.method === "bank");
-    assert.ok((await store.getBooking(r.booking.id))?.invoices?.[0].paidAt);
-    // Numbers keep counting
-    const r2 = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "bank" });
-    assert.ok(r2.ok && r2.booking.invoices?.[0].number === "HR-0002");
   });
 
   test(`${name}: one unpaid invoice at a time (card is still allowed)`, async () => {
@@ -214,10 +232,11 @@ for (const [name, make] of [
     const { partner: a } = await store.createPartner(partner);
     const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], method: "bank" });
     assert.ok(first.ok);
+    await store.confirm(first.booking.id, "pi_hold", "initial");
     const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "bank" });
     assert.ok(!second.ok && second.message.includes("HR-0001"));
     assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "card" })).ok);
-    await store.markBankPaid(first.booking.id, "initial");
+    await store.markBankPaid(first.booking.id, "balance");
     assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: false }], method: "bank" })).ok);
   });
 

@@ -271,8 +271,10 @@ type PaidBooking = {
   paidPence: number;
   totalPence: number;
   balancePence?: number;
-  /** Long date of the balance deadline day, for deposits */
+  /** When the balance is due, e.g. "midnight on Saturday 12 December" or "2:23pm, Saturday 31 October" */
   balanceDue?: string;
+  /** Holding deposit for a bank transfer: the balance invoice follows in a separate email */
+  holding?: boolean;
   machineCoach?: string;
   method: "card" | "bank";
   cardFeePence?: number;
@@ -290,7 +292,9 @@ export async function sendPartnerBookingConfirmation(p: PartnerContact, b: PaidB
   const via = b.method === "bank" ? " by bank transfer" : b.cardFeePence ? ` by card (plus a ${formatPrice(b.cardFeePence)} card processing fee)` : " by card";
   const payment =
     b.stage === "deposit"
-      ? `We've received your deposit of ${formatPrice(b.paidPence)}${via}. The balance of ${formatPrice(b.balancePence ?? 0)} must be paid by midnight on ${b.balanceDue} — after that the nets are released and the deposit isn't refunded. We'll send reminders, and you can pay any time from your account.`
+      ? b.holding
+        ? `We've received your holding deposit of ${formatPrice(b.paidPence)}${via}. Your invoice for the balance of ${formatPrice(b.balancePence ?? 0)} follows in a separate email; please pay it by bank transfer by ${b.balanceDue}, or the nets are released and the deposit isn't refunded.`
+        : `We've received your deposit of ${formatPrice(b.paidPence)}${via}. The balance of ${formatPrice(b.balancePence ?? 0)} must be paid by ${b.balanceDue} — after that the nets are released and the deposit isn't refunded. We'll send reminders, and you can pay any time from your account.`
       : b.stage === "balance"
         ? `We've received your balance payment of ${formatPrice(b.paidPence)}${via}. Your booking (${formatPrice(b.totalPence)} in total) is now paid in full.`
         : `We've received your payment of ${formatPrice(b.paidPence)}${via}. Your booking is paid in full.`;
@@ -319,7 +323,7 @@ ${signOff}
   });
   await notifyAcademy(
     `Partner payment: ${p.orgName} — ${b.blockLabel} ${b.stage === "full" ? "" : `(${b.stage}) `}${formatPrice(b.paidPence)}`,
-    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n${heading}\n\n${b.nets.join("\n")}\n\nPaid now: ${formatPrice(b.paidPence)} · Booking total: ${formatPrice(b.totalPence)}${b.stage === "deposit" ? ` · Balance ${formatPrice(b.balancePence ?? 0)} due by midnight ${b.balanceDue}` : ""}\nRef ${b.reference}\n\nSee ${site.url}/admin/partners`,
+    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n${heading}\n\n${b.nets.join("\n")}\n\nPaid now: ${formatPrice(b.paidPence)} · Booking total: ${formatPrice(b.totalPence)}${b.stage === "deposit" ? ` · Balance ${formatPrice(b.balancePence ?? 0)} due by ${b.balanceDue}` : ""}\nRef ${b.reference}\n\nSee ${site.url}/admin/partners`,
   );
 }
 
@@ -333,21 +337,21 @@ type InvoiceEmail = {
   nets: string[];
 };
 
-/** Bank-transfer invoice: due within 24 hours, no card fee */
+/** Bank-transfer invoice: due on receipt, payable within INVOICE_DUE_HOURS, no card fee */
 export async function sendPartnerInvoice(p: PartnerContact, inv: InvoiceEmail) {
   const due = ukDateTime(inv.dueAt);
   const what = inv.kind === "deposit" ? `Deposit to reserve your ${inv.blockLabel} nets` : inv.kind === "balance" ? `Balance for your ${inv.blockLabel} nets` : `${inv.blockLabel} nets`;
   const bank = bankDetails;
   await send({
     to: p.email,
-    subject: `Invoice ${inv.number}: ${formatPrice(inv.amountPence)} due by ${due}`,
+    subject: `Invoice ${inv.number}: ${formatPrice(inv.amountPence)} due on receipt`,
     text: `Hi ${p.contactName.split(" ")[0]},
 
 Here is your invoice for ${what.charAt(0).toLowerCase()}${what.slice(1)}. Bank transfer has no fee.
 
 Invoice: ${inv.number}
 Amount due: ${formatPrice(inv.amountPence)}
-Due by: ${due} (within 24 hours)
+Due: on receipt — please pay by ${due}
 
 Pay by bank transfer to:
 Account name: ${bank.accountName ?? "—"}

@@ -1,5 +1,5 @@
 /**
- * How partners pay: bank transfer against an invoice (no fee, due within 24 hours) or card through
+ * How partners pay: bank transfer against an invoice (no fee, due on receipt, payable within 24 hours) or card through
  * Stripe with a card processing fee that covers Stripe's charge.
  *
  * Bank transfer stays switched off until the bank details below are filled in.
@@ -20,7 +20,7 @@ export const bankDetails = {
 
 export const bankTransferEnabled = () => !!(bankDetails.accountName && bankDetails.sortCode && bankDetails.accountNumber);
 
-/** Invoices are due this many hours after they're issued; unpaid initial invoices then release their nets */
+/** Invoices are due on receipt and must be paid within this many hours; unpaid ones then release their nets */
 export const INVOICE_DUE_HOURS = 24;
 export const invoiceNumber = (n: number) => `HR-${String(n).padStart(4, "0")}`;
 

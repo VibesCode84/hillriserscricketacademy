@@ -45,6 +45,11 @@ export type PartnerBlock = {
    * is due by midnight (UK time) at the end of their last session in `dueAfterBlock`.
    */
   deposit?: { percent: number; dueAfterBlock: string };
+  /**
+   * Paying by bank transfer: a holding deposit (this % of the total) is taken by card first, then the
+   * balance is invoiced, payable within INVOICE_DUE_HOURS (nets released and deposit kept if unpaid).
+   */
+  holdingDeposit?: number;
   /** Stripe test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up */
   test?: boolean;
 };
@@ -75,6 +80,7 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "autumn-2026",
     label: "Autumn block 2026",
+    holdingDeposit: 25,
     summary: "November to 13 December 2026",
     notes: [
       "Wednesdays start on 25 November.",

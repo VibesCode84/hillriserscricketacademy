@@ -106,6 +106,8 @@ export type NetBooking = {
   totalPence: number;
   /** Paying in full (default) or reserving with a deposit */
   plan?: "full" | "deposit";
+  /** A card holding deposit for a bank-transfer booking: the balance is invoiced once it's paid */
+  holding?: boolean;
   /** How the first payment was (or is being) made; card adds a card processing fee */
   method?: PaymentMethod;
   cardFeePence?: number;
@@ -294,7 +296,7 @@ function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number
 }
 
 /** Records a payment: the first one (in full → confirmed, deposit → reserved) or a balance (→ confirmed) */
-function settle(b: NetBooking, stage: "initial" | "balance", p: { method: PaymentMethod; paymentIntentId?: string; cardFeePence?: number }) {
+function settle(d: Data, b: NetBooking, stage: "initial" | "balance", p: { method: PaymentMethod; paymentIntentId?: string; cardFeePence?: number }) {
   const at = now();
   if (stage === "balance") {
     if (b.status !== "reserved") return b;
@@ -302,6 +304,12 @@ function settle(b: NetBooking, stage: "initial" | "balance", p: { method: Paymen
   } else {
     if (b.status === "confirmed" || b.status === "reserved") return b;
     Object.assign(b, { status: b.plan === "deposit" ? "reserved" : "confirmed", paidAt: at, paymentIntentId: p.paymentIntentId, method: p.method, cardFeePence: p.cardFeePence, holdExpiresAt: undefined });
+    if (b.holding) {
+      // Holding deposit paid: invoice the balance, payable within INVOICE_DUE_HOURS
+      b.balanceDueAt = new Date(Date.now() + INVOICE_DUE_HOURS * 3_600_000).toISOString();
+      b.invoices = [...(b.invoices ?? []), newInvoice(d, "balance", b.totalPence - (b.depositPence ?? 0), b.balanceDueAt)];
+      return b;
+    }
   }
   // A card payment settles any open invoice for the same payment too
   for (const inv of b.invoices ?? []) if (inv.stage === stage && !inv.paidAt) inv.paidAt = at;
@@ -513,6 +521,8 @@ export class PartnerStore {
         const open = openInvoice(d, input.partnerId);
         if (open) return { ok: false, reason: "invalid", message: unpaidMessage(open) };
       }
+      // Bank transfer on a block with a holding deposit: card deposit now, balance invoiced once it's paid
+      const holding = input.method === "bank" && !!block.holdingDeposit && input.plan !== "deposit";
       let balanceDueDate: string | undefined;
       let firstSession: string | undefined;
       if (input.plan === "deposit") {
@@ -568,14 +578,16 @@ export class PartnerStore {
               balanceDueDate,
               balanceDueAt: endOfDayLondon(balanceDueDate).toISOString(),
             }
-          : { plan: "full" as const }),
-        method: input.method ?? "card",
+          : holding
+            ? { plan: "deposit" as const, holding: true, depositPence: Math.round((items.reduce((n, i) => n + i.pricePence, 0) * block.holdingDeposit!) / 100) }
+            : { plan: "full" as const }),
+        method: holding ? "card" : (input.method ?? "card"),
         status: "pending_payment",
         // A bank transfer holds the nets until the invoice is due; a card payment for the checkout window
-        holdExpiresAt: new Date(at + (input.method === "bank" ? INVOICE_DUE_HOURS * 3_600_000 : PARTNER_HOLD_MINUTES * 60_000)).toISOString(),
+        holdExpiresAt: new Date(at + (input.method === "bank" && !holding ? INVOICE_DUE_HOURS * 3_600_000 : PARTNER_HOLD_MINUTES * 60_000)).toISOString(),
         createdAt: now(),
       };
-      if (input.method === "bank") {
+      if (input.method === "bank" && !holding) {
         booking.invoices = [newInvoice(d, "initial", booking.plan === "deposit" ? booking.depositPence! : booking.totalPence, booking.holdExpiresAt!)];
       }
       d.bookings.push(booking);
@@ -606,7 +618,7 @@ export class PartnerStore {
   confirm(bookingId: string, paymentIntentId?: string, stage: "initial" | "balance" = "initial", cardFeePence?: number) {
     return this.tx((d) => {
       const b = d.bookings.find((x) => x.id === bookingId);
-      return b && settle(b, stage, { method: "card", paymentIntentId, cardFeePence });
+      return b && settle(d, b, stage, { method: "card", paymentIntentId, cardFeePence });
     });
   }
 
@@ -625,7 +637,7 @@ export class PartnerStore {
         const clash = b.items.some((i) => others.some((o) => o.items.some((j) => j.slotKey === i.slotKey || (i.bowlingMachine && j.bowlingMachine && machineKey(b.blockId, i) === machineKey(b.blockId, j)))));
         if (clash && !getBlock(b.blockId)?.test) return { ok: false, message: "The payment deadline passed and some of these nets have since been booked by someone else. Please refund the transfer." };
       }
-      settle(b, stage, { method: "bank" });
+      settle(d, b, stage, { method: "bank" });
       return { ok: true, booking: b };
     });
   }

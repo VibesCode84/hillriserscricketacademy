@@ -145,7 +145,10 @@ export async function createPartnerCheckout(booking: NetBooking, partner: Partne
     stage === "balance"
       ? single(`${label} — balance`, booking.totalPence - (booking.depositPence ?? 0))
       : booking.plan === "deposit"
-        ? single(`${label} — ${block?.deposit?.percent ?? ""}% deposit to reserve`, booking.depositPence ?? booking.totalPence)
+        ? single(
+            booking.holding ? `${label} — ${block?.holdingDeposit ?? ""}% holding deposit` : `${label} — ${block?.deposit?.percent ?? ""}% deposit to reserve`,
+            booking.depositPence ?? booking.totalPence,
+          )
         : booking.items.map((i) => ({
             quantity: 1,
             price_data: {
