@@ -15,7 +15,7 @@ export const company = {
 export const bankDetails = {
   accountName: "HILLRISERS CIC" as string | undefined,
   sortCode: "08-92-99" as string | undefined,
-  accountNumber: "67562992-00" as string | undefined,
+  accountNumber: "67562992" as string | undefined,
 };
 
 export const bankTransferEnabled = () => !!(bankDetails.accountName && bankDetails.sortCode && bankDetails.accountNumber);
