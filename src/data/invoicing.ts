@@ -8,16 +8,14 @@
 export const company = {
   legalName: "HillRisers CIC",
   companyNumber: "17511172",
-  /** Registered office — TODO: add (required on invoices) */
-  registeredOffice: undefined as string | undefined,
+  registeredOffice: "53 Sharps Lane, Ruislip, Middlesex, HA4 7JD" as string | undefined,
   email: "office@hillrisers.co.uk",
 };
 
-/** TODO: add once the account is open */
 export const bankDetails = {
-  accountName: undefined as string | undefined,
-  sortCode: undefined as string | undefined,
-  accountNumber: undefined as string | undefined,
+  accountName: "HILLRISERS CIC" as string | undefined,
+  sortCode: "08-92-99" as string | undefined,
+  accountNumber: "67562992-00" as string | undefined,
 };
 
 export const bankTransferEnabled = () => !!(bankDetails.accountName && bankDetails.sortCode && bankDetails.accountNumber);
