@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export const viewport: Viewport = {
-  themeColor: "#07182f",
+  themeColor: "#071b3f",
   width: "device-width",
   initialScale: 1,
 };

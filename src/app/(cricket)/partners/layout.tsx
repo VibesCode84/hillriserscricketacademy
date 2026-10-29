@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Crest } from "@/components/Logo";
+import { Crest, Wordmark } from "@/components/Logo";
 import { site } from "@/data/site";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function PartnersLayout({ children }: { children: React.ReactNode
           <Link href="/partners" className="inline-flex items-center gap-3">
             <Crest className="h-9 w-auto" />
             <span className="flex flex-col leading-none">
-              <span className="font-serif text-[1.45rem] font-semibold text-cream">HillRisers</span>
+              <Wordmark className="h-[1.45rem] w-auto" />
               <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-gold">Partner portal</span>
             </span>
           </Link>

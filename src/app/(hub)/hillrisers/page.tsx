@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Crest } from "@/components/Logo";
+import { Crest, Wordmark } from "@/components/Logo";
 import { hub, sports, type Sport } from "@/data/hub";
 
 // Served at hillrisers.co.uk/ (src/middleware.ts rewrites the landing page's "/" here)
@@ -119,8 +119,8 @@ export default function HillRisersHome() {
 
       <header className="container-x relative flex items-center justify-between py-6">
         <span className="inline-flex items-center gap-3">
-          <Crest className="h-10 w-auto" />
-          <span className="font-serif text-[1.65rem] font-semibold tracking-tight">{hub.name}</span>
+          <Crest className="h-11 w-auto" />
+          <Wordmark className="h-[1.75rem] w-auto" />
         </span>
         <a href="#about" className="text-sm font-medium text-slate underline-offset-4 hover:text-cream hover:underline">
           About us

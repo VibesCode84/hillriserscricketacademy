@@ -404,11 +404,11 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
             <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
               <legend className="sr-only">How would you like to pay?</legend>
               <label className="flex cursor-pointer items-start gap-2">
-                <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                 <span><strong>Pay in full</strong> — {formatPrice(total)}</span>
               </label>
               <label className="flex cursor-pointer items-start gap-2">
-                <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                 <span>
                   <strong>{block.deposit.percent}% deposit</strong> — {formatPrice(deposit)}, balance of {formatPrice(total - deposit)} due by midnight
                   on {longDate(balanceDate)}
@@ -423,11 +423,11 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
               {bankTransferEnabled() ? (
                 <>
                   <label className="flex cursor-pointer items-start gap-2">
-                    <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                    <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                     <span><strong>Bank transfer — no fee.</strong> Invoice payable within 24 hours.</span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-2">
-                    <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                    <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                     <span><strong>Card — plus a {formatPrice(fee)} card processing fee.</strong></span>
                   </label>
                 </>
@@ -446,7 +446,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                 {errors.machineCoach && <p className="error-text">{errors.machineCoach}</p>}
               </div>
               <label className="flex cursor-pointer items-start gap-2">
-                <input type="checkbox" checked={ownBalls} onChange={(e) => (setOwnBalls(e.target.checked), clearError("ownBalls"))} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+                <input type="checkbox" checked={ownBalls} onChange={(e) => (setOwnBalls(e.target.checked), clearError("ownBalls"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                 <span>We will supply our own balls.</span>
               </label>
               {errors.ownBalls && <p className="error-text">{errors.ownBalls}</p>}
@@ -455,12 +455,12 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
 
           <div className="mt-5 space-y-3 text-sm">
             <label className="flex cursor-pointer items-start gap-2">
-              <input type="checkbox" checked={noVideo} onChange={(e) => (setNoVideo(e.target.checked), clearError("noVideo"))} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+              <input type="checkbox" checked={noVideo} onChange={(e) => (setNoVideo(e.target.checked), clearError("noVideo"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
               <span><strong>No filming or video.</strong> I confirm no filming or video recording of any kind will take place, including on phones.</span>
             </label>
             {errors.noVideo && <p className="error-text">{errors.noVideo}</p>}
             <label className="flex cursor-pointer items-start gap-2">
-              <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#d5a93f]" />
+              <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
               <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits and card fees, are non-refundable.</span>
             </label>
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}

@@ -19,7 +19,7 @@ export function CTASection({
     <section className="relative overflow-hidden bg-navy-950 py-24 md:py-32">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <svg className="absolute bottom-0 left-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 1440 400">
-          <path d="M0 360 C 360 330 620 220 900 180 S 1300 120 1440 80" stroke="#d5a93f" strokeOpacity="0.25" fill="none" />
+          <path d="M0 360 C 360 330 620 220 900 180 S 1300 120 1440 80" stroke="#e8b84e" strokeOpacity="0.25" fill="none" />
           <path d="M0 390 C 380 370 660 270 940 230 S 1320 170 1440 140" stroke="#e8cf83" strokeOpacity="0.1" fill="none" />
         </svg>
       </div>

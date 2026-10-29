@@ -9,9 +9,9 @@ function HeroArtwork() {
       <div className="absolute -left-40 top-0 h-[36rem] w-[36rem] rounded-full bg-navy-800/60 blur-[120px]" />
       <div className="absolute right-0 top-20 h-[28rem] w-[28rem] rounded-full bg-gold/[0.07] blur-[110px]" />
       <svg className="absolute bottom-0 left-0 h-[70%] w-full" preserveAspectRatio="none" viewBox="0 0 1440 500">
-        <path d="M0 470 C 300 450 560 330 860 270 S 1280 190 1440 150" stroke="#d5a93f" strokeOpacity="0.35" fill="none" />
+        <path d="M0 470 C 300 450 560 330 860 270 S 1280 190 1440 150" stroke="#e8b84e" strokeOpacity="0.35" fill="none" />
         <path d="M0 495 C 320 480 600 370 900 315 S 1300 240 1440 205" stroke="#e8cf83" strokeOpacity="0.12" fill="none" />
-        <path d="M0 440 C 280 420 520 290 820 225 S 1260 140 1440 95" stroke="#f8f6f0" strokeOpacity="0.05" fill="none" />
+        <path d="M0 440 C 280 420 520 290 820 225 S 1260 140 1440 95" stroke="#f5f0e6" strokeOpacity="0.05" fill="none" />
       </svg>
     </div>
   );

@@ -44,18 +44,18 @@ export function Photo({
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 300" aria-hidden="true">
           <defs>
             <radialGradient id="ph-glow" cx="70%" cy="20%" r="70%">
-              <stop offset="0%" stopColor="#d5a93f" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#d5a93f" stopOpacity="0" />
+              <stop offset="0%" stopColor="#e8b84e" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#e8b84e" stopOpacity="0" />
             </radialGradient>
           </defs>
           <rect width="400" height="300" fill="url(#ph-glow)" />
           {/* rising hill lines */}
-          <path d="M-20 250 C 80 230 160 170 260 150 S 380 120 440 90" stroke="#d5a93f" strokeOpacity="0.35" strokeWidth="1" fill="none" />
+          <path d="M-20 250 C 80 230 160 170 260 150 S 380 120 440 90" stroke="#e8b84e" strokeOpacity="0.35" strokeWidth="1" fill="none" />
           <path d="M-20 275 C 90 260 170 205 270 185 S 390 160 440 135" stroke="#e8cf83" strokeOpacity="0.15" strokeWidth="1" fill="none" />
           {/* ball seam */}
-          <circle cx="300" cy="95" r="42" stroke="#f8f6f0" strokeOpacity="0.08" strokeWidth="1" fill="none" />
-          <path d="M272 64 C 292 84 292 106 272 126" stroke="#d5a93f" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" fill="none" />
-          <path d="M328 64 C 308 84 308 106 328 126" stroke="#d5a93f" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" fill="none" />
+          <circle cx="300" cy="95" r="42" stroke="#f5f0e6" strokeOpacity="0.08" strokeWidth="1" fill="none" />
+          <path d="M272 64 C 292 84 292 106 272 126" stroke="#e8b84e" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" fill="none" />
+          <path d="M328 64 C 308 84 308 106 328 126" stroke="#e8b84e" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="2 4" fill="none" />
         </svg>
       </div>
       {showCaption && (

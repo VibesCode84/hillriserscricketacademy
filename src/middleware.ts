@@ -60,4 +60,4 @@ function timingSafeEqual(a: string, b: string) {
 }
 
 // Everything except build assets and images (those load the same on every address)
-export const config = { matcher: ["/((?!_next/|images/|icon.svg|favicon.ico).*)"] };
+export const config = { matcher: ["/((?!_next/|images/|brand/|icon.svg|favicon.ico).*)"] };

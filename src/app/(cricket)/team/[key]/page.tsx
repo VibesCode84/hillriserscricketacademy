@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { COACH_PAGE_KEY } from "@/data/recruitment";
-import { Crest } from "@/components/Logo";
+import { Crest, Wordmark } from "@/components/Logo";
 import { site } from "@/data/site";
 import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
@@ -79,7 +79,7 @@ export default async function CoachRecruitmentPage({ params }: { params: Promise
         <div className="container-x flex h-[4.5rem] items-center gap-3 lg:h-20">
           <Crest className="h-10 w-auto" />
           <span className="flex flex-col leading-none">
-            <span className="font-serif text-[1.55rem] font-semibold tracking-tight text-cream">HillRisers</span>
+            <Wordmark className="h-[1.6rem] w-auto" />
             <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.28em] text-gold">Coaching opportunities</span>
           </span>
         </div>

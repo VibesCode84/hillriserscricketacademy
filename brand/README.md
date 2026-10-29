@@ -1,15 +1,19 @@
 # HillRisers logo files
 
-| Version | Use on |
+Production files recreated from the brand pack (`GUIDELINES.md`, originals in `reference/`): shield + Harrow spire + rolling hills, flat brand colours, wordmark converted to outlines.
+
+| File | Use |
 |---|---|
-| `*-dark` | Navy or dark backgrounds and photos (as on the website) |
-| `*-light` | White or light backgrounds, most print |
-| `hillrisers-social-square` | Social media profile pictures |
+| `hillrisers-primary-crest` | Main badge: kit, social, signage |
+| `hillrisers-horizontal-on-dark` / `-on-light` | Website header, email signatures, documents, banners |
+| `hillrisers-icon` | Crest without wordmark: mobile header, app icon |
+| `hillrisers-wordmark-on-dark` / `-on-light` | Wordmark only |
+| `hillrisers-mono-light` / `hillrisers-icon-mono-light` / `hillrisers-horizontal-mono-light` | Ivory artwork for dark backgrounds |
+| `hillrisers-mono-dark` / `hillrisers-icon-mono-dark` / `hillrisers-horizontal-mono-dark` | Navy artwork for light backgrounds |
+| `hillrisers-embroidery` | Thicker lines, simplified spire, 3 thread colours (navy, gold, ivory) |
+| `favicon` | Simplified crest for favicons |
+| `hillrisers-social-square` | Social profile picture |
 
-- **svg/** — vector, for websites and designers
-- **pdf/** — vector, for printers (scales to any size)
-- **png/** — transparent background, for documents, emails and social media
+- **svg/** vector for web and designers · **pdf/** vector for printers · **png/** transparent background
 
-Lockups: `hillrisers-cricket-academy-logo` (crest + HillRisers + Cricket Academy), `hillrisers-logo` (crest + HillRisers), `hillrisers-crest` (crest only).
-
-Colours: navy #07182F · gold #D5A93F · light gold #E8CF83 · deep gold #8F6A17 · cream #F8F6F0. Fonts: Cormorant Garamond SemiBold (HillRisers), Manrope SemiBold (Cricket Academy) — already converted to shapes in these files.
+Colours: deep navy #071B3F · rich navy #0A2A5E · warm gold #E8B84E · ivory #F5F0E6. Wordmark: DM Serif Display.

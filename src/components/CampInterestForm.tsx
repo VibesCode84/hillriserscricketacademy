@@ -83,7 +83,7 @@ export function CampInterestForm() {
                 selected.includes(o.id) ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 bg-white hover:border-navy-950/40"
               }`}
             >
-              <input type="checkbox" className="mt-1 h-4 w-4 accent-[#d5a93f]" checked={selected.includes(o.id)} onChange={() => toggle(o.id)} />
+              <input type="checkbox" className="mt-1 h-4 w-4 accent-[#e8b84e]" checked={selected.includes(o.id)} onChange={() => toggle(o.id)} />
               <span>
                 <span className="block font-semibold">{o.title}</span>
                 <span className={`block text-sm ${selected.includes(o.id) ? "text-slate" : "text-ink-muted"}`}>{o.detail}</span>

@@ -50,7 +50,7 @@ export function Header() {
       }`}
     >
       <div className="container-x flex h-[4.5rem] items-center justify-between gap-6 lg:h-20">
-        <Logo />
+        <Logo iconOnPhones />
 
         <nav aria-label="Main" className="hidden items-center gap-6 xl:flex">
           {nav.map((item) => (
