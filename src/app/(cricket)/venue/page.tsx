@@ -10,7 +10,7 @@ import { CTASection } from "@/components/CTASection";
 export const metadata: Metadata = {
   title: "Venue — John Lyon School, Harrow on the Hill",
   description:
-    "HillRisers coaches in the John Lyon School sports hall, Harrow on the Hill — three indoor nets and a bowling machine — with outdoor nets expected in summer.",
+    "HillRisers coaches in the John Lyon School sports hall, Harrow on the Hill — three indoor nets and a bowling machine.",
   alternates: { canonical: "/venue" },
 };
 
@@ -21,15 +21,15 @@ const info = [
   },
   {
     t: "About the run-up",
-    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected, and full run-ups return outdoors.",
+    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected.",
   },
   {
     t: "Bowling machine",
-    b: "A bowling machine with an automatic ball feeder is available through autumn and spring — in sessions, or book the bowling machine net on its own.",
+    b: "A bowling machine with an automatic ball feeder is available through autumn and spring.",
   },
   {
     t: "Summer",
-    b: "Summer arrangements are to be confirmed. We're expecting outdoor nets, with a multi-use games area (MUGA) for fielding.",
+    b: "Summer arrangements are to be confirmed.",
   },
   {
     t: "Arrival and collection",
@@ -48,7 +48,7 @@ export default function VenuePage() {
       <PageHero
         eyebrow="The venue"
         title="John Lyon School, Harrow on the Hill."
-        intro={<p>Three indoor nets and a bowling machine in the sports hall, with outdoor nets expected in summer.</p>}
+        intro={<p>Three indoor nets and a bowling machine in the sports hall.</p>}
         actions={
           <>
             <ButtonLink href="/register" arrow className="group">Register your interest</ButtonLink>

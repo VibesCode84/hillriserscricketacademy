@@ -58,11 +58,11 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "Where are sessions held?",
-        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and a bowling machine. Summer arrangements are to be confirmed, and we're expecting outdoor nets.",
+        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and a bowling machine. Summer arrangements are to be confirmed.",
       },
       {
         q: "Can seam bowlers bowl off a full run-up indoors?",
-        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Full run-ups return outdoors.",
+        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations.",
       },
       {
         q: "Who are the coaches?",

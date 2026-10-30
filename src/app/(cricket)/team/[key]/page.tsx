@@ -28,7 +28,7 @@ const opportunity = [
   { t: "Launching soon", b: "A brand-new academy at John Lyon School, Harrow on the Hill, with programmes built around the families who register." },
   { t: "Families are signing up now", b: "Parents are registering their children's availability and ambitions, and we're building the timetable around them." },
   { t: "Coaching that fits your life", b: "Session times are set around families and our coaches' availability — tell us when you can coach and we'll build around you." },
-  { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall, with outdoor nets expected in summer." },
+  { t: "A great indoor venue", b: "Three indoor nets in the John Lyon sports hall." },
   { t: "A bowling machine", b: "A bowling machine is available through autumn and spring, with video analysis on the way." },
   { t: "A founding team", b: "Be one of the coaches who shapes HillRisers from the very first session — your ideas will define how we coach." },
 ];

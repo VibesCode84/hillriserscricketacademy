@@ -126,7 +126,7 @@ export type CoachAvailability = {
   notes?: string;
   /** Term labels from sessionTerms they could coach. Missing on early expressions of interest. */
   terms?: string[];
-  /** Summer times may change (outdoor nets) — coaches can note any summer commitments */
+  /** Summer times may change — coaches can note any summer commitments */
   summerNotes?: string;
   /** Weekly sessions during school holidays: yes / some / no */
   holidayWeekly?: "yes" | "some" | "no";

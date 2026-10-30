@@ -68,8 +68,8 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
   {
     term: "Summer term 2027",
     entries: [
-      { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "Summer arrangements are to be confirmed. We're expecting outdoor nets alongside the sports hall." },
-      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No indoor sessions on these dates. Likely: sessions move outdoors or a make-up session is offered." },
+      { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "Summer arrangements are to be confirmed." },
+      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No indoor sessions on these dates." },
       { id: "summer-half", kind: "holiday", dates: holiday("summer-half-term-2027").dates, title: "Summer half term", detail: holidayDetail },
       { id: "summer-holidays", kind: "holiday", dates: holiday("summer-holidays-2027").dates, title: "Summer holidays", detail: holidayDetail },
     ],
@@ -99,7 +99,7 @@ export const sessionTerms = [
     label: "Summer term",
     dates: "Wednesday 14 April – Sunday 11 July 2027",
     weeks: 12,
-    note: "Half term 31 May – 6 June: weekly sessions or camps, to be confirmed. The sports hall is unavailable on 20 May, 26 May and 10 June (exams), and we're expecting outdoor nets, so summer times may change.",
+    note: "Half term 31 May – 6 June: weekly sessions or camps, to be confirmed. The sports hall is unavailable on 20 May, 26 May and 10 June (exams), and summer times may change.",
   },
 ] as const;
 

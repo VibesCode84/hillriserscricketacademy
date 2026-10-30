@@ -302,7 +302,7 @@ function AvailabilityPicker(props: {
               Anything about the summer term we should know? <span className="font-normal text-ink-muted">(optional)</span>
             </label>
             <input id="co-summerNotes" name="summerNotes" className="field" placeholder="e.g. I play club cricket on Saturdays" />
-            <p className="hint">Summer times may change once outdoor nets are confirmed.</p>
+            <p className="hint">Summer times may change.</p>
           </div>
         </div>
         {termErr && <p className="error-text">{termErr}</p>}
