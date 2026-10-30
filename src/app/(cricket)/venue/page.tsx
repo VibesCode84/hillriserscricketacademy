@@ -4,6 +4,7 @@ import { PageHero } from "@/components/Hero";
 import { ButtonLink } from "@/components/Button";
 import { Section, SectionHeader } from "@/components/Section";
 import { Photo } from "@/components/Photo";
+import { photos } from "@/data/photos";
 import { Reveal } from "@/components/Reveal";
 import { CTASection } from "@/components/CTASection";
 
@@ -62,7 +63,7 @@ export default function VenuePage() {
             </ButtonLink>
           </>
         }
-        image={{ alt: "John Lyon School sports hall with indoor nets" }}
+        image={photos.sportsHall}
       />
       <Section tone="light">
         <div className="grid gap-14 lg:grid-cols-[1.1fr_0.9fr]">
@@ -97,8 +98,8 @@ export default function VenuePage() {
       </Section>
       <section className="bg-navy-950">
         <div className="grid gap-1 sm:grid-cols-2">
-          <Photo alt="Indoor net at John Lyon School" className="aspect-[16/10]" sizes="50vw" />
-          <Photo alt="Outdoor summer coaching" className="aspect-[16/10]" tone="warm" sizes="50vw" />
+          <Photo {...photos.sportsHallNets} className="aspect-[16/10]" sizes="50vw" />
+          <Photo {...photos.school} className="aspect-[16/10]" sizes="50vw" />
         </div>
       </section>
       <CTASection />

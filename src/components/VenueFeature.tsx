@@ -2,14 +2,15 @@ import { site } from "@/data/site";
 import { ButtonLink } from "./Button";
 import { Photo } from "./Photo";
 import { Reveal } from "./Reveal";
+import { photos } from "@/data/photos";
 
 export function VenueFeature() {
   return (
     <div className="grid items-center gap-12 lg:grid-cols-2">
       <Reveal className="grid grid-cols-2 gap-4">
-        <Photo alt="John Lyon School sports hall set up with indoor nets" className="col-span-2 aspect-[16/9] rounded-2xl" sizes="(min-width: 1024px) 45vw, 100vw" />
-        <Photo alt="Indoor net during a coaching session" className="aspect-square rounded-2xl" tone="warm" sizes="22vw" showCaption={false} />
-        <Photo alt="Outdoor summer coaching" className="aspect-square rounded-2xl" tone="deep" sizes="22vw" showCaption={false} />
+        <Photo {...photos.sportsHall} className="col-span-2 aspect-[16/9] rounded-2xl" sizes="(min-width: 1024px) 45vw, 100vw" />
+        <Photo {...photos.sportsHallNets} className="aspect-square rounded-2xl" sizes="22vw" />
+        <Photo {...photos.school} className="aspect-square rounded-2xl" sizes="22vw" />
       </Reveal>
       <Reveal delay={120}>
         <p className="eyebrow">The venue</p>
