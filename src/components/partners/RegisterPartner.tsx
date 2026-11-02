@@ -77,8 +77,7 @@ export function RegisterPartner() {
         <label className="flex cursor-pointer items-start gap-3 text-[0.95rem]">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[#0b2345]" />
           <span>
-            I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>, including that no filming or video recording is
-            permitted.
+            I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>.
           </span>
         </label>
         {errors.agreeTerms && <p className="error-text ml-8">{errors.agreeTerms}</p>}

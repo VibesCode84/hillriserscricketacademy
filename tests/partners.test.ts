@@ -307,11 +307,11 @@ for (const [name, make] of [
   });
 }
 
-test("checkout needs the no-video confirmation; bowling machine needs a Level 2 coach and own balls", () => {
+test("checkout needs the terms; bowling machine needs a Level 2 coach and own balls", () => {
   const who = { ageGroup: "Under 11", ability: "Beginner", gender: "Mixed" };
-  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false, ...who }], noVideo: true, agreeTerms: true };
+  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false, ...who }], agreeTerms: true };
   assert.ok(partnerCheckoutSchema.safeParse(base).success);
-  assert.ok(!partnerCheckoutSchema.safeParse({ ...base, noVideo: false }).success);
+  assert.ok(!partnerCheckoutSchema.safeParse({ ...base, agreeTerms: false }).success);
   const machine = { ...base, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true, ...who }] };
   const bad = partnerCheckoutSchema.safeParse(machine);
   assert.ok(!bad.success);
@@ -321,10 +321,10 @@ test("checkout needs the no-video confirmation; bowling machine needs a Level 2 
 
 test("each booked session says who it's for", () => {
   const item = { slotKey: slotKey(block.id, sat, 1), bowlingMachine: false };
-  const bad = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [item], noVideo: true, agreeTerms: true });
+  const bad = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [item], agreeTerms: true });
   assert.ok(!bad.success);
   assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["items.0.ability", "items.0.ageGroup", "items.0.gender"]);
-  const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], noVideo: true, agreeTerms: true });
+  const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], agreeTerms: true });
   assert.ok(ok.success);
 });
 

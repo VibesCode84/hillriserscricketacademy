@@ -374,7 +374,7 @@ function AvailabilityPicker(props: {
             <label htmlFor="co-campNotes" className="label !text-cream">
               Anything else about the holidays? <span className="font-normal text-slate">(optional)</span>
             </label>
-            <input id="co-campNotes" name="campNotes" className="field" placeholder="e.g. away the first two weeks of August" />
+            <input id="co-campNotes" name="campNotes" className="field" placeholder="e.g. away the last week of July" />
           </div>
         </div>
       </section>

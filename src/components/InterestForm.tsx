@@ -337,7 +337,7 @@ export function InterestForm() {
                   id={`ri-c${i}-hols`}
                   rows={2}
                   className="field"
-                  placeholder="e.g. away the first week of August; mornings only for camps"
+                  placeholder="e.g. away the last week of July; mornings only for camps"
                   value={c.holidayNotes}
                   onChange={(ev) => setChild(i, { holidayNotes: ev.target.value })}
                 />

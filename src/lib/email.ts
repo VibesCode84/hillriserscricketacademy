@@ -311,7 +311,6 @@ ${b.machineCoach ? `\nBowling machine operator (Level 2): ${b.machineCoach}. Ple
 Booking reference: ${b.reference}
 
 Please remember:
-• No filming or video recording of any kind at the venue, including on phones.
 • Upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
 
 See your bookings and payment history: ${site.url}/partners/account

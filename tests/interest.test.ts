@@ -92,7 +92,7 @@ test("coach expressions of interest validate and store", async () => {
       sunday: [],
       weekdayBlocks: ["Wednesday 6–9pm (3-hour block)"],
       terms: ["Autumn term", "Summer term"],
-      camps: { "2027-02-15": ["Full days"], "2027-08-02": [] },
+      camps: { "2027-02-15": ["Full days"], "2027-07-26": [] },
       holidayWeekly: "some",
     },
     dbsStatus: "Enhanced cricket DBS 2025",

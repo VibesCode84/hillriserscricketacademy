@@ -231,12 +231,10 @@ export const partnerCheckoutSchema = z
     plan: z.enum(["full", "deposit"]).default("full"),
     method: z.enum(["card", "bank"]).default("card"),
     ownBalls: z.boolean().default(false),
-    noVideo: z.boolean().default(false),
     agreeTerms: z.boolean().default(false),
   })
   // All checks in one pass, so every missing item is shown at once
   .superRefine((v, ctx) => {
-    if (!v.noVideo) ctx.addIssue({ code: "custom", path: ["noVideo"], message: "Please confirm that no filming or video recording will take place" });
     if (!v.agreeTerms) ctx.addIssue({ code: "custom", path: ["agreeTerms"], message: "Please accept the partner terms" });
     if (!v.items.some((i) => i.bowlingMachine)) return;
     if (!v.machineCoach || v.machineCoach.length < 2)

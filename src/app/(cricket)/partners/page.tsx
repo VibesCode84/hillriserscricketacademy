@@ -89,9 +89,6 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
               {documentKinds.filter((d) => d.value !== "other").map((d) => <li key={d.value}>{d.label}</li>)}
             </ul>
           </div>
-          <div className="rounded-2xl border border-[#8c1d18]/25 bg-[#fbeae8] p-5 text-sm text-[#8c1d18]">
-            <strong>No filming or video.</strong> No filming or video recording of any kind is permitted at the venue, including on phones.
-          </div>
           <div className="rounded-2xl bg-cream-200 p-5 text-sm">
             <strong>Bowling machine:</strong> one machine, so one net per time slot. You must supply your own balls, and it must be operated by a Level 2
             qualified coach.

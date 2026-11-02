@@ -114,7 +114,6 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
   const [notice, setNotice] = useState("");
   const [coach, setCoach] = useState("");
   const [ownBalls, setOwnBalls] = useState(false);
-  const [noVideo, setNoVideo] = useState(false);
   const [agree, setAgree] = useState(false);
   const [plan, setPlan] = useState<"full" | "deposit">("full");
   const [method, setMethod] = useState<"bank" | "card">(bankTransferEnabled() ? "bank" : "card");
@@ -231,7 +230,6 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
         plan: depositPlan ? "deposit" : "full",
         method: byCard ? "card" : "bank",
         ownBalls,
-        noVideo,
         agreeTerms: agree,
       }),
     });
@@ -469,11 +467,6 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
           )}
 
           <div className="mt-5 space-y-3 text-sm">
-            <label className="flex cursor-pointer items-start gap-2">
-              <input type="checkbox" checked={noVideo} onChange={(e) => (setNoVideo(e.target.checked), clearError("noVideo"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-              <span><strong>No filming or video.</strong> I confirm no filming or video recording of any kind will take place, including on phones.</span>
-            </label>
-            {errors.noVideo && <p className="error-text">{errors.noVideo}</p>}
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
               <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits and card fees, are non-refundable.</span>
