@@ -37,6 +37,7 @@ export const nav = [
   { href: "/venue", label: "Venue" },
   { href: "/coaches", label: "Coaching" },
   { href: "/faq", label: "FAQs" },
+  { href: "/partners", label: "Partners" },
 ] as const;
 
 export function formatPrice(pence: number) {
