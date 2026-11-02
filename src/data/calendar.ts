@@ -105,10 +105,13 @@ export const sessionTerms = [
 /** Potential holiday camp weeks (Monday–Friday), excluding the Christmas shutdown. To be confirmed. */
 export const campWeeks = [
   { id: "2026-12-14", period: "Christmas holidays", dates: "14–18 December 2026" },
-  { id: "2027-02-15", period: "Spring half term", dates: "15–19 February 2027" },
+  { id: "2027-02-15", period: "February half term", dates: "15–19 February 2027" },
   { id: "2027-03-30", period: "Easter holidays", dates: "30 March – 2 April 2027 (after Easter Monday)" },
   { id: "2027-04-05", period: "Easter holidays", dates: "5–9 April 2027" },
   { id: "2027-06-01", period: "Summer half term", dates: "1–4 June 2027 (after the bank holiday)" },
+  { id: "2027-07-12", period: "Summer holidays", dates: "12–16 July 2027" },
+  { id: "2027-07-19", period: "Summer holidays", dates: "19–23 July 2027" },
+  { id: "2027-07-26", period: "Summer holidays", dates: "26–30 July 2027" },
 ] as const;
 
 export const campDayOptions = ["Full days", "Part days"] as const;

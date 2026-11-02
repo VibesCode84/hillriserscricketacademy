@@ -13,6 +13,7 @@ export function CoachInterestForm() {
   const [weekdayBlocks, setWeekdayBlocks] = useState<string[]>([]);
   const [terms, setTerms] = useState<string[]>([]);
   const [camps, setCamps] = useState<Record<string, string[]>>({});
+  const [coachFor, setCoachFor] = useState<"both" | "weekly" | "camps">("both");
   const [holidayWeekly, setHolidayWeekly] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -33,16 +34,18 @@ export function CoachInterestForm() {
           ...fd,
           roles,
           firstAid,
+          // Only send the parts that apply to what they chose to coach
           availability: {
-            saturday,
-            sunday,
-            weekdayBlocks,
-            notes: fd.availabilityNotes,
-            terms,
-            summerNotes: fd.summerNotes,
-            holidayWeekly: holidayWeekly || undefined,
-            camps,
-            campNotes: fd.campNotes,
+            coachFor,
+            saturday: coachFor === "camps" ? [] : saturday,
+            sunday: coachFor === "camps" ? [] : sunday,
+            weekdayBlocks: coachFor === "camps" ? [] : weekdayBlocks,
+            notes: coachFor === "camps" ? undefined : fd.availabilityNotes,
+            terms: coachFor === "camps" ? [] : terms,
+            summerNotes: coachFor === "camps" ? undefined : fd.summerNotes,
+            holidayWeekly: coachFor === "camps" ? undefined : holidayWeekly || undefined,
+            camps: coachFor === "weekly" ? {} : camps,
+            campNotes: coachFor === "weekly" ? undefined : fd.campNotes,
           },
           availabilityNotes: undefined,
           summerNotes: undefined,
@@ -133,6 +136,8 @@ export function CoachInterestForm() {
       </div>
 
       <AvailabilityPicker
+        coachFor={coachFor}
+        setCoachFor={setCoachFor}
         saturday={saturday}
         setSaturday={setSaturday}
         sunday={sunday}
@@ -223,6 +228,8 @@ function HourGrid({
 }
 
 function AvailabilityPicker(props: {
+  coachFor: "both" | "weekly" | "camps";
+  setCoachFor: (v: "both" | "weekly" | "camps") => void;
   saturday: string[];
   setSaturday: (v: string[]) => void;
   sunday: string[];
@@ -240,8 +247,39 @@ function AvailabilityPicker(props: {
   const termErr = props.errors["availability.termTime"];
   const termsErr = props.errors["availability.terms"];
   const periods = [...new Set(campWeeks.map((w) => w.period))];
+  const campsErr = props.errors["availability.campWeeks"];
+  const weekly = props.coachFor !== "camps";
+  const holidays = props.coachFor !== "weekly";
   return (
     <div className="space-y-6">
+      <fieldset className="rounded-2xl bg-cream p-5 md:p-6">
+        <legend className="sr-only">What could you coach?</legend>
+        <h3 className="font-serif text-2xl text-navy-950">What could you coach?</h3>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          {(
+            [
+              ["both", "Weekly sessions and holiday camps"],
+              ["weekly", "Weekly sessions only"],
+              ["camps", "Holiday camps only"],
+            ] as const
+          ).map(([value, label]) => {
+            const on = props.coachFor === value;
+            return (
+              <label
+                key={value}
+                className={`cursor-pointer rounded-xl border p-4 text-sm font-semibold transition-all duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-gold ${
+                  on ? "border-navy-950 bg-navy-950 text-cream" : "border-navy-950/15 bg-white text-navy-950 hover:border-navy-950/40"
+                }`}
+              >
+                <input type="radio" name="coachFor" className="sr-only" checked={on} onChange={() => props.setCoachFor(value)} />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      {weekly && (
       <section className="rounded-2xl bg-cream p-5 md:p-6">
         <h3 className="font-serif text-2xl text-navy-950">Session dates 2026/27</h3>
         <p className="mt-1 text-sm text-ink-muted">
@@ -275,7 +313,9 @@ function AvailabilityPicker(props: {
         </fieldset>
         {termsErr && <p className="error-text">{termsErr}</p>}
       </section>
+      )}
 
+      {weekly && (
       <section className="rounded-2xl bg-cream p-5 md:p-6">
         <h3 className="font-serif text-2xl text-navy-950">Weekly availability</h3>
         <p className="mt-1 text-sm text-ink-muted">
@@ -307,11 +347,13 @@ function AvailabilityPicker(props: {
         </div>
         {termErr && <p className="error-text">{termErr}</p>}
       </section>
+      )}
 
+      {holidays && (
       <section className="rounded-2xl bg-navy-950 p-5 text-cream md:p-6">
         <h3 className="font-serif text-2xl">Holiday camps: potential dates</h3>
         <p className="mt-1 text-sm leading-relaxed text-slate">
-          We&rsquo;re planning holiday camps, Monday to Friday. Dates and formats are still to be confirmed. Tick any weeks you might be able to
+          Camps would run Monday to Friday, somewhere between 9am and 5pm. Exact times and dates are to be confirmed. Tick the weeks you could
           coach, and whether full or part days suit you.
         </p>
         <div className="mt-5 space-y-5">
@@ -351,6 +393,7 @@ function AvailabilityPicker(props: {
               </div>
             </fieldset>
           ))}
+          {weekly && (
           <fieldset>
             <legend className="label !text-cream">Could you also coach weekly sessions in the school holidays?</legend>
             <div className="mt-1 flex flex-wrap gap-2">
@@ -370,14 +413,17 @@ function AvailabilityPicker(props: {
               })}
             </div>
           </fieldset>
+          )}
           <div>
             <label htmlFor="co-campNotes" className="label !text-cream">
               Anything else about the holidays? <span className="font-normal text-slate">(optional)</span>
             </label>
-            <input id="co-campNotes" name="campNotes" className="field" placeholder="e.g. away the last week of July" />
+            <input id="co-campNotes" name="campNotes" className="field" placeholder="e.g. away for the Easter weeks" />
           </div>
         </div>
+        {campsErr && <p className="error-text">{campsErr}</p>}
       </section>
+      )}
     </div>
   );
 }

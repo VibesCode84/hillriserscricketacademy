@@ -119,6 +119,8 @@ export const coachAvailabilityOptions = {
 };
 
 export type CoachAvailability = {
+  /** What they could coach (missing on early expressions of interest = weekly) */
+  coachFor?: "both" | "weekly" | "camps";
   /** Weekly slots, all terms */
   saturday: string[];
   sunday: string[];
@@ -137,6 +139,7 @@ export type CoachAvailability = {
 
 /** One-line summary for emails, admin and CSV */
 export function summariseCoachAvailability(a: CoachAvailability) {
+  if (a.coachFor === "camps") return "Holiday camps only";
   const parts = [
     a.saturday.length && `Sat ${a.saturday.join(", ")}`,
     a.sunday.length && `Sun ${a.sunday.join(", ")}`,

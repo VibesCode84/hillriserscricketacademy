@@ -144,11 +144,12 @@ export const coachInterestSchema = z.object({
   weaknesses: z.string().trim().min(5, "Please tell us what you're working on as a coach").max(2000),
   availability: z
     .object({
+      coachFor: z.enum(["both", "weekly", "camps"]).default("both"),
       saturday: multi(coachAvailabilityOptions.saturdayHours),
       sunday: multi(coachAvailabilityOptions.sundayHours),
       weekdayBlocks: multi(coachAvailabilityOptions.weekdayBlocks),
       notes: optionalText(500),
-      terms: z.array(z.enum(sessionTerms.map((t) => t.label) as [string, ...string[]])).min(1, "Please tick the terms you could coach").max(3),
+      terms: z.array(z.enum(sessionTerms.map((t) => t.label) as [string, ...string[]])).max(3),
       summerNotes: optionalText(500),
       holidayWeekly: z.enum(["yes", "some", "no"]).optional(),
       camps: z
@@ -157,9 +158,15 @@ export const coachInterestSchema = z.object({
         .transform((c) => Object.fromEntries(Object.entries(c).filter(([, v]) => v && v.length)) as Record<string, string[]>),
       campNotes: optionalText(500),
     })
-    .refine((a) => a.saturday.length + a.sunday.length + a.weekdayBlocks.length > 0, {
-      message: "Please tick when you could coach each week",
-      path: ["termTime"],
+    // Weekly coaches need terms and weekly times; camps-only coaches need at least one camp week
+    .superRefine((a, ctx) => {
+      if (a.coachFor !== "camps") {
+        if (!a.terms.length) ctx.addIssue({ code: "custom", path: ["terms"], message: "Please tick the terms you could coach" });
+        if (a.saturday.length + a.sunday.length + a.weekdayBlocks.length === 0)
+          ctx.addIssue({ code: "custom", path: ["termTime"], message: "Please tick when you could coach each week" });
+      }
+      if (a.coachFor === "camps" && !Object.keys(a.camps).length)
+        ctx.addIssue({ code: "custom", path: ["campWeeks"], message: "Please tick the camp weeks you could coach" });
     }),
   dbsStatus: z.string().trim().min(2, "Please tell us your DBS status").max(200),
   safeguardingStatus: z.string().trim().min(2, "Please tell us your safeguarding training status").max(200),
