@@ -15,8 +15,8 @@ export const bookingSteps = [
     b: "When programmes are ready, we'll contact you with the details.",
   },
   {
-    t: "Try a session",
-    b: "Your child can try a session before you commit.",
+    t: "Book a taster",
+    b: "The first session is a paid taster. After that, fees are paid termly in advance.",
   },
 ];
 

@@ -161,7 +161,7 @@ export default async function AdminBookingsPage({ searchParams }: { searchParams
                   <div className="sm:col-span-2">Wants: {c.wants.join(", ") || "—"}</div>
                   <div className="sm:col-span-2">Holidays: {summariseHolidays(c.holidays) || "—"}{c.holidayNotes ? ` — ${c.holidayNotes}` : ""}</div>
                   <div>Other interests: {c.otherInterests.join(", ") || "—"}</div>
-                  <div>Payment: {labelFor("paymentPreference", c.paymentPreference)}</div>
+                  {c.paymentPreference && <div>Payment: {labelFor("paymentPreference", c.paymentPreference)}</div>}
                 </dl>
               ))}
             </details>

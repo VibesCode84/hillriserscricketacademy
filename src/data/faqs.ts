@@ -37,11 +37,11 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "Can my child try a session first?",
-        a: "Yes.",
+        a: "Yes. The first session is a paid taster.",
       },
       {
         q: "How much does it cost?",
-        a: "Registering is free. We'll share fees when programmes are ready.",
+        a: "Nets are £25 per hour, with up to six players per net. Early Risers is £15 per 40-minute session. Small group and 1-to-1 rates are to be confirmed. Fees are paid termly in advance.",
       },
       {
         q: "How long are sessions?",

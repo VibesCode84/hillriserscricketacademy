@@ -109,7 +109,8 @@ const childSchema = z.object({
     .transform((h) => Object.fromEntries(Object.entries(h).filter(([, v]) => v && v.length)) as Record<string, string[]>),
   holidayNotes: optionalText(500),
   otherInterests: multi(interestOptions.otherInterests),
-  paymentPreference: z.enum(valuesOf("paymentPreference"), { errorMap: () => ({ message: "Please choose an option" }) }),
+  /** No longer asked (fees are termly in advance); kept for older registrations */
+  paymentPreference: z.enum(valuesOf("paymentPreference")).optional(),
 });
 
 export const interestRegistrationSchema = z.object({

@@ -24,7 +24,6 @@ type Child = {
   holidays: Record<string, string[]>;
   holidayNotes: string;
   otherInterests: string[];
-  paymentPreference: string;
 };
 
 const newChild = (): Child => ({
@@ -45,7 +44,6 @@ const newChild = (): Child => ({
   holidays: {},
   holidayNotes: "",
   otherInterests: [],
-  paymentPreference: "",
 });
 
 /** Show the Early Risers question for children aged 3–7 today (4–6 during the season) */
@@ -343,10 +341,7 @@ export function InterestForm() {
                 />
               </div>
 
-              <div className="grid gap-7 sm:grid-cols-2">
-                <MultiChoice legend="Other interests" options={interestOptions.otherInterests} value={c.otherInterests} onChange={(v) => setChild(i, { otherInterests: v })} />
-                <SingleChoice name={`c${i}-pay`} legend="Preferred payment" options={interestOptions.paymentPreference} value={c.paymentPreference} onChange={(v) => setChild(i, { paymentPreference: v })} error={e("paymentPreference")} />
-              </div>
+              <MultiChoice legend="Other interests" options={interestOptions.otherInterests} value={c.otherInterests} onChange={(v) => setChild(i, { otherInterests: v })} />
             </div>
           </section>
         );

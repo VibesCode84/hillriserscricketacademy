@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { programmes } from "@/data/programmes";
+import { FEES_NOTE, programmes } from "@/data/programmes";
 
 /** Programmes and ages — a table on desktop, cards on phones. */
 export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) {
@@ -15,6 +15,7 @@ export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) 
               <th scope="col" className="px-6 py-4">Programme</th>
               <th scope="col" className="px-6 py-4">Ages</th>
               <th scope="col" className="px-6 py-4">What it is</th>
+              <th scope="col" className="px-6 py-4">Fee</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${light ? "divide-navy-950/10 text-navy-950" : "divide-cream/10 text-cream"}`}>
@@ -25,11 +26,13 @@ export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) 
                 </th>
                 <td className="whitespace-nowrap px-6 py-5">{p.ages}</td>
                 <td className={`px-6 py-5 ${light ? "text-ink-muted" : "text-slate"}`}>{p.summary}</td>
+                <td className="px-6 py-5">{p.fee}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <p className={`mt-4 text-sm ${light ? "text-ink-muted" : "text-slate"}`}>{FEES_NOTE}</p>
 
       {/* Phone cards */}
       <ul className="grid gap-3 md:hidden">
@@ -40,6 +43,7 @@ export function ProgrammeTable({ tone = "light" }: { tone?: "light" | "dark" }) 
               <p className={`text-sm ${light ? "text-ink-muted" : "text-slate"}`}>{p.ages}</p>
             </div>
             <p className={`mt-1 text-sm ${light ? "text-ink-muted" : "text-slate"}`}>{p.summary}</p>
+            <p className="mt-2 text-sm font-semibold">{p.fee}</p>
           </li>
         ))}
       </ul>

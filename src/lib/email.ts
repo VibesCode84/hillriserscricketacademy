@@ -60,7 +60,7 @@ Thank you for registering your interest in HillRisers Cricket Academy for ${who}
 WHAT HAPPENS NEXT
 1. We're using every family's answers — which days they can make, level and what each child wants from cricket — to shape our programmes.
 2. We'll be in touch with the details when programmes are ready.
-3. Your child can try a session before you commit.
+3. The first session is a paid taster. After that, fees are paid termly in advance.
 
 We'll be in touch as soon as programmes are ready. How it works: ${site.url}/how-booking-works
 

@@ -52,7 +52,7 @@ export default function TermsPage() {
 
       <h2 id="booking">3. Booking</h2>
       <p>
-        Fees, payment and cancellation terms will be published before booking opens.
+        Fees are paid termly in advance, and the first session is a paid taster. Full payment and cancellation terms will be published before booking opens.
       </p>
 
       <h2 id="safeguarding">4. Safeguarding and photography</h2>

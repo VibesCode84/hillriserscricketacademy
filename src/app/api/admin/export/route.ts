@@ -64,7 +64,7 @@ export async function GET(req: Request) {
             ...interestOptions.formats.map((f) => yes(c.formats, f)),
             yes(c.sessionLengths, "1 hour"), yes(c.sessionLengths, "90 minutes"), yes(c.sessionLengths, "2 hours"),
             ...holidayPeriods.flatMap((p) => holidayOptions.map((o) => yes(c.holidays?.[p.id] ?? [], o))), c.holidayNotes,
-            c.wants.join(" / "), c.otherInterests.join(" / "), labelFor("paymentPreference", c.paymentPreference),
+            c.wants.join(" / "), c.otherInterests.join(" / "), c.paymentPreference ? labelFor("paymentPreference", c.paymentPreference) : "",
           ];
         }),
       ),

@@ -25,7 +25,6 @@ const child = (overrides = {}) => ({
   frequency: "once",
   holidays: { "spring-half-term-2027": ["Part-day camp", "Full-day camp"], "easter-2027": [] },
   otherInterests: ["1-to-1 coaching"],
-  paymentPreference: "monthly",
   ...overrides,
 });
 
@@ -141,10 +140,13 @@ test("coach availability matches the John Lyon hall slots", () => {
   assert.ok(!noWeeks.success && noWeeks.error.issues.some((i) => i.path.join(".") === "availability.campWeeks"));
 });
 
-test("public programmes: ages 4–15 and no prices", () => {
+test("public programmes: ages 4–15 with fees", () => {
   assert.equal(programmes.length, 7);
+  const fee = Object.fromEntries(programmes.map((p) => [p.key, p.fee]));
+  assert.equal(fee["early-risers"], "£15 per 40-minute session");
+  assert.equal(fee.performance, "£25 per hour");
+  assert.equal(fee["one-to-one"], "To be confirmed");
   for (const p of programmes) {
-    assert.ok(!/£|price/i.test(JSON.stringify(p)), p.key);
     assert.ok((p.ageMin ?? 0) >= 4 && (p.ageMax ?? 0) <= 15, p.key);
   }
 });

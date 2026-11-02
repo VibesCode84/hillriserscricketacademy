@@ -119,7 +119,8 @@ export type ChildInterest = {
   holidayNotes?: string;
   /** 1-to-1 / Summer outdoor (multi) */
   otherInterests: string[];
-  paymentPreference: "termly" | "monthly";
+  /** Asked on older registrations only */
+  paymentPreference?: "termly" | "monthly";
 };
 
 export type InterestRegistration = {
