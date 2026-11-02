@@ -29,6 +29,7 @@ export const holidayPeriods = [
   { id: "spring-half-term-2027", label: "Spring half term", dates: "15–21 February 2027" },
   { id: "easter-2027", label: "Easter holidays", dates: "29 March – 11 April 2027" },
   { id: "summer-half-term-2027", label: "Summer half term", dates: "31 May – 6 June 2027" },
+  { id: "summer-holidays-2027", label: "Summer holidays", dates: "12–31 July 2027" },
 ] as const;
 
 export type HolidayPeriodId = (typeof holidayPeriods)[number]["id"];
@@ -70,6 +71,7 @@ export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
       { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "Summer arrangements are to be confirmed." },
       { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No indoor sessions on these dates." },
       { id: "summer-half", kind: "holiday", dates: holiday("summer-half-term-2027").dates, title: "Summer half term", detail: holidayDetail },
+      { id: "summer-holidays", kind: "holiday", dates: holiday("summer-holidays-2027").dates, title: "Summer holidays", detail: holidayDetail },
       { id: "summer-end", kind: "term", dates: "Saturday 31 July", title: "Last sessions", detail: "Weekly sessions run to the end of July." },
     ],
   },
