@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { allFaqs, faqGroups } from "@/data/faqs";
 import { PageHero } from "@/components/Hero";
 import { Section } from "@/components/Section";
@@ -25,6 +26,9 @@ export default function FAQPage() {
             </div>
           ))}
           <NotSureBanner tone="light" />
+          <p className="text-center text-sm text-ink-muted">
+            <Link href="/ask" rel="nofollow" prefetch={false} className="hover:underline">Ask HillRisers</Link>
+          </p>
         </div>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(allFaqs)) }} />
       </Section>
