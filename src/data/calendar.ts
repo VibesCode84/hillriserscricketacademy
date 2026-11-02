@@ -1,6 +1,6 @@
 /**
  * 2026/27 HillRisers calendar at John Lyon School, from the school's
- * allocation (Licence to Occupy, 2 November 2026 – July 2027; no August).
+ * allocation (Licence to Occupy, 2 November 2026 – July 2027, with summer holiday camps to 27 August).
  *
  * Public copy only: no hall times, costs or licence details here.
  * Holiday arrangements are still being shaped by parent feedback, so they
@@ -29,7 +29,7 @@ export const holidayPeriods = [
   { id: "spring-half-term-2027", label: "Spring half term", dates: "15–21 February 2027" },
   { id: "easter-2027", label: "Easter holidays", dates: "29 March – 11 April 2027" },
   { id: "summer-half-term-2027", label: "Summer half term", dates: "31 May – 6 June 2027" },
-  { id: "summer-holidays-2027", label: "Summer holidays", dates: "12–31 July 2027" },
+  { id: "summer-holidays-2027", label: "Summer holidays", dates: "26 July – 27 August 2027" },
 ] as const;
 
 export type HolidayPeriodId = (typeof holidayPeriods)[number]["id"];
@@ -111,9 +111,11 @@ export const campWeeks = [
   { id: "2027-03-30", period: "Easter holidays", dates: "30 March – 2 April 2027 (after Easter Monday)" },
   { id: "2027-04-05", period: "Easter holidays", dates: "5–9 April 2027" },
   { id: "2027-06-01", period: "Summer half term", dates: "1–4 June 2027 (after the bank holiday)" },
-  { id: "2027-07-12", period: "Summer holidays", dates: "12–16 July 2027" },
-  { id: "2027-07-19", period: "Summer holidays", dates: "19–23 July 2027" },
   { id: "2027-07-26", period: "Summer holidays", dates: "26–30 July 2027" },
+  { id: "2027-08-02", period: "Summer holidays", dates: "2–6 August 2027" },
+  { id: "2027-08-09", period: "Summer holidays", dates: "9–13 August 2027" },
+  { id: "2027-08-16", period: "Summer holidays", dates: "16–20 August 2027" },
+  { id: "2027-08-23", period: "Summer holidays", dates: "23–27 August 2027" },
 ] as const;
 
 export const campDayOptions = ["Full days", "Part days"] as const;

@@ -134,7 +134,7 @@ test("coach availability matches the John Lyon hall slots", () => {
   assert.ok(ok.success);
   assert.equal(summariseCoachAvailability(ok.data.availability), "Sun 2–3pm");
   // Camps only: no terms or weekly times needed, but at least one camp week
-  const campsOnly = coachInterestSchema.safeParse({ ...base, availability: { coachFor: "camps", saturday: [], sunday: [], weekdayBlocks: [], terms: [], camps: { "2027-07-19": ["Full days"] } } });
+  const campsOnly = coachInterestSchema.safeParse({ ...base, availability: { coachFor: "camps", saturday: [], sunday: [], weekdayBlocks: [], terms: [], camps: { "2027-08-16": ["Full days"] } } });
   assert.ok(campsOnly.success);
   assert.equal(summariseCoachAvailability(campsOnly.data.availability), "Holiday camps only");
   const noWeeks = coachInterestSchema.safeParse({ ...base, availability: { coachFor: "camps", saturday: [], sunday: [], weekdayBlocks: [], terms: [], camps: {} } });
