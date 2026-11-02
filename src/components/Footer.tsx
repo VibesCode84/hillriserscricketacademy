@@ -25,6 +25,7 @@ const groups = [
       { href: "/register", label: "Register Your Interest" },
       { href: "/coaches", label: "Our Coaching" },
       { href: "/refer", label: "Invite a Friend" },
+      { href: "/partners", label: "Delivery Partners" },
       { href: "/faq", label: "FAQs" },
       { href: "/contact", label: "Contact" },
     ],
