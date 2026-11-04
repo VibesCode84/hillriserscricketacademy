@@ -4,15 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /** Admin: record that a bank transfer for an invoice has arrived */
-export function MarkPaid({ bookingId, stage, label }: { bookingId: string; stage: "initial" | "balance"; label: string }) {
+export function MarkPaid({ number, label }: { number: string; label: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const mark = async () => {
-    if (!window.confirm(`Mark ${label} as paid by bank transfer? The partner will get a confirmation email.`)) return;
+    if (!window.confirm(`Mark ${label} as paid by bank transfer? The partner will get an email.`)) return;
     setBusy(true);
     setError("");
-    const res = await fetch("/api/admin/partners/mark-paid", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingId, stage }) });
+    const res = await fetch("/api/admin/partners/mark-paid", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ number }) });
     const json = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok || !json.ok) setError(json.message ?? "Something went wrong.");

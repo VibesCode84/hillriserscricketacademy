@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
 import { getBlock, machineKey, slotKey } from "@/data/partners";
+import { currentPartner } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Live availability for a block: which nets and which bowling-machine slots
- * are taken. Polled by the portal grid every few seconds. No personal data.
+ * Live availability for a block: which nets and which bowling-machine slots are taken (held nets
+ * count as taken, except for the partner they're held for). Polled by the portal grid. No personal data.
  */
 export async function GET(req: Request) {
   const blockId = new URL(req.url).searchParams.get("block") ?? "";
   const block = getBlock(blockId);
   if (!block) return NextResponse.json({ ok: false }, { status: 404 });
-  const taken = await getPartnerStore().taken(blockId);
+  const store = getPartnerStore();
+  const partner = await currentPartner();
+  const code = partner ? await store.priorityFor(partner.id) : undefined;
+  const taken = await store.taken(blockId, code?.holdId);
   const nets: Record<string, boolean> = {};
   const machines: Record<string, boolean> = {};
   for (const s of block.slots) {

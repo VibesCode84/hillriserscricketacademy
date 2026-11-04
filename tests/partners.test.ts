@@ -4,8 +4,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { balanceReminderDates, endOfDayLondon, getBlock, londonDate, londonTime, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
-import { createD1PartnerStore, createFilePartnerStore, holds } from "../src/lib/partners/store";
+import { endOfDayLondon, getBlock, heldNets, londonTime, monthInvoiceAt, monthlySplit, partnerBlocks, itemPricePence, machineKey, priorityWindowOpen, slotKey } from "../src/data/partners";
+import { createD1PartnerStore, createFilePartnerStore, monthsToInvoice } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
 
@@ -26,20 +26,55 @@ const sat = block.slots.find((s) => s.day === "Saturday" && s.start === "14:30")
 const wed = block.slots.find((s) => s.day === "Wednesday")!;
 const thu = block.slots.find((s) => s.day === "Thursday")!;
 const partner = { orgName: "Test CC", contactName: "Sam", email: "Sam@Example.com", phone: "07000 000000", type: "Club" };
+/** After the priority window (11:59pm, 8 November) */
+const OPEN = Date.parse("2026-11-10T10:00:00Z");
+const PRIORITY = Date.parse("2026-11-05T10:00:00Z");
+const net = (s: typeof sat, n: number, bowlingMachine = false) => ({ slotKey: slotKey(block.id, s, n), bowlingMachine });
 
-test("released slots: Wednesdays from 25 Nov, Thursdays two nets, Sundays 9am–5pm", () => {
+test("autumn: Thursdays, Saturdays and Sundays from w/c 16 November; Wednesdays from 25 November", () => {
   assert.deepEqual(wed.dates, ["2026-11-25", "2026-12-02", "2026-12-09"]);
+  assert.deepEqual(thu.dates, ["2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10"]);
+  assert.deepEqual(sat.dates, ["2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"]);
+  assert.equal(block.slots.find((s) => s.day === "Sunday")!.dates[0], "2026-11-22");
   assert.deepEqual(thu.nets, [1, 2]);
-  assert.equal(block.slots.filter((s) => s.day === "Sunday")[0].start, "09:00");
   assert.equal(block.slots.filter((s) => s.day === "Sunday").length, 8);
-  assert.equal(block.slots.filter((s) => s.day === "Saturday").length, 3);
-  assert.ok(block.slots.every((s) => s.dates.every((d) => d <= "2026-12-13")));
+  assert.ok(block.slots.every((s) => s.dates.every((d) => d >= "2026-11-16" && d <= "2026-12-13")));
 });
 
 test("pricing: £18.80 block rate per net per hour for every week, bowling machine +£10 per hour", () => {
   assert.equal(itemPricePence(wed, false), 3 * 1880);
-  assert.equal(itemPricePence(sat, false), 6 * 1880);
-  assert.equal(itemPricePence(sat, true), 6 * 2880);
+  assert.equal(itemPricePence(sat, false), 4 * 1880);
+  assert.equal(itemPricePence(sat, true), 4 * 2880);
+});
+
+test("held nets: Bessborough CC on spring Sundays 2–5pm (all nets); Sanjiv on one net Wed, Thu 6–9pm, Sat 2:30–5:30pm, Sun 9am–1pm", () => {
+  const spring = getBlock("spring-2027")!;
+  const springHeld = heldNets(spring.id);
+  const sunday = (start: string) => spring.slots.find((s) => s.day === "Sunday" && s.start === start)!;
+  for (const n of [1, 2, 3]) for (const t of ["14:00", "15:00", "16:00"]) assert.equal(springHeld.get(slotKey(spring.id, sunday(t), n))?.id, "bessborough");
+  assert.equal(springHeld.get(slotKey(spring.id, sunday("13:00"), 2)), undefined);
+  const autumn = heldNets(block.id);
+  assert.equal(autumn.size, 3 + 3 + 3 + 4);
+  assert.ok([...autumn.values()].every((h) => h.id === "sanjiv"));
+  assert.equal(autumn.get(slotKey(block.id, sat, 1))?.id, "sanjiv");
+  assert.equal(autumn.get(slotKey(block.id, sat, 2)), undefined);
+  // Sanjiv's nets are held in spring too
+  assert.equal([...springHeld.values()].filter((h) => h.id === "sanjiv").length, 13);
+});
+
+test("priority booking ends at 11:59pm UK time on Sunday 8 November", () => {
+  assert.ok(priorityWindowOpen(Date.parse("2026-11-08T23:59:00Z")));
+  assert.ok(!priorityWindowOpen(Date.parse("2026-11-09T00:00:00Z")));
+});
+
+test("monthly split and invoice dates: a week before each month's first session, 8am UK time", () => {
+  const months = monthlySplit([{ slotKey: slotKey(block.id, sat, 2), pricePence: itemPricePence(sat, false), weeks: 4 }], block.id);
+  assert.deepEqual(months, [
+    { month: "2026-11", pence: 2 * 1880, firstSession: "2026-11-21" },
+    { month: "2026-12", pence: 2 * 1880, firstSession: "2026-12-05" },
+  ]);
+  assert.equal(monthInvoiceAt("2026-12-05").toISOString(), "2026-11-28T08:00:00.000Z");
+  assert.equal(monthInvoiceAt("2027-04-10").toISOString(), "2027-04-03T07:00:00.000Z");
 });
 
 for (const [name, make] of [
@@ -50,54 +85,161 @@ for (const [name, make] of [
     const store = make();
     const { partner: a, token } = await store.createPartner(partner);
     const { partner: b } = await store.createPartner({ ...partner, orgName: "Other" });
+    assert.ok(a && b);
     assert.equal((await store.partnerBySession(token))?.id, a.id);
     assert.equal(a.email, "sam@example.com");
-    const k = slotKey(block.id, sat, 2);
     const [r1, r2] = await Promise.all([
-      store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: k, bowlingMachine: false }] }),
-      store.reserve({ partnerId: b.id, blockId: block.id, items: [{ slotKey: k, bowlingMachine: false }] }),
+      store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: OPEN }),
+      store.reserve({ partnerId: b.id, blockId: block.id, items: [net(sat, 2)], at: OPEN }),
     ]);
     assert.equal([r1, r2].filter((r) => r.ok).length, 1);
-    assert.ok((await store.taken(block.id)).has(k));
+    assert.ok((await store.taken(block.id)).has(slotKey(block.id, sat, 2)));
   });
 
   test(`${name}: one bowling machine per time slot`, async () => {
     const store = make();
     const { partner: a } = await store.createPartner(partner);
-    const both = await store.reserve({
-      partnerId: a.id,
-      blockId: block.id,
-      items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true }, { slotKey: slotKey(block.id, sat, 2), bowlingMachine: true }],
-    });
-    assert.equal(both.ok, false);
-    const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true }], machineCoach: "Alex" });
-    assert.ok(first.ok && first.booking.totalPence === 6 * 2880);
-    const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: true }] });
-    assert.equal(second.ok, false);
+    const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
+    assert.ok(a && b);
+    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2, true), net(sat, 3, true)], at: OPEN })).ok, false);
+    const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2, true)], machineCoach: "Alex", at: OPEN });
+    assert.ok(first.ok && first.booking.totalPence === 4 * 2880);
+    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(sat, 3, true)], at: OPEN })).ok, false);
     assert.ok((await store.taken(block.id)).has(machineKey(block.id, sat)));
     // The net without the machine is still fine
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: false }] })).ok);
+    assert.ok((await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(sat, 3)], at: OPEN })).ok);
   });
 
-  test(`${name}: unreleased nets can't be booked; cancelled holds free the slot; confirm marks paid`, async () => {
+  test(`${name}: termly: one invoice for the block, nets held for 24 hours, confirmed when paid`, async () => {
     const store = make();
     const { partner: a } = await store.createPartner(partner);
-    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, thu, 3), bowlingMachine: false }] })).ok, false);
-    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, thu, 1), bowlingMachine: false }] });
+    assert.ok(a);
+    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(thu, 3)], at: OPEN })).ok, false); // net 3 isn't released on Thursdays
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2), net(thu, 2)], terms: "termly", at: OPEN });
     assert.ok(r.ok);
-    await store.release(r.booking.id, "cancelled");
-    assert.equal((await store.taken(block.id)).size, 0);
-    const again = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, thu, 1), bowlingMachine: false }] });
-    assert.ok(again.ok);
-    await store.confirm(again.booking.id, "pi_123");
-    assert.equal((await store.getBooking(again.booking.id))?.status, "confirmed");
-    await store.release(again.booking.id, "expired");
-    assert.equal((await store.getBooking(again.booking.id))?.status, "confirmed");
+    assert.equal(r.booking.status, "pending_payment");
+    assert.equal(r.booking.invoices?.length, 1);
+    const inv = r.booking.invoices![0];
+    assert.equal(inv.amountPence, 8 * 1880);
+    assert.equal(Date.parse(inv.dueAt) - Date.parse(inv.issuedAt), 24 * 3_600_000);
+    assert.equal(r.booking.holdExpiresAt, inv.dueAt);
+    // One unpaid invoice at a time
+    const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 3)], at: OPEN });
+    assert.ok(!second.ok && /unpaid invoice/.test(second.message));
+    const paid = await store.markInvoicePaid(inv.number);
+    assert.ok(paid.ok && paid.confirmed);
+    assert.equal((await store.getBooking(r.booking.id))?.status, "confirmed");
+    assert.equal((await store.markInvoicePaid(inv.number)).ok, false);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 3)], at: OPEN })).ok);
+  });
+
+  test(`${name}: an unpaid first invoice releases the nets after 24 hours`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
+    assert.ok(a && b);
+    await store.redeemPriorityCode(a.id, (await store.createPriorityCode("Test CC")).code);
+    const past = Date.now() - 25 * 3_600_000;
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], terms: "termly", at: past });
+    assert.ok(r.ok);
+    assert.equal((await store.getBooking(r.booking.id))?.status, "expired");
+    assert.ok(!(await store.taken(block.id)).has(slotKey(block.id, sat, 2)));
+    assert.ok((await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(sat, 2)], terms: "termly", at: OPEN })).ok);
+    // Too late to pay now: someone else has the net
+    assert.equal((await store.markInvoicePaid(r.booking.invoices![0].number)).ok, false);
+  });
+
+  test(`${name}: monthly: first month invoiced now, later months a week before, with daily 8am reminders when overdue`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], terms: "monthly", at: OPEN });
+    assert.ok(r.ok);
+    assert.equal(r.booking.totalPence, 4 * 1880);
+    assert.deepEqual(r.booking.invoices!.map((i) => [i.months, i.amountPence]), [[["2026-11"], 2 * 1880]]);
+    assert.equal(await store.dueMonthlyInvoices(Date.parse("2026-11-28T09:00:00Z")).then((d) => d.length), 0); // not confirmed yet
+    await store.markInvoicePaid(r.booking.invoices![0].number);
+    const booking = (await store.getBooking(r.booking.id))!;
+    assert.equal(monthsToInvoice(booking)[0].issueAt, Date.parse("2026-11-28T08:00:00Z"));
+    assert.equal((await store.dueMonthlyInvoices(Date.parse("2026-11-28T07:59:00Z"))).length, 0);
+    const due = await store.dueMonthlyInvoices(Date.parse("2026-11-28T08:00:00Z"));
+    assert.deepEqual(due.map((x) => x.month), ["2026-12"]);
+    const issued = await store.issueMonthInvoice(r.booking.id, "2026-12", Date.parse("2026-11-28T08:00:00Z"));
+    assert.ok(issued);
+    assert.equal(issued.invoice.amountPence, 2 * 1880);
+    assert.equal(issued.invoice.dueAt, "2026-11-29T08:00:00.000Z");
+    assert.equal(await store.issueMonthInvoice(r.booking.id, "2026-12"), undefined); // only once
+    // Overdue: a reminder at 8am each day, once
+    assert.equal((await store.dueInvoiceReminders(Date.parse("2026-11-29T07:00:00Z"))).length, 0);
+    const rem = await store.dueInvoiceReminders(Date.parse("2026-11-30T08:30:00Z"));
+    assert.equal(rem.length, 1);
+    assert.ok(await store.claimInvoiceReminder(rem[0].invoice.number, rem[0].date));
+    assert.equal(await store.claimInvoiceReminder(rem[0].invoice.number, rem[0].date), false);
+    assert.equal((await store.dueInvoiceReminders(Date.parse("2026-11-30T09:30:00Z"))).length, 0);
+    // An unpaid monthly invoice blocks new bookings, and doesn't release the nets
+    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 3)], at: OPEN })).ok, false);
+    assert.equal((await store.getBooking(r.booking.id))?.status, "confirmed");
+    const receipt = await store.markInvoicePaid(issued.invoice.number);
+    assert.ok(receipt.ok && !receipt.confirmed);
+    assert.equal((await store.dueInvoiceReminders(Date.parse("2026-12-01T08:30:00Z"))).length, 0);
+  });
+
+  test(`${name}: priority window: only partners with a code can book until 11:59pm on 8 November`, async () => {
+    const store = make();
+    const code = await store.createPriorityCode("Friend CC");
+    assert.match(code.code, /^HR-[A-Z2-9]{6}$/);
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    const early = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: PRIORITY });
+    assert.ok(!early.ok && early.reason === "locked" && /11:59pm on Sunday 8 November/.test(early.message));
+    assert.equal((await store.redeemPriorityCode(a.id, "HR-NOPE00")).ok, false);
+    assert.ok((await store.redeemPriorityCode(a.id, ` ${code.code.toLowerCase()} `)).ok);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: PRIORITY })).ok);
+    // A code works for one account; registering with a used or unknown code creates nothing
+    assert.ok((await store.createPartner({ ...partner, email: "c@example.com", priorityCode: code.code })).error);
+    assert.ok((await store.createPartner({ ...partner, email: "d@example.com", priorityCode: "HR-ZZZZZZ" })).error);
+    assert.equal((await store.listPartners()).length, 1);
+    const second = await store.createPriorityCode("Second CC");
+    const { partner: e } = await store.createPartner({ ...partner, email: "e@example.com", priorityCode: second.code });
+    assert.equal(e?.priorityCode, second.code);
+    assert.equal(await store.deletePriorityCode(second.code), false); // used
+    const spare = await store.createPriorityCode("Spare");
+    assert.ok(await store.deletePriorityCode(spare.code));
+  });
+
+  test(`${name}: held nets can only be booked with the linked priority code`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    assert.ok((await store.taken(block.id)).has(slotKey(block.id, sat, 1)));
+    const no = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 1)], at: OPEN });
+    assert.ok(!no.ok && no.reason === "taken");
+    const sanjiv = await store.createPriorityCode("Sanjiv", "sanjiv");
+    const { partner: s } = await store.createPartner({ ...partner, email: "sanjiv@example.com", priorityCode: sanjiv.code });
+    assert.ok(s);
+    assert.ok(!(await store.taken(block.id, "sanjiv")).has(slotKey(block.id, sat, 1)));
+    assert.ok((await store.reserve({ partnerId: s.id, blockId: block.id, items: [net(sat, 1)], at: PRIORITY })).ok);
+  });
+
+  test(`${name}: spring can only be booked once the partner's autumn booking is paid`, async () => {
+    const store = make();
+    const spring = getBlock("spring-2027")!;
+    const sSat = spring.slots.find((x) => x.day === "Saturday" && x.start === "14:30")!;
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    const item = [{ slotKey: slotKey(spring.id, sSat, 2), bowlingMachine: false }];
+    const locked = await store.reserve({ partnerId: a.id, blockId: spring.id, items: item, at: OPEN });
+    assert.ok(!locked.ok && locked.reason === "locked");
+    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: OPEN });
+    assert.ok(autumn.ok);
+    await store.markInvoicePaid(autumn.booking.invoices![0].number);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: item, terms: "monthly", at: OPEN })).ok);
   });
 
   test(`${name}: documents are stored and read back byte for byte (larger than one chunk)`, async () => {
     const store = make();
     const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
     const bytes = new Uint8Array(1_300_000).map((_, i) => i % 251);
     const doc = await store.addDocument(a.id, { kind: "dbs", filename: "dbs.pdf", contentType: "application/pdf", size: bytes.length }, bytes);
     const back = await store.getDocument(doc.id);
@@ -106,179 +248,24 @@ for (const [name, make] of [
     await store.reviewDocument(doc.id, "approved");
     assert.equal((await store.documentsFor(a.id))[0].review, "approved");
   });
-  test(`${name}: spring can only be booked once the partner's autumn booking is paid`, async () => {
-    const store = make();
-    const spring = getBlock("spring-2027")!;
-    const springSat = spring.slots.find((s) => s.day === "Saturday")!;
-    const { partner: a } = await store.createPartner(partner);
-    const { partner: b } = await store.createPartner({ ...partner, email: "other@example.com" });
-    const springItem = [{ slotKey: slotKey(spring.id, springSat, 1), bowlingMachine: false }];
-    const locked = await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem });
-    assert.ok(!locked.ok && locked.reason === "locked");
-    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
-    assert.ok(autumn.ok);
-    // A hold awaiting payment isn't enough
-    assert.equal((await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem })).ok, false);
-    await store.confirm(autumn.booking.id, "pi_1");
-    // Another partner's autumn booking doesn't unlock spring for them
-    assert.equal((await store.reserve({ partnerId: b.id, blockId: spring.id, items: springItem })).ok, false);
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: springItem })).ok);
-  });
-  test(`${name}: spring deposit reserves the nets; the balance is due by midnight after the last autumn session`, async () => {
-    const store = make();
-    const spring = getBlock("spring-2027")!;
-    const springSat = spring.slots.find((s) => s.day === "Saturday")!;
-    const { partner: a } = await store.createPartner(partner);
-    // Autumn can't be reserved with a deposit
-    const noDeposit = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], plan: "deposit" });
-    assert.equal(noDeposit.ok, false);
-    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
-    assert.ok(autumn.ok);
-    await store.confirm(autumn.booking.id, "pi_a");
-    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, springSat, 1), bowlingMachine: false }], plan: "deposit" });
-    assert.ok(r.ok);
-    assert.equal(r.booking.totalPence, 12 * 1880);
-    assert.equal(r.booking.depositPence, Math.round(12 * 1880 * 0.25));
-    assert.equal(r.booking.balanceDueDate, "2026-12-12");
-    assert.equal(r.booking.balanceDueAt, "2026-12-13T00:00:00.000Z");
-    await store.confirm(r.booking.id, "pi_dep");
-    assert.equal((await store.getBooking(r.booking.id))?.status, "reserved");
-    // A repeated deposit webhook doesn't settle the balance
-    await store.confirm(r.booking.id, "pi_dep");
-    assert.equal((await store.getBooking(r.booking.id))?.status, "reserved");
-    const reserved = (await store.getBooking(r.booking.id))!;
-    assert.ok(holds(reserved, Date.parse("2026-12-12T23:00:00Z")));
-    assert.ok(!holds(reserved, Date.parse("2026-12-13T00:31:00Z")));
-    await store.confirm(r.booking.id, "pi_bal", "balance");
-    const paid = (await store.getBooking(r.booking.id))!;
-    assert.equal(paid.status, "confirmed");
-    assert.ok(paid.balancePaidAt);
-  });
 
-  test(`${name}: balance reminders go out once each, after 8am UK time, until the balance is paid`, async () => {
-    const store = make();
-    const spring = getBlock("spring-2027")!;
-    const { partner: a } = await store.createPartner(partner);
-    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
-    assert.ok(autumn.ok);
-    await store.confirm(autumn.booking.id, "pi_a");
-    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], plan: "deposit" });
-    assert.ok(r.ok);
-    await store.confirm(r.booking.id, "pi_dep");
-    const booked = (await store.getBooking(r.booking.id))!;
-    assert.equal(booked.firstSessionDate, "2026-11-07");
-    const days = balanceReminderDates(booked.firstSessionDate!, booked.balanceDueDate!, londonDate(booked.paidAt!));
-    assert.deepEqual(days, ["2026-11-21", "2026-11-28", "2026-12-05", "2026-12-09", "2026-12-10", "2026-12-12"]);
-    const first = londonTime(days[0], 8).getTime();
-    assert.equal((await store.dueBalanceReminders(first - 60_000)).length, 0);
-    const due = await store.dueBalanceReminders(first + 3_600_000);
-    assert.deepEqual(due.map((d) => d.date), [days[0]]);
-    assert.equal(await store.claimReminder(r.booking.id, days[0]), true);
-    assert.equal(await store.claimReminder(r.booking.id, days[0]), false);
-    assert.equal((await store.dueBalanceReminders(first + 3_600_000)).length, 0);
-    // A missed day isn't sent late
-    assert.equal((await store.dueBalanceReminders(londonTime(days[1], 8).getTime() + 21 * 3_600_000)).length, 0);
-    // Final day
-    const last = await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000);
-    assert.deepEqual(last.map((d) => [d.date, d.finalDay]), [["2026-12-12", true]]);
-    // Paid: no more reminders
-    await store.confirm(r.booking.id, "pi_bal", "balance");
-    assert.equal((await store.dueBalanceReminders(londonTime("2026-12-12", 8).getTime() + 60_000)).length, 0);
-  });
-
-  test(`${name}: autumn by bank transfer: 25% holding deposit by card, then an invoice for the balance`, async () => {
-    const store = make();
-    const { partner: a } = await store.createPartner(partner);
-    const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
-    const item = [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }];
-    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: item, method: "bank" });
-    assert.ok(r.ok && r.booking.holding && r.booking.method === "card");
-    assert.equal(r.booking.depositPence, Math.round(6 * 1880 * 0.25));
-    assert.equal(r.booking.invoices, undefined);
-    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
-    await store.confirm(r.booking.id, "pi_hold", "initial", 63);
-    const held = (await store.getBooking(r.booking.id))!;
-    assert.equal(held.status, "reserved");
-    const inv = held.invoices?.[0];
-    assert.ok(inv && inv.number === "HR-0001" && inv.stage === "balance" && inv.amountPence === 6 * 1880 - held.depositPence!);
-    const window = Date.parse(held.balanceDueAt!) - Date.now();
-    assert.ok(window > 23.9 * 3_600_000 && window <= 24 * 3_600_000);
-    assert.equal((await store.reserve({ partnerId: b.id, blockId: block.id, items: item })).ok, false);
-    const paid = await store.markBankPaid(r.booking.id, "balance");
-    assert.ok(paid.ok && paid.booking.status === "confirmed" && paid.booking.balanceMethod === "bank");
-    assert.ok((await store.getBooking(r.booking.id))?.invoices?.[0].paidAt);
-  });
-
-  test(`${name}: spring by bank transfer is invoiced straight away and held for 24 hours`, async () => {
-    const store = make();
-    const spring = getBlock("spring-2027")!;
-    const { partner: a } = await store.createPartner(partner);
-    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
-    assert.ok(autumn.ok);
-    await store.confirm(autumn.booking.id, "pi_a");
-    const r = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], method: "bank" });
-    assert.ok(r.ok && !r.booking.holding);
-    const hold = Date.parse(r.booking.holdExpiresAt!) - Date.now();
-    assert.ok(hold > 23.9 * 3_600_000 && hold <= 24 * 3_600_000);
-    assert.equal(r.booking.invoices?.[0].amountPence, 12 * 1880);
-    await store.release(r.booking.id, "cancelled");
-    assert.equal((await store.getBooking(r.booking.id))?.status, "pending_payment");
-    const paid = await store.markBankPaid(r.booking.id, "initial");
-    assert.ok(paid.ok && paid.booking.status === "confirmed" && paid.booking.method === "bank");
-  });
-
-  test(`${name}: one unpaid invoice at a time (card is still allowed)`, async () => {
-    const store = make();
-    const { partner: a } = await store.createPartner(partner);
-    const first = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }], method: "bank" });
-    assert.ok(first.ok);
-    await store.confirm(first.booking.id, "pi_hold", "initial");
-    const second = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "bank" });
-    assert.ok(!second.ok && second.message.includes("HR-0001"));
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false }], method: "card" })).ok);
-    await store.markBankPaid(first.booking.id, "balance");
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 3), bowlingMachine: false }], method: "bank" })).ok);
-  });
-
-  test(`${name}: a card payment records its card fee; spring balance can be invoiced`, async () => {
-    const store = make();
-    const spring = getBlock("spring-2027")!;
-    const { partner: a } = await store.createPartner(partner);
-    const autumn = await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false }] });
-    assert.ok(autumn.ok);
-    await store.confirm(autumn.booking.id, "pi_a", "initial", 193);
-    const got = (await store.getBooking(autumn.booking.id))!;
-    assert.equal(got.method, "card");
-    assert.equal(got.cardFeePence, 193);
-    const dep = await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, spring.slots.find((s) => s.day === "Saturday")!, 1), bowlingMachine: false }], plan: "deposit", method: "bank" });
-    assert.ok(dep.ok && dep.booking.invoices?.[0].amountPence === dep.booking.depositPence);
-    assert.ok((await store.markBankPaid(dep.booking.id, "initial")).ok);
-    assert.equal((await store.getBooking(dep.booking.id))?.status, "reserved");
-    const inv = await store.issueBalanceInvoice(dep.booking.id, a.id);
-    assert.ok(inv && !("error" in inv) && inv.stage === "balance" && inv.amountPence === dep.booking.totalPence - dep.booking.depositPence!);
-    // Asking again reuses the open invoice
-    const again = await store.issueBalanceInvoice(dep.booking.id, a.id);
-    assert.ok(again && !("error" in again) && again.number === inv.number);
-    assert.equal((await store.findInvoice(inv.number))?.booking.id, dep.booking.id);
-    const done = await store.markBankPaid(dep.booking.id, "balance");
-    assert.ok(done.ok && done.booking.status === "confirmed" && done.booking.balanceMethod === "bank");
-  });
-
-  test(`${name}: the Stripe test booking costs £1 and never fills up`, async () => {
+  test(`${name}: the test booking costs £1, never fills up and ignores the priority window`, async () => {
     const store = make();
     const t = getBlock("stripe-test")!;
     const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
     const item = [{ slotKey: slotKey(t.id, t.slots[0], 1), bowlingMachine: false }];
-    const first = await store.reserve({ partnerId: a.id, blockId: t.id, items: item });
-    assert.ok(first.ok && first.booking.totalPence === 100);
-    await store.confirm(first.booking.id, "pi_test");
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: t.id, items: item })).ok);
+    const first = await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: PRIORITY });
+    assert.ok(first.ok && first.booking.totalPence === 100 && first.booking.invoices![0].amountPence === 100);
+    await store.markInvoicePaid(first.booking.invoices![0].number);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: PRIORITY })).ok);
     assert.equal((await store.taken(t.id)).size, 0);
   });
 
   test(`${name}: password sign-in, lockout, sign-in links and password changes`, async () => {
     const store = make();
     const { partner: a, token: first } = await store.createPartner({ ...partner, password: "correct horse battery" });
+    assert.ok(a && first);
     assert.equal((await store.login("nobody@example.com", "correct horse battery")).ok, false);
     const s = await store.login(" SAM@example.com ", "correct horse battery");
     assert.ok(s.ok);
@@ -307,12 +294,14 @@ for (const [name, make] of [
   });
 }
 
-test("checkout needs the terms; bowling machine needs a Level 2 coach and own balls", () => {
+test("checkout needs the terms, monthly or termly; bowling machine needs a Level 2 coach and own balls", () => {
   const who = { ageGroup: "Under 11", ability: "Beginner", gender: "Mixed" };
-  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: false, ...who }], agreeTerms: true };
+  const base = { blockId: block.id, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: false, ...who }], terms: "termly", agreeTerms: true };
   assert.ok(partnerCheckoutSchema.safeParse(base).success);
+  assert.ok(partnerCheckoutSchema.safeParse({ ...base, terms: "monthly" }).success);
+  assert.ok(!partnerCheckoutSchema.safeParse({ ...base, terms: undefined }).success);
   assert.ok(!partnerCheckoutSchema.safeParse({ ...base, agreeTerms: false }).success);
-  const machine = { ...base, items: [{ slotKey: slotKey(block.id, sat, 1), bowlingMachine: true, ...who }] };
+  const machine = { ...base, items: [{ slotKey: slotKey(block.id, sat, 2), bowlingMachine: true, ...who }] };
   const bad = partnerCheckoutSchema.safeParse(machine);
   assert.ok(!bad.success);
   assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["machineCoach", "ownBalls"]);
@@ -320,11 +309,11 @@ test("checkout needs the terms; bowling machine needs a Level 2 coach and own ba
 });
 
 test("each booked session says who it's for", () => {
-  const item = { slotKey: slotKey(block.id, sat, 1), bowlingMachine: false };
-  const bad = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [item], agreeTerms: true });
+  const item = { slotKey: slotKey(block.id, sat, 2), bowlingMachine: false };
+  const bad = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [item], terms: "termly", agreeTerms: true });
   assert.ok(!bad.success);
   assert.deepEqual(bad.error.issues.map((i) => i.path.join(".")).sort(), ["items.0.ability", "items.0.ageGroup", "items.0.gender"]);
-  const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], agreeTerms: true });
+  const ok = partnerCheckoutSchema.safeParse({ blockId: block.id, items: [{ ...item, ageGroup: "Adults", ability: "Advanced", gender: "Female" }], terms: "termly", agreeTerms: true });
   assert.ok(ok.success);
 });
 
@@ -338,37 +327,17 @@ test("spring block: 12 weeks from 6 January, including half term", () => {
   assert.equal(spring.slots.find((s) => s.day === "Sunday")!.dates.at(-1), "2027-03-28");
 });
 
-test("midnight UK time at the end of a date, in GMT and BST", () => {
+test("UK times: midnight at the end of a date and 8am, in GMT and BST", () => {
   assert.equal(endOfDayLondon("2026-12-13").toISOString(), "2026-12-14T00:00:00.000Z");
   assert.equal(endOfDayLondon("2027-06-01").toISOString(), "2027-06-01T23:00:00.000Z");
-});
-
-test("balance reminders: two weeks after the first autumn session, weekly, then 3 days, 2 days and the final day; at 8am UK time", () => {
-  // First session Thursday 5 November, last Sunday 13 December, deposit paid 22 October
-  assert.deepEqual(balanceReminderDates("2026-11-05", "2026-12-13", "2026-10-22"), [
-    "2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10", "2026-12-11", "2026-12-13",
-  ]);
-  // Deposit paid late: only the reminders still to come
-  assert.deepEqual(balanceReminderDates("2026-11-05", "2026-12-13", "2026-12-04"), ["2026-12-10", "2026-12-11", "2026-12-13"]);
   assert.equal(londonTime("2026-11-05", 8).toISOString(), "2026-11-05T08:00:00.000Z");
   assert.equal(londonTime("2026-10-22", 8).toISOString(), "2026-10-22T07:00:00.000Z");
 });
 
-test("the Stripe test booking is only for test accounts", async () => {
+test("the test booking is only for test accounts", async () => {
   const { isTestPartner } = await import("../src/lib/partners/test-access");
   assert.ok(isTestPartner("Office@HillRisers.co.uk"));
   assert.ok(!isTestPartner("someone@example.com"));
-});
-
-test("card processing fee: grossed up so 1.5% + 20p of the total still leaves the full price", async () => {
-  const { cardFeePence } = await import("../src/data/invoicing");
-  for (const price of [100, 5170, 11280, 20680, 112800]) {
-    const total = price + cardFeePence(price);
-    const stripe = Math.round(total * 0.015) + 20;
-    assert.ok(total - stripe >= price, `${price}: ${total - stripe}`);
-    assert.ok(total - stripe - price <= 1, `${price} overcharged`);
-  }
-  assert.equal(cardFeePence(11280), 193);
 });
 
 test("UK date and time labels, in GMT and BST", async () => {

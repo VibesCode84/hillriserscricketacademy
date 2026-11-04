@@ -3,8 +3,6 @@ import type Stripe from "stripe";
 import { getStore } from "@/lib/booking";
 import { confirmPaidBooking } from "@/lib/booking/confirm";
 import { getStripe } from "@/lib/payments";
-import { getPartnerStore } from "@/lib/partners/store";
-import { confirmPartnerPayment } from "@/lib/partners/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -28,25 +26,6 @@ export async function POST(req: Request) {
   } catch (err) {
     console.warn("[hillrisers] webhook signature verification failed", (err as Error).message);
     return NextResponse.json({ ok: false }, { status: 400 });
-  }
-
-  // Delivery partner net booking (metadata.kind === "partner")
-  if (event.type.startsWith("checkout.session.")) {
-    const cs = event.data.object as Stripe.Checkout.Session;
-    if (cs.metadata?.kind === "partner" && cs.metadata.partnerBookingId) {
-      const partners = getPartnerStore();
-      const id = cs.metadata.partnerBookingId;
-      const stage = cs.metadata.stage === "balance" ? "balance" : "initial";
-      if ((event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") && cs.payment_status === "paid") {
-        const pi = typeof cs.payment_intent === "string" ? cs.payment_intent : cs.payment_intent?.id;
-        const fee = Number(cs.metadata.cardFeePence);
-        await confirmPartnerPayment(id, pi, stage, Number.isFinite(fee) ? fee : undefined);
-      } else if ((event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") && stage === "initial") {
-        // An abandoned balance payment leaves the reservation in place until its deadline
-        await partners.release(id, "expired", cs.id);
-      }
-      return NextResponse.json({ received: true });
-    }
   }
 
   const store = getStore();

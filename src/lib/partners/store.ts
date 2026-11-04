@@ -1,29 +1,31 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hashPassword, verifyPassword } from "./password";
 import { INVOICE_DUE_HOURS, invoiceNumber } from "../../data/invoicing";
 import {
   blockUnlocked,
-  depositFor,
-  endOfDayLondon,
   findSlot,
-  firstSessionDate,
+  firstInvoiceMonths,
   getBlock,
-  balanceReminderDates,
+  heldNets,
   itemPricePence,
-  lastSessionDate,
   londonDate,
   londonTime,
   machineKey,
-  PARTNER_HOLD_MINUTES,
+  priorityEndsLabel,
+  priorityWindowOpen,
   REMINDER_HOUR,
   slotKey,
   type DocumentKind,
   type PartnerDay,
+  type PaymentTerms,
 } from "../../data/partners";
 import type { D1Database } from "../booking/d1-store";
+import { monthsToInvoice } from "./describe";
+
+export { monthsToInvoice, paidToDate } from "./describe";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -48,7 +50,21 @@ export type Partner = {
   sports?: string;
   website?: string;
   about?: string;
+  /** Redeemed priority code (see PriorityCode) */
+  priorityCode?: string;
   createdAt: string;
+};
+
+/** A priority code for an invited partner: books during the priority window, and unlocks a hold if linked */
+export type PriorityCode = {
+  code: string;
+  /** Who it's for, e.g. "Sanjiv" */
+  name: string;
+  /** netHolds id this code can book */
+  holdId?: string;
+  createdAt: string;
+  redeemedBy?: string;
+  redeemedAt?: string;
 };
 
 export type DocumentReview = "pending" | "approved" | "rejected";
@@ -83,14 +99,22 @@ export type NetBookingItem = {
 
 export type PaymentMethod = "card" | "bank";
 
-/** A bank-transfer invoice for the first payment (in full or deposit) or a deposit balance */
+/**
+ * A bank-transfer invoice, payable within INVOICE_DUE_HOURS. "initial" is the first one for a booking
+ * (the whole block when termly; the first month(s) when monthly); "month" is a later monthly one.
+ * "balance" belongs to the earlier deposit scheme.
+ */
 export type PartnerInvoice = {
   number: string;
-  stage: "initial" | "balance";
+  stage: "initial" | "month" | "balance";
+  /** Months covered ("2026-11"), for monthly payment terms */
+  months?: string[];
   amountPence: number;
   issuedAt: string;
   dueAt: string;
   paidAt?: string;
+  /** Overdue reminder days already emailed (ISO dates) */
+  remindersSent?: string[];
 };
 
 /** reserved = deposit paid, balance still due; forfeited = balance missed its deadline (shown, never stored) */
@@ -104,8 +128,8 @@ export type NetBooking = {
   /** Level 2 coach operating the bowling machine */
   machineCoach?: string;
   totalPence: number;
-  /** Paying in full (default) or reserving with a deposit */
-  plan?: "full" | "deposit";
+  /** Payment terms (earlier bookings: "full" or "deposit") */
+  plan?: PaymentTerms | "full" | "deposit";
   /** A card holding deposit for a bank-transfer booking: the balance is invoiced once it's paid */
   holding?: boolean;
   /** How the first payment was (or is being) made; card adds a card processing fee */
@@ -133,7 +157,7 @@ export type NetBooking = {
   paidAt?: string;
 };
 
-type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; invoiceSeq?: number };
+type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; priorityCodes?: PriorityCode[]; invoiceSeq?: number };
 const empty = (): Data => ({ partners: [], documents: [], bookings: [] });
 
 /* ── Storage backends: a versioned JSON document plus file blobs ───────── */
@@ -261,12 +285,11 @@ function addSession(p: Partner) {
 export type LoginResult = { ok: true; partner: Partner; token: string } | { ok: false; locked: boolean };
 const now = () => new Date().toISOString();
 
-/** A slot is taken by a confirmed booking or by a payment hold that hasn't expired */
+/** A slot is taken by a confirmed booking or by an invoice that's still within its payment time */
 export const holds = (b: NetBooking, at = Date.now()) =>
   b.status === "confirmed" ||
   (b.status === "pending_payment" && !!b.holdExpiresAt && Date.parse(b.holdExpiresAt) > at) ||
-  // A balance checkout started before the deadline gets the usual hold time to finish
-  (b.status === "reserved" && !!b.balanceDueAt && Date.parse(b.balanceDueAt) + PARTNER_HOLD_MINUTES * 60_000 > at);
+  (b.status === "reserved" && !!b.balanceDueAt && Date.parse(b.balanceDueAt) > at);
 
 /** Deposit paid but the balance missed its deadline: the nets are released and the deposit kept */
 export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "reserved" && !holds(b, at);
@@ -275,27 +298,61 @@ export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "
 const view = (b: NetBooking): NetBooking =>
   balanceOverdue(b) ? { ...b, status: "forfeited" } : b.status === "pending_payment" && !holds(b) ? { ...b, status: "expired" } : b;
 
-/** A partner's unpaid, unexpired invoice, if any — partners can have one at a time */
-function openInvoice(d: Data, partnerId: string) {
+/**
+ * A partner's unpaid invoice, if any — partners can have one at a time. A first invoice counts while its
+ * nets are held; a monthly invoice counts until it's paid.
+ */
+function openInvoice(d: Data, partnerId: string, at = Date.now()) {
   for (const b of d.bookings) {
     if (b.partnerId !== partnerId) continue;
     for (const i of b.invoices ?? []) {
-      if (i.paidAt || Date.parse(i.dueAt) <= Date.now()) continue;
-      if ((i.stage === "initial" && b.status === "pending_payment") || (i.stage === "balance" && b.status === "reserved")) return i;
+      if (i.paidAt) continue;
+      if (i.stage === "initial" && b.status === "pending_payment" && Date.parse(i.dueAt) > at) return i;
+      if (i.stage === "month" && b.status === "confirmed") return i;
     }
   }
   return undefined;
 }
 
-const unpaidMessage = (i: PartnerInvoice) =>
-  `You already have an unpaid invoice (${i.number}). Please pay it, or pay it by card from My account, before requesting another — or pay this booking by card.`;
+const unpaidMessage = (i: PartnerInvoice) => `You have an unpaid invoice (${i.number}). Please pay it before making another booking.`;
 
-function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, dueAt: string): PartnerInvoice {
+function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, at: number, months?: string[]): PartnerInvoice {
   d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
-  return { number: invoiceNumber(d.invoiceSeq), stage, amountPence, issuedAt: now(), dueAt };
+  return { number: invoiceNumber(d.invoiceSeq), stage, months, amountPence, issuedAt: new Date(at).toISOString(), dueAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString() };
 }
 
-/** Records a payment: the first one (in full → confirmed, deposit → reserved) or a balance (→ confirmed) */
+/** Readable code, no look-alike characters: "HR-7K3M9P" */
+function newCode(existing: Set<string>) {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  for (;;) {
+    const code = `HR-${Array.from({ length: 6 }, () => chars[randomInt(chars.length)]).join("")}`;
+    if (!existing.has(code)) return code;
+  }
+}
+
+const normaliseCode = (code: string) => {
+  const c = code.trim().toUpperCase().replace(/\s+/g, "");
+  return c.startsWith("HR-") ? c : `HR-${c.replace(/^HR/, "")}`;
+};
+
+/** The priority code a partner has redeemed */
+const codeFor = (d: Data, partnerId: string) => {
+  const p = d.partners.find((x) => x.id === partnerId);
+  return p?.priorityCode ? d.priorityCodes?.find((c) => c.code === p.priorityCode) : undefined;
+};
+
+export type RedeemResult = { ok: true; code: PriorityCode } | { ok: false; message: string };
+
+function redeem(d: Data, p: Partner, raw: string): RedeemResult {
+  const code = d.priorityCodes?.find((c) => c.code === normaliseCode(raw));
+  if (!code) return { ok: false, message: "That priority code isn't recognised. Please check it and try again." };
+  if (code.redeemedBy && code.redeemedBy !== p.id) return { ok: false, message: "That priority code has already been used." };
+  Object.assign(code, { redeemedBy: p.id, redeemedAt: code.redeemedAt ?? now() });
+  p.priorityCode = code.code;
+  return { ok: true, code };
+}
+
+/** Records a first payment (→ confirmed) or a deposit balance from the earlier scheme */
 function settle(d: Data, b: NetBooking, stage: "initial" | "balance", p: { method: PaymentMethod; paymentIntentId?: string; cardFeePence?: number }) {
   const at = now();
   if (stage === "balance") {
@@ -304,14 +361,7 @@ function settle(d: Data, b: NetBooking, stage: "initial" | "balance", p: { metho
   } else {
     if (b.status === "confirmed" || b.status === "reserved") return b;
     Object.assign(b, { status: b.plan === "deposit" ? "reserved" : "confirmed", paidAt: at, paymentIntentId: p.paymentIntentId, method: p.method, cardFeePence: p.cardFeePence, holdExpiresAt: undefined });
-    if (b.holding) {
-      // Holding deposit paid: invoice the balance, payable within INVOICE_DUE_HOURS
-      b.balanceDueAt = new Date(Date.now() + INVOICE_DUE_HOURS * 3_600_000).toISOString();
-      b.invoices = [...(b.invoices ?? []), newInvoice(d, "balance", b.totalPence - (b.depositPence ?? 0), b.balanceDueAt)];
-      return b;
-    }
   }
-  // A card payment settles any open invoice for the same payment too
   for (const inv of b.invoices ?? []) if (inv.stage === stage && !inv.paidAt) inv.paidAt = at;
   return b;
 }
@@ -348,16 +398,65 @@ export class PartnerStore {
 
   /* Partners */
 
-  /** Creates a partner and signs them in: returns a session token for the cookie */
-  async createPartner(input: Omit<Partner, "id" | "createdAt" | "keyHash" | "keyExpiresAt" | "passwordHash" | "sessions" | "failedLogins" | "lockedUntil"> & { password?: string }) {
-    const { password, ...details } = input;
+  /**
+   * Creates a partner and signs them in: returns a session token for the cookie. A priority code, if
+   * given, must be valid (nothing is created otherwise).
+   */
+  async createPartner(
+    input: Omit<Partner, "id" | "createdAt" | "keyHash" | "keyExpiresAt" | "passwordHash" | "sessions" | "failedLogins" | "lockedUntil"> & { password?: string },
+  ): Promise<{ partner: Partner; token: string; error?: undefined } | { error: string; partner?: undefined; token?: undefined }> {
+    const { password, priorityCode, ...details } = input;
     const passwordHash = password ? await hashPassword(password) : undefined;
     return this.tx((d) => {
       const p: Partner = { ...details, email: details.email.trim().toLowerCase(), id: randomUUID(), passwordHash, createdAt: now() };
+      if (priorityCode) {
+        const r = redeem(d, p, priorityCode);
+        if (!r.ok) return { error: r.message };
+      }
       const token = addSession(p);
       d.partners.push(p);
       return { partner: p, token };
     });
+  }
+
+  /* Priority codes */
+
+  /** Admin: a new priority code for a named partner, optionally linked to a hold */
+  createPriorityCode(name: string, holdId?: string) {
+    return this.tx((d) => {
+      const code: PriorityCode = { code: newCode(new Set((d.priorityCodes ?? []).map((c) => c.code))), name: name.trim(), holdId: holdId || undefined, createdAt: now() };
+      d.priorityCodes = [...(d.priorityCodes ?? []), code];
+      return code;
+    });
+  }
+
+  /** Admin: removes a code that hasn't been used */
+  deletePriorityCode(code: string) {
+    return this.tx((d) => {
+      const c = d.priorityCodes?.find((x) => x.code === code);
+      if (!c || c.redeemedBy) return false;
+      d.priorityCodes = d.priorityCodes!.filter((x) => x !== c);
+      return true;
+    });
+  }
+
+  async listPriorityCodes() {
+    return [...((await this.read()).priorityCodes ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  /** A partner enters a priority code in the portal */
+  redeemPriorityCode(partnerId: string, raw: string) {
+    return this.tx<RedeemResult>((d) => {
+      const p = d.partners.find((x) => x.id === partnerId);
+      if (!p) return { ok: false, message: "Please sign in again." };
+      if (p.priorityCode && p.priorityCode !== normaliseCode(raw)) return { ok: false, message: "Your account already has a priority code." };
+      return redeem(d, p, raw);
+    });
+  }
+
+  /** A partner's priority code (and the hold it unlocks), if they have one */
+  async priorityFor(partnerId: string) {
+    return codeFor(await this.read(), partnerId);
   }
 
   async partnerByEmail(email: string) {
@@ -483,11 +582,15 @@ export class PartnerStore {
 
   /* Availability and bookings */
 
-  /** Taken keys (nets and the bowling machine) for a block, from live bookings */
-  async taken(blockId: string) {
+  /**
+   * Taken keys (nets and the bowling machine) for a block, from live bookings and held nets.
+   * Nets held for `holdId` count as free (that partner may book them).
+   */
+  async taken(blockId: string, holdId?: string) {
     const at = Date.now();
     const set = new Set<string>();
     if (getBlock(blockId)?.test) return set;
+    for (const [key, hold] of heldNets(blockId)) if (hold.id !== holdId) set.add(key);
     for (const b of (await this.read()).bookings) {
       if (b.blockId !== blockId || !holds(b, at)) continue;
       for (const i of b.items) {
@@ -499,41 +602,32 @@ export class PartnerStore {
   }
 
   /**
-   * Holds the requested nets (and bowling machine) while the partner pays.
-   * Atomic: either every item is free and all are held, or nothing changes.
+   * Books the requested nets (and bowling machine) and issues the first invoice. The nets are held for
+   * INVOICE_DUE_HOURS while it's paid. Atomic: either every item is free and all are held, or nothing changes.
    */
   reserve(input: {
     partnerId: string;
     blockId: string;
     items: { slotKey: string; bowlingMachine: boolean; ageGroup?: string; ability?: string; gender?: string }[];
     machineCoach?: string;
-    plan?: "full" | "deposit";
-    method?: PaymentMethod;
+    terms?: PaymentTerms;
+    /** For tests: the time to book at */
+    at?: number;
   }): Promise<ReserveResult> {
     return this.tx<ReserveResult>((d) => {
+      const at = input.at ?? Date.now();
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
+      const code = codeFor(d, input.partnerId);
+      if (!block.test && priorityWindowOpen(at) && !code) {
+        return { ok: false, reason: "locked", message: `Priority booking is open to invited partners until ${priorityEndsLabel()}. Booking opens to everyone after that. If you have a priority code, enter it above.` };
+      }
       if (!blockUnlocked(block, d.bookings.filter((b) => b.partnerId === input.partnerId))) {
         const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
         return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
       }
-      if (input.method === "bank") {
-        const open = openInvoice(d, input.partnerId);
-        if (open) return { ok: false, reason: "invalid", message: unpaidMessage(open) };
-      }
-      // Bank transfer on a block with a holding deposit: card deposit now, balance invoiced once it's paid
-      const holding = input.method === "bank" && !!block.holdingDeposit && input.plan !== "deposit";
-      let balanceDueDate: string | undefined;
-      let firstSession: string | undefined;
-      if (input.plan === "deposit") {
-        if (!block.deposit) return { ok: false, reason: "invalid", message: `${block.label} must be paid in full.` };
-        const theirs = d.bookings.filter((b) => b.partnerId === input.partnerId);
-        balanceDueDate = lastSessionDate(block.deposit.dueAfterBlock, theirs);
-        firstSession = firstSessionDate(block.deposit.dueAfterBlock, theirs);
-        if (!balanceDueDate || endOfDayLondon(balanceDueDate).getTime() <= Date.now()) {
-          return { ok: false, reason: "invalid", message: "The deadline for a deposit has passed. Please pay in full." };
-        }
-      }
+      const open = openInvoice(d, input.partnerId, at);
+      if (open) return { ok: false, reason: "invalid", message: unpaidMessage(open) };
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();
       for (const it of input.items) {
@@ -550,19 +644,22 @@ export class PartnerStore {
         }
         items.push({ slotKey: key, day: slot.day, start: slot.start, end: slot.end, net, weeks: slot.dates.length, bowlingMachine: it.bowlingMachine, ageGroup: it.ageGroup, ability: it.ability, gender: it.gender, pricePence: itemPricePence(slot, it.bowlingMachine) });
       }
-      const at = Date.now();
       const clash = new Set<string>();
-      for (const b of d.bookings) {
-        if (block.test || b.blockId !== input.blockId || !holds(b, at)) continue;
-        for (const i of b.items) {
-          if (wanted.has(i.slotKey)) clash.add(i.slotKey);
-          const m = machineKey(input.blockId, i);
-          if (i.bowlingMachine && wanted.has(m)) clash.add(m);
+      if (!block.test) {
+        for (const [key, hold] of heldNets(input.blockId)) if (wanted.has(key) && hold.id !== code?.holdId) clash.add(key);
+        for (const b of d.bookings) {
+          if (b.blockId !== input.blockId || !holds(b, at)) continue;
+          for (const i of b.items) {
+            if (wanted.has(i.slotKey)) clash.add(i.slotKey);
+            const m = machineKey(input.blockId, i);
+            if (i.bowlingMachine && wanted.has(m)) clash.add(m);
+          }
         }
       }
       if (clash.size) {
-        return { ok: false, reason: "taken", keys: [...clash], message: "Sorry — someone has just booked one of those. The grid has been updated." };
+        return { ok: false, reason: "taken", keys: [...clash], message: "Sorry — one of those has just been booked or isn't available. The grid has been updated." };
       }
+      const terms: PaymentTerms = input.terms ?? "termly";
       const booking: NetBooking = {
         id: randomUUID(),
         partnerId: input.partnerId,
@@ -570,91 +667,99 @@ export class PartnerStore {
         items,
         machineCoach: items.some((i) => i.bowlingMachine) ? input.machineCoach : undefined,
         totalPence: items.reduce((n, i) => n + i.pricePence, 0),
-        ...(balanceDueDate
-          ? {
-              plan: "deposit" as const,
-              depositPence: depositFor(block, items.reduce((n, i) => n + i.pricePence, 0)),
-              firstSessionDate: firstSession,
-              balanceDueDate,
-              balanceDueAt: endOfDayLondon(balanceDueDate).toISOString(),
-            }
-          : holding
-            ? { plan: "deposit" as const, holding: true, depositPence: Math.round((items.reduce((n, i) => n + i.pricePence, 0) * block.holdingDeposit!) / 100) }
-            : { plan: "full" as const }),
-        method: holding ? "card" : (input.method ?? "card"),
+        plan: terms,
+        method: "bank",
         status: "pending_payment",
-        // A bank transfer holds the nets until the invoice is due; a card payment for the checkout window
-        holdExpiresAt: new Date(at + (input.method === "bank" && !holding ? INVOICE_DUE_HOURS * 3_600_000 : PARTNER_HOLD_MINUTES * 60_000)).toISOString(),
-        createdAt: now(),
+        holdExpiresAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString(),
+        createdAt: new Date(at).toISOString(),
       };
-      if (input.method === "bank" && !holding) {
-        booking.invoices = [newInvoice(d, "initial", booking.plan === "deposit" ? booking.depositPence! : booking.totalPence, booking.holdExpiresAt!)];
+      if (terms === "monthly") {
+        // The first invoice covers the first month, plus any month whose invoice would already be due
+        const due = firstInvoiceMonths(monthsToInvoice(booking), at);
+        booking.invoices = [newInvoice(d, "initial", due.reduce((n, m) => n + m.pence, 0), at, due.map((m) => m.month))];
+      } else {
+        booking.invoices = [newInvoice(d, "initial", booking.totalPence, at)];
       }
       d.bookings.push(booking);
       return { ok: true, booking };
     });
   }
 
-  attachCheckout(bookingId: string, checkoutId: string) {
-    return this.tx((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      if (b) b.checkoutId = checkoutId;
-      return b;
-    });
-  }
-
-  attachBalanceCheckout(bookingId: string, checkoutId: string) {
-    return this.tx((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      if (b) b.balanceCheckoutId = checkoutId;
-      return b;
-    });
-  }
-
   /**
-   * Called from the Stripe webhook (or dev checkout) once a payment is confirmed.
-   * "initial" is the first payment (in full, or the deposit); "balance" settles a deposit.
+   * Admin: the bank transfer for an invoice has arrived. A first invoice confirms the booking; if its
+   * payment time has lapsed, that only goes through while the nets are still free (otherwise refund it).
    */
-  confirm(bookingId: string, paymentIntentId?: string, stage: "initial" | "balance" = "initial", cardFeePence?: number) {
-    return this.tx((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      return b && settle(d, b, stage, { method: "card", paymentIntentId, cardFeePence });
-    });
-  }
-
-  /**
-   * Admin: a bank transfer has arrived. If the invoice's hold has lapsed, it only goes through
-   * while the nets are still free (otherwise the money should be refunded).
-   */
-  markBankPaid(bookingId: string, stage: "initial" | "balance") {
-    return this.tx<{ ok: true; booking: NetBooking } | { ok: false; message: string }>((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      if (!b) return { ok: false, message: "Booking not found." };
-      const awaiting = stage === "initial" ? b.status === "pending_payment" : b.status === "reserved";
-      if (!awaiting) return { ok: false, message: stage === "initial" ? "This booking isn't awaiting payment." : "There's no balance outstanding on this booking." };
+  markInvoicePaid(number: string) {
+    return this.tx<{ ok: true; booking: NetBooking; invoice: PartnerInvoice; confirmed: boolean } | { ok: false; message: string }>((d) => {
+      const b = d.bookings.find((x) => x.invoices?.some((i) => i.number === number));
+      const inv = b?.invoices?.find((i) => i.number === number);
+      if (!b || !inv) return { ok: false, message: "Invoice not found." };
+      if (inv.paidAt) return { ok: false, message: "That invoice is already marked as paid." };
+      if (inv.stage === "month") {
+        inv.paidAt = now();
+        return { ok: true, booking: b, invoice: inv, confirmed: false };
+      }
+      const stage = inv.stage === "balance" ? "balance" : "initial";
+      const awaiting = stage === "initial" ? b.status === "pending_payment" || b.status === "expired" : b.status === "reserved";
+      if (!awaiting) return { ok: false, message: "This booking isn't awaiting payment." };
       if (!holds(b)) {
         const others = d.bookings.filter((x) => x.id !== b.id && x.blockId === b.blockId && holds(x));
         const clash = b.items.some((i) => others.some((o) => o.items.some((j) => j.slotKey === i.slotKey || (i.bowlingMachine && j.bowlingMachine && machineKey(b.blockId, i) === machineKey(b.blockId, j)))));
-        if (clash && !getBlock(b.blockId)?.test) return { ok: false, message: "The payment deadline passed and some of these nets have since been booked by someone else. Please refund the transfer." };
+        if (clash && !getBlock(b.blockId)?.test) return { ok: false, message: "The payment time passed and some of these nets have since been booked by someone else. Please refund the transfer." };
       }
+      if (b.status === "expired") b.status = "pending_payment";
       settle(d, b, stage, { method: "bank" });
-      return { ok: true, booking: b };
+      return { ok: true, booking: b, invoice: inv, confirmed: true };
     });
   }
 
-  /** A bank-transfer invoice for a deposit balance (reuses an unexpired one) */
-  issueBalanceInvoice(bookingId: string, partnerId: string) {
-    return this.tx<PartnerInvoice | { error: string } | undefined>((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId && x.partnerId === partnerId);
-      if (!b || b.status !== "reserved" || !holds(b) || !b.balanceDueAt) return undefined;
-      const open = b.invoices?.find((i) => i.stage === "balance" && !i.paidAt && Date.parse(i.dueAt) > Date.now());
-      if (open) return open;
-      const other = openInvoice(d, partnerId);
-      if (other) return { error: unpaidMessage(other) };
-      const due = Math.min(Date.now() + INVOICE_DUE_HOURS * 3_600_000, Date.parse(b.balanceDueAt));
-      const inv = newInvoice(d, "balance", b.totalPence - (b.depositPence ?? 0), new Date(due).toISOString());
+  /** Monthly terms: months whose invoice is now due to be issued (8am UK time, a week before the month's first session) */
+  async dueMonthlyInvoices(at = Date.now()) {
+    const due: { booking: NetBooking; month: string }[] = [];
+    for (const b of (await this.read()).bookings) {
+      if (b.status !== "confirmed" || b.plan !== "monthly") continue;
+      for (const m of monthsToInvoice(b)) if (m.issueAt <= at) due.push({ booking: b, month: m.month });
+    }
+    return due;
+  }
+
+  /** Issues a month's invoice (once): undefined if it already exists */
+  issueMonthInvoice(bookingId: string, month: string, at = Date.now()) {
+    return this.tx((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      const m = b && monthsToInvoice(b).find((x) => x.month === month);
+      if (!b || !m || b.status !== "confirmed") return undefined;
+      const inv = newInvoice(d, "month", m.pence, at, [month]);
       b.invoices = [...(b.invoices ?? []), inv];
-      return inv;
+      return { booking: b, invoice: inv };
+    });
+  }
+
+  /**
+   * Overdue monthly invoices: one reminder a day at 8am UK time (sent within 20 hours of 8am,
+   * never late) until it's paid.
+   */
+  async dueInvoiceReminders(at = Date.now()) {
+    const due: { booking: NetBooking; invoice: PartnerInvoice; date: string }[] = [];
+    for (const b of (await this.read()).bookings) {
+      if (b.status !== "confirmed") continue;
+      for (const i of b.invoices ?? []) {
+        if (i.stage !== "month" || i.paidAt || Date.parse(i.dueAt) > at) continue;
+        const date = londonDate(new Date(at));
+        const sendAt = londonTime(date, REMINDER_HOUR).getTime();
+        if (sendAt <= at && sendAt >= Date.parse(i.dueAt) && at - sendAt < 20 * 3_600_000 && !i.remindersSent?.includes(date)) due.push({ booking: b, invoice: i, date });
+      }
+    }
+    return due;
+  }
+
+  /** Marks a reminder as sent; false if another run already claimed it */
+  claimInvoiceReminder(number: string, date: string) {
+    return this.tx((d) => {
+      const inv = d.bookings.flatMap((b) => b.invoices ?? []).find((i) => i.number === number);
+      if (!inv || inv.paidAt || inv.remindersSent?.includes(date)) return false;
+      inv.remindersSent = [...(inv.remindersSent ?? []), date];
+      return true;
     });
   }
 
@@ -664,46 +769,6 @@ export class PartnerStore {
       if (invoice) return { booking: view(b), invoice };
     }
     return undefined;
-  }
-
-  release(bookingId: string, status: "cancelled" | "expired", checkoutId?: string) {
-    return this.tx((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      if (!b || b.status !== "pending_payment") return b;
-      // A bank-transfer booking keeps its nets until the invoice is due, even if a card attempt is abandoned
-      if (b.method === "bank") return b;
-      if (checkoutId && b.checkoutId && b.checkoutId !== checkoutId) return b;
-      b.status = status;
-      return b;
-    });
-  }
-
-  /**
-   * Balance reminders due now: reserved bookings with a reminder day whose 8am (UK) has passed
-   * within the last 20 hours and hasn't been sent. Older missed days are skipped, never sent late.
-   */
-  async dueBalanceReminders(at = Date.now()) {
-    const due: { booking: NetBooking; date: string; finalDay: boolean }[] = [];
-    for (const b of (await this.read()).bookings) {
-      if (b.status !== "reserved" || !holds(b, at) || !b.paidAt || !b.balanceDueDate) continue;
-      for (const date of balanceReminderDates(b.firstSessionDate ?? londonDate(b.paidAt), b.balanceDueDate, londonDate(b.paidAt))) {
-        const sendAt = londonTime(date, REMINDER_HOUR).getTime();
-        if (sendAt <= at && at - sendAt < 20 * 3_600_000 && !b.remindersSent?.includes(date)) {
-          due.push({ booking: b, date, finalDay: date === b.balanceDueDate });
-        }
-      }
-    }
-    return due;
-  }
-
-  /** Marks a reminder as sent; false if another run already claimed it */
-  claimReminder(bookingId: string, date: string) {
-    return this.tx((d) => {
-      const b = d.bookings.find((x) => x.id === bookingId);
-      if (!b || b.status !== "reserved" || b.remindersSent?.includes(date)) return false;
-      b.remindersSent = [...(b.remindersSent ?? []), date];
-      return true;
-    });
   }
 
   async getBooking(id: string) {

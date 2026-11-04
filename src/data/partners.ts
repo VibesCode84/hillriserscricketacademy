@@ -3,6 +3,9 @@
  *
  * - Block bookings only: a net at the same time every week for a whole block.
  * - £18.80 per net per hour (the block rate); the bowling machine is £10 per hour on top.
+ * - Invoice only: paid by bank transfer within 24 hours of each invoice, monthly or termly in advance.
+ * - Until PRIORITY_UNTIL_DATE ends, only partners with a priority code can book.
+ * - Some nets are held (netHolds below) and can only be booked with the linked priority code.
  * - There is ONE bowling machine, so it can go on one net per time slot.
  * - Only the slots listed here are released. Update this file to release the
  *   next block or change what is available.
@@ -12,8 +15,14 @@
 export const PARTNER_RATE_PENCE = 1880;
 export const BOWLING_MACHINE_PENCE = 1000;
 export const NETS = [1, 2, 3] as const;
-/** How long slots are held while a partner pays */
-export const PARTNER_HOLD_MINUTES = 30;
+
+/** Priority booking for invited partners (with a priority code) until 11:59pm UK time on this date */
+export const PRIORITY_UNTIL_DATE = "2026-11-08";
+
+/** Payment terms: one invoice for the whole block, or one per calendar month, both in advance */
+export type PaymentTerms = "termly" | "monthly";
+/** A month's invoice is issued this many days before that month's first session (8am UK time) */
+export const MONTHLY_INVOICE_DAYS_BEFORE = 7;
 
 export type PartnerDay = "Wednesday" | "Thursday" | "Saturday" | "Sunday";
 
@@ -40,17 +49,7 @@ export type PartnerBlock = {
   slots: SlotTemplate[];
   /** Only partners with a paid booking in this block can book this one */
   requiresBlock?: string;
-  /**
-   * Partners may reserve with a deposit instead of paying in full. The balance
-   * is due by midnight (UK time) at the end of their last session in `dueAfterBlock`.
-   */
-  deposit?: { percent: number; dueAfterBlock: string };
-  /**
-   * Paying by bank transfer: a holding deposit (this % of the total) is taken by card first, then the
-   * balance is invoiced, payable within INVOICE_DUE_HOURS (nets released and deposit kept if unpaid).
-   */
-  holdingDeposit?: number;
-  /** Stripe test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up */
+  /** Test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up, ignores the priority window */
   test?: boolean;
 };
 
@@ -62,10 +61,11 @@ const hourly = (day: PartnerDay, from: string, to: string, nets: number[], dates
   return out;
 };
 
+/** Autumn: from the week commencing 16 November; Wednesdays from 25 November */
 const wednesdays = ["2026-11-25", "2026-12-02", "2026-12-09"];
-const thursdays = ["2026-11-05", "2026-11-12", "2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10"];
-const saturdays = ["2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"];
-const sundays = ["2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13"];
+const thursdays = ["2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10"];
+const saturdays = ["2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"];
+const sundays = ["2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13"];
 
 /** Spring 2027: 12 weeks, 4 January – 28 March, including half term (15–21 February) */
 const springWeek = (first: string) => {
@@ -80,10 +80,9 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "autumn-2026",
     label: "Autumn block 2026",
-    holdingDeposit: 25,
-    summary: "November to 13 December 2026",
+    summary: "Week commencing 16 November to 13 December 2026",
     notes: [
-      "Wednesdays start on 25 November.",
+      "Thursdays, Saturdays and Sundays start in the week commencing 16 November. Wednesdays start on 25 November.",
       "No sessions over the Christmas shutdown (21 December – 3 January).",
     ],
     slots: [
@@ -97,11 +96,9 @@ export const partnerBlocks: PartnerBlock[] = [
     id: "spring-2027",
     label: "Spring block 2027",
     requiresBlock: "autumn-2026",
-    deposit: { percent: 25, dueAfterBlock: "autumn-2026" },
     summary: "6 January to 28 March 2027 (12 weeks, including half term)",
     notes: [
       "Open to partners who have booked the autumn block.",
-      "Pay in full or reserve with a deposit.",
       "Includes the Easter weekend (27–28 March).",
     ],
     slots: [
@@ -113,18 +110,51 @@ export const partnerBlocks: PartnerBlock[] = [
   },
   {
     id: "stripe-test",
-    label: "Stripe test booking (£1)",
+    label: "Test booking (£1)",
     summary: "Only visible to HillRisers test accounts",
     notes: [
-      "Takes a real £1 card payment so the whole payment flow can be checked. Refund it afterwards in Stripe (Payments → the payment → Refund).",
-      "Not a real session. It can be booked any number of times.",
+      "Issues a real £1 invoice so the invoicing can be checked. Not a real session. It can be booked any number of times.",
     ],
     test: true,
     slots: [{ day: "Sunday", start: "09:00", end: "10:00", nets: [1], dates: ["2026-12-27"], ratePence: 100, machinePence: 0 }],
   },
 ];
 
-/** Real blocks (everything bar the Stripe test) */
+/**
+ * Nets held for a named partner: nobody else can book them. A priority code linked to the hold
+ * (set when the code is created in admin) lets its partner book them.
+ */
+export type NetHold = { id: string; label: string; blockId: string; day: PartnerDay; from: string; to: string; nets: number[] };
+
+const both = (h: Omit<NetHold, "blockId">): NetHold[] => ["autumn-2026", "spring-2027"].map((blockId) => ({ ...h, blockId }));
+
+export const netHolds: NetHold[] = [
+  { id: "bessborough", label: "Bessborough CC", blockId: "spring-2027", day: "Sunday", from: "14:00", to: "17:00", nets: [1, 2, 3] },
+  ...both({ id: "sanjiv", label: "Sanjiv", day: "Wednesday", from: "18:00", to: "21:00", nets: [1] }),
+  ...both({ id: "sanjiv", label: "Sanjiv", day: "Thursday", from: "18:00", to: "21:00", nets: [1] }),
+  ...both({ id: "sanjiv", label: "Sanjiv", day: "Saturday", from: "14:30", to: "17:30", nets: [1] }),
+  ...both({ id: "sanjiv", label: "Sanjiv", day: "Sunday", from: "09:00", to: "13:00", nets: [1] }),
+];
+
+/** The holds partners' priority codes can be linked to */
+export const holdOptions = [...new Map(netHolds.map((h) => [h.id, h.label])).entries()].map(([id, label]) => ({ id, label }));
+
+/** Held net keys in a block, and who for */
+export function heldNets(blockId: string) {
+  const out = new Map<string, NetHold>();
+  const block = getBlock(blockId);
+  if (!block) return out;
+  for (const h of netHolds) {
+    if (h.blockId !== blockId) continue;
+    for (const s of block.slots) {
+      if (s.day !== h.day || s.start < h.from || s.end > h.to) continue;
+      for (const n of h.nets) if (s.nets.includes(n)) out.set(slotKey(blockId, s, n), h);
+    }
+  }
+  return out;
+}
+
+/** Real blocks (everything bar the test booking) */
 export const releasedBlocks = partnerBlocks.filter((b) => !b.test);
 
 export const getBlock = (id: string) => partnerBlocks.find((b) => b.id === id);
@@ -161,27 +191,37 @@ export function findSlot(blockId: string, key: string) {
 export const itemPricePence = (s: SlotTemplate, bowlingMachine: boolean) =>
   s.dates.length * ((s.ratePence ?? PARTNER_RATE_PENCE) + (bowlingMachine ? (s.machinePence ?? BOWLING_MACHINE_PENCE) : 0));
 
-/** Deposit for a block booking (the full amount when the block takes no deposits) */
-export const depositFor = (block: PartnerBlock, totalPence: number) =>
-  block.deposit ? Math.round((totalPence * block.deposit.percent) / 100) : totalPence;
-
-type BookingDates = { blockId: string; status: string; items: { slotKey: string }[] }[];
-
-/** A partner's paid session dates (ISO, sorted) in a block */
-function sessionDates(blockId: string, bookings: BookingDates) {
-  const dates = new Set<string>();
-  for (const b of bookings) {
-    if (b.blockId !== blockId || b.status !== "confirmed") continue;
-    for (const i of b.items) for (const d of findSlot(blockId, i.slotKey)?.slot.dates ?? []) dates.add(d);
+/** Price of one net's sessions in each calendar month ("2026-11"), from its weekly dates */
+export function monthlySplit(items: { slotKey: string; pricePence: number; weeks: number }[], blockId: string) {
+  const months = new Map<string, { pence: number; firstSession: string }>();
+  for (const i of items) {
+    const dates = findSlot(blockId, i.slotKey)?.slot.dates ?? [];
+    const perWeek = dates.length ? i.pricePence / dates.length : 0;
+    for (const d of dates) {
+      const m = d.slice(0, 7);
+      const cur = months.get(m) ?? { pence: 0, firstSession: d };
+      months.set(m, { pence: cur.pence + perWeek, firstSession: d < cur.firstSession ? d : cur.firstSession });
+    }
   }
-  return [...dates].sort();
+  return [...months.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([month, v]) => ({ month, pence: Math.round(v.pence), firstSession: v.firstSession }));
 }
 
-/** A partner's first paid session date in a block — balance reminders start two weeks after it */
-export const firstSessionDate = (blockId: string, bookings: BookingDates) => sessionDates(blockId, bookings)[0];
+/** When a month's invoice is issued: 8am UK time, MONTHLY_INVOICE_DAYS_BEFORE days before its first session */
+export const monthInvoiceAt = (firstSession: string) => londonTime(addDays(firstSession, -MONTHLY_INVOICE_DAYS_BEFORE), REMINDER_HOUR);
 
-/** A partner's last paid session date in a block — sets the deadline for a deposit balance */
-export const lastSessionDate = (blockId: string, bookings: BookingDates) => sessionDates(blockId, bookings).at(-1);
+/** Months the first invoice covers on monthly terms: the first month, plus any whose invoice would already be due */
+export const firstInvoiceMonths = <T extends { firstSession: string }>(months: T[], at = Date.now()) =>
+  months.filter((m, idx) => idx === 0 || monthInvoiceAt(m.firstSession).getTime() <= at);
+
+/** "November 2026" */
+export const monthLabel = (month: string) =>
+  new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+
+/** Priority booking ends at midnight UK time at the end of PRIORITY_UNTIL_DATE */
+export const priorityEndsAt = () => endOfDayLondon(PRIORITY_UNTIL_DATE);
+export const priorityWindowOpen = (at = Date.now()) => at < priorityEndsAt().getTime();
+/** "11:59pm on Sunday 8 November" */
+export const priorityEndsLabel = () => `11:59pm on ${longDate(PRIORITY_UNTIL_DATE)}`;
 
 /** Midnight UK time at the end of a date ("2026-12-13" → 14 Dec 00:00 London) */
 export function endOfDayLondon(iso: string) {
@@ -208,20 +248,8 @@ const addDays = (iso: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-/** Balance reminders are emailed at this hour (UK time) */
+/** Invoice emails and reminders go out at this hour (UK time) */
 export const REMINDER_HOUR = 8;
-
-/**
- * Days to remind a partner about a deposit balance: two weeks after their first autumn session,
- * then weekly, plus 3 days and 2 days before the deadline day and on the day itself (their last
- * autumn session). Only days after the deposit was paid.
- */
-export function balanceReminderDates(firstSession: string, lastSession: string, depositDate: string) {
-  const dates = new Set<string>();
-  for (let d = addDays(firstSession, 14); d < lastSession; d = addDays(d, 7)) dates.add(d);
-  for (const n of [3, 2, 0]) dates.add(addDays(lastSession, -n));
-  return [...dates].filter((d) => d > depositDate && d <= lastSession).sort();
-}
 
 /** "Sunday 13 December" */
 export function longDate(iso: string) {

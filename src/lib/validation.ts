@@ -208,6 +208,7 @@ export const partnerRegistrationSchema = z.object({
   website: optionalText(200),
   about: optionalText(1000),
   agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
+  priorityCode: optionalText(20),
   company: z.string().max(0).optional(),
 });
 
@@ -236,8 +237,7 @@ export const partnerCheckoutSchema = z
       .min(1, "Please choose at least one slot")
       .max(60),
     machineCoach: optionalText(100),
-    plan: z.enum(["full", "deposit"]).default("full"),
-    method: z.enum(["card", "bank"]).default("card"),
+    terms: z.enum(["termly", "monthly"], { errorMap: () => ({ message: "Please choose monthly or termly" }) }),
     ownBalls: z.boolean().default(false),
     agreeTerms: z.boolean().default(false),
   })

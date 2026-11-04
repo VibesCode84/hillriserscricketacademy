@@ -229,137 +229,45 @@ ${signOff}
   });
 }
 
-type BalanceReminder = {
-  blockLabel: string;
-  balancePence: number;
-  /** Last autumn session (ISO date): the balance is due by midnight at the end of it */
-  dueDate: string;
-  nets: string[];
-  finalDay: boolean;
-};
-
-export async function sendBalanceReminder(p: PartnerContact, r: BalanceReminder) {
-  const when = new Date(`${r.dueDate}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
-  const deadline = r.finalDay ? "by midnight tonight" : `by midnight on ${when}`;
-  await send({
-    to: p.email,
-    subject: `${r.finalDay ? "Final reminder" : "Reminder"}: ${r.blockLabel} balance of ${formatPrice(r.balancePence)} due ${deadline}`,
-    text: `Hi ${p.contactName.split(" ")[0]},
-
-Your ${r.blockLabel} nets are reserved with a deposit. To confirm them, please pay the balance of ${formatPrice(r.balancePence)} ${deadline}.
-
-Your reserved nets:
-${r.nets.map((n) => `• ${n}`).join("\n")}
-
-Pay from your account by bank transfer (no fee) or card (sign in with your email and password):
-${site.url}/partners/account
-
-If the balance isn't paid ${deadline}, the nets will be released for other partners and the deposit won't be refunded.
-
-${contactLine()}
-
-${signOff}
-`,
-  });
-}
-
-type PaidBooking = {
-  stage: "full" | "deposit" | "balance";
-  blockLabel: string;
-  /** "Saturday 2:30–3:30pm, net 1 (Under 11, Beginner, Mixed) — 6 weeks, 7 Nov – 12 Dec" */
-  nets: string[];
-  paidPence: number;
-  totalPence: number;
-  balancePence?: number;
-  /** When the balance is due, e.g. "midnight on Saturday 12 December" or "2:23pm, Saturday 31 October" */
-  balanceDue?: string;
-  /** Holding deposit for a bank transfer: the balance invoice follows in a separate email */
-  holding?: boolean;
-  machineCoach?: string;
-  method: "card" | "bank";
-  cardFeePence?: number;
-  reference: string;
-};
-
-/** Sent when Stripe confirms a partner payment: in full, a deposit, or a balance */
-export async function sendPartnerBookingConfirmation(p: PartnerContact, b: PaidBooking) {
-  const heading =
-    b.stage === "deposit"
-      ? `Deposit received: your ${b.blockLabel} nets are reserved`
-      : b.stage === "balance"
-        ? `Balance received: your ${b.blockLabel} nets are confirmed`
-        : `Booking confirmed: ${b.blockLabel}`;
-  const via = b.method === "bank" ? " by bank transfer" : b.cardFeePence ? ` by card (plus a ${formatPrice(b.cardFeePence)} card processing fee)` : " by card";
-  const payment =
-    b.stage === "deposit"
-      ? b.holding
-        ? `We've received your holding deposit of ${formatPrice(b.paidPence)}${via}. Your invoice for the balance of ${formatPrice(b.balancePence ?? 0)} follows in a separate email; please pay it by bank transfer by ${b.balanceDue}, or the nets are released and the deposit isn't refunded.`
-        : `We've received your deposit of ${formatPrice(b.paidPence)}${via}. The balance of ${formatPrice(b.balancePence ?? 0)} must be paid by ${b.balanceDue} — after that the nets are released and the deposit isn't refunded. We'll send reminders, and you can pay any time from your account.`
-      : b.stage === "balance"
-        ? `We've received your balance payment of ${formatPrice(b.paidPence)}${via}. Your booking (${formatPrice(b.totalPence)} in total) is now paid in full.`
-        : `We've received your payment of ${formatPrice(b.paidPence)}${via}. Your booking is paid in full.`;
-  await send({
-    to: p.email,
-    subject: `${heading} (ref ${b.reference})`,
-    text: `Hi ${p.contactName.split(" ")[0]},
-
-${payment}
-
-${b.blockLabel} — your nets at ${site.venue.name}:
-${b.nets.map((n) => `• ${n}`).join("\n")}
-${b.machineCoach ? `\nBowling machine operator (Level 2): ${b.machineCoach}. Please bring your own balls.\n` : ""}
-Booking reference: ${b.reference}
-
-Please remember:
-• Upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
-
-See your bookings and payment history: ${site.url}/partners/account
-
-${contactLine()}
-
-${signOff}
-`,
-  });
-  await notifyAcademy(
-    `Partner payment: ${p.orgName} — ${b.blockLabel} ${b.stage === "full" ? "" : `(${b.stage}) `}${formatPrice(b.paidPence)}`,
-    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n${heading}\n\n${b.nets.join("\n")}\n\nPaid now: ${formatPrice(b.paidPence)} · Booking total: ${formatPrice(b.totalPence)}${b.stage === "deposit" ? ` · Balance ${formatPrice(b.balancePence ?? 0)} due by ${b.balanceDue}` : ""}\nRef ${b.reference}\n\nSee ${site.url}/admin/partners`,
-  );
-}
-
+/** An invoice as the emails describe it */
 type InvoiceEmail = {
   number: string;
   amountPence: number;
-  totalPence: number;
   dueAt: string;
-  kind: "full" | "deposit" | "balance";
+  /** "Autumn block 2026 — November 2026 (monthly, in advance)" */
+  description: string;
   blockLabel: string;
   nets: string[];
+  /** The booking's first invoice: its nets are released if it isn't paid in time */
+  first: boolean;
+  /** Monthly terms with months still to invoice after this one */
+  moreToFollow: boolean;
 };
 
-/** Bank-transfer invoice: due on receipt, payable within INVOICE_DUE_HOURS, no card fee */
+const bankLines = (reference: string) => `Pay by bank transfer to:
+Account name: ${bankDetails.accountName ?? "—"}
+Sort code: ${bankDetails.sortCode ?? "—"}
+Account number: ${bankDetails.accountNumber ?? "—"}
+Reference: ${reference}`;
+
+/** An invoice, payable by bank transfer within INVOICE_DUE_HOURS */
 export async function sendPartnerInvoice(p: PartnerContact, inv: InvoiceEmail) {
   const due = ukDateTime(inv.dueAt);
-  const what = inv.kind === "deposit" ? `Deposit to reserve your ${inv.blockLabel} nets` : inv.kind === "balance" ? `Balance for your ${inv.blockLabel} nets` : `${inv.blockLabel} nets`;
-  const bank = bankDetails;
   await send({
     to: p.email,
-    subject: `Invoice ${inv.number}: ${formatPrice(inv.amountPence)} due on receipt`,
+    subject: `Invoice ${inv.number}: ${formatPrice(inv.amountPence)}, payable within 24 hours`,
     text: `Hi ${p.contactName.split(" ")[0]},
 
-Here is your invoice for ${what.charAt(0).toLowerCase()}${what.slice(1)}. Bank transfer has no fee.
+Here is your invoice for ${inv.description}.
 
 Invoice: ${inv.number}
 Amount due: ${formatPrice(inv.amountPence)}
-Due: on receipt — please pay by ${due}
+Please pay by: ${due}
 
-Pay by bank transfer to:
-Account name: ${bank.accountName ?? "—"}
-Sort code: ${bank.sortCode ?? "—"}
-Account number: ${bank.accountNumber ?? "—"}
-Reference: ${inv.number}
+${bankLines(inv.number)}
 
-${inv.kind === "balance" ? "If the balance isn't paid by your deadline, the nets are released and the deposit isn't refunded." : "Your nets are held until then. If payment hasn't arrived by the due time, they're released for other partners."}
-We'll email you as soon as your payment arrives. Our bank details will never change by email — if you get a message saying they have, please call or email us first.
+${inv.first ? "Your nets are held until then. If payment hasn't arrived in time, they're released." : "Bookings can't be cancelled, so the full block fee remains payable."}${inv.moreToFollow ? " Each later month's invoice is emailed a week before that month's first session." : ""}
+Our bank details will never change by email — if you get a message saying they have, please contact us first.
 
 Your nets:
 ${inv.nets.map((n) => `• ${n}`).join("\n")}
@@ -373,6 +281,76 @@ ${signOff}
   });
   await notifyAcademy(
     `Invoice ${inv.number} issued: ${p.orgName} — ${formatPrice(inv.amountPence)}`,
-    `${p.orgName} — ${p.contactName} <${p.email}>\n${what}: ${formatPrice(inv.amountPence)} due by ${due}.\n\nMark it paid when the transfer arrives: ${site.url}/admin/partners`,
+    `${p.orgName} — ${p.contactName} <${p.email}>\n${inv.description}: ${formatPrice(inv.amountPence)}, payable by ${due}.\n\nMark it paid when the transfer arrives: ${site.url}/admin/partners`,
   );
+}
+
+/** A monthly invoice that's past its payment time: one reminder a day */
+export async function sendInvoiceReminder(p: PartnerContact, inv: Omit<InvoiceEmail, "first" | "moreToFollow">) {
+  await send({
+    to: p.email,
+    subject: `Reminder: invoice ${inv.number} for ${formatPrice(inv.amountPence)} is overdue`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Invoice ${inv.number} for ${inv.description} was due by ${ukDateTime(inv.dueAt)}. Please pay ${formatPrice(inv.amountPence)} today.
+
+${bankLines(inv.number)}
+
+If you've already paid, thank you — please ignore this email.
+
+View the invoice: ${site.url}/partners/invoice/${inv.number}
+
+${contactLine()}
+
+${signOff}
+`,
+  });
+}
+
+/** Sent when the first invoice is paid: the booking is confirmed */
+export async function sendPartnerBookingConfirmation(
+  p: PartnerContact,
+  b: { blockLabel: string; nets: string[]; paidPence: number; totalPence: number; monthly: boolean; machineCoach?: string; reference: string },
+) {
+  await send({
+    to: p.email,
+    subject: `Booking confirmed: ${b.blockLabel} (ref ${b.reference})`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+We've received your payment of ${formatPrice(b.paidPence)}. Your booking is confirmed.${b.monthly ? ` We'll email each later month's invoice a week before that month's first session (block total ${formatPrice(b.totalPence)}).` : ""}
+
+${b.blockLabel} — your nets at ${site.venue.name}:
+${b.nets.map((n) => `• ${n}`).join("\n")}
+${b.machineCoach ? `\nBowling machine operator (Level 2): ${b.machineCoach}. Please bring your own balls.\n` : ""}
+Booking reference: ${b.reference}
+
+Please upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
+
+See your bookings and payment history: ${site.url}/partners/account
+
+${contactLine()}
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `Partner booking confirmed: ${p.orgName} — ${b.blockLabel} ${formatPrice(b.paidPence)}`,
+    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n\n${b.nets.join("\n")}\n\nPaid: ${formatPrice(b.paidPence)} · Block total: ${formatPrice(b.totalPence)}${b.monthly ? " (monthly)" : ""}\nRef ${b.reference}\n\nSee ${site.url}/admin/partners`,
+  );
+}
+
+/** Sent when a later monthly invoice is paid */
+export async function sendPartnerPaymentReceipt(p: PartnerContact, r: { number: string; amountPence: number; description: string }) {
+  await send({
+    to: p.email,
+    subject: `Payment received: invoice ${r.number}`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Thank you — we've received your payment of ${formatPrice(r.amountPence)} for ${r.description} (invoice ${r.number}).
+
+Your payment history: ${site.url}/partners/account
+
+${signOff}
+`,
+  });
 }

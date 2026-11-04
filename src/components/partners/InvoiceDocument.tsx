@@ -1,5 +1,6 @@
 import { bankDetails, company, INVOICE_DUE_HOURS, isPast, ukDateTime } from "@/data/invoicing";
-import { findSlot, getBlock, shortDate, timeLabel } from "@/data/partners";
+import { findSlot, getBlock, monthLabel, shortDate, timeLabel } from "@/data/partners";
+import { invoiceDescription } from "@/lib/partners/describe";
 import { formatPrice, site } from "@/data/site";
 import type { NetBooking, Partner, PartnerInvoice } from "@/lib/partners/store";
 import { Crest } from "../Logo";
@@ -7,7 +8,7 @@ import { PrintButton } from "./PrintButton";
 
 const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", day: "numeric", month: "long", year: "numeric" });
 
-/** A bank-transfer invoice (standard layout until HillRisers' own template is supplied) */
+/** An invoice, paid by bank transfer (standard layout until HillRisers' own template is supplied) */
 export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBooking; invoice: PartnerInvoice; partner: Partner }) {
   const block = getBlock(booking.blockId)?.label ?? booking.blockId;
   const nets = booking.items.map((i) => {
@@ -20,8 +21,22 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
     };
   });
   const status = invoice.paidAt ? "Paid" : isPast(invoice.dueAt) ? "Overdue" : "Due";
-  const rows =
-    invoice.stage === "balance"
+  // Monthly: each net's sessions in the invoiced months
+  const monthRows = (invoice.months ?? []).flatMap((m) =>
+    booking.items.flatMap((i) => {
+      const dates = (findSlot(booking.blockId, i.slotKey)?.slot.dates ?? []).filter((d) => d.startsWith(m));
+      if (!dates.length) return [];
+      return [{
+        key: `${m}${i.slotKey}`,
+        text: `${monthLabel(m)}: ${i.day} ${timeLabel(i.start)}–${timeLabel(i.end)}, net ${i.net}${i.bowlingMachine ? " + bowling machine" : ""}`,
+        detail: `${dates.length} week${dates.length === 1 ? "" : "s"}: ${dates.map(shortDate).join(", ")}`,
+        pence: Math.round((i.pricePence / i.weeks) * dates.length),
+      }];
+    }),
+  );
+  const rows = monthRows.length
+    ? monthRows
+    : invoice.stage === "balance"
       ? [{ key: "balance", text: `Balance for ${block} nets`, detail: `Booking total ${formatPrice(booking.totalPence)}, ${booking.holding ? "holding deposit" : "deposit"} ${formatPrice(booking.depositPence ?? 0)} paid`, pence: invoice.amountPence }]
       : booking.plan === "deposit"
         ? [{ key: "deposit", text: `Deposit to reserve ${block} nets`, detail: `Booking total ${formatPrice(booking.totalPence)}; balance due later`, pence: invoice.amountPence }]
@@ -60,7 +75,7 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
           </div>
           <dl className="space-y-1 sm:text-right">
             <div><dt className="inline text-ink-muted">Issued: </dt><dd className="inline">{when(invoice.issuedAt)}</dd></div>
-            <div><dt className="inline text-ink-muted">Due: </dt><dd className="inline font-semibold">On receipt</dd></div>
+            <div><dt className="inline text-ink-muted">For: </dt><dd className="inline">{invoiceDescription(booking, invoice).replace(`${block} — `, "")}</dd></div>
             <div><dt className="inline text-ink-muted">Pay by: </dt><dd className="inline font-semibold">{ukDateTime(invoice.dueAt)}</dd></div>
             <div><dt className="inline text-ink-muted">Booking ref: </dt><dd className="inline font-mono">{booking.id.slice(0, 8).toUpperCase()}</dd></div>
           </dl>
@@ -102,7 +117,7 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
         )}
 
         <section className="mt-8 rounded-2xl bg-cream-200 p-6 text-sm print:border print:border-navy-950/20 print:bg-transparent">
-          <p className="font-semibold">Pay by bank transfer within {INVOICE_DUE_HOURS} hours — no fee</p>
+          <p className="font-semibold">Pay by bank transfer within {INVOICE_DUE_HOURS} hours of this invoice</p>
           <dl className="mt-3 grid gap-x-6 gap-y-1 sm:grid-cols-[auto_1fr]">
             <dt className="text-ink-muted">Account name</dt><dd className="font-semibold">{bankDetails.accountName ?? "—"}</dd>
             <dt className="text-ink-muted">Sort code</dt><dd className="font-mono font-semibold">{bankDetails.sortCode ?? "—"}</dd>
@@ -110,9 +125,9 @@ export function InvoiceDocument({ booking, invoice, partner }: { booking: NetBoo
             <dt className="text-ink-muted">Reference</dt><dd className="font-mono font-semibold">{invoice.number}</dd>
           </dl>
           <p className="mt-4 text-ink-muted">
-            {invoice.stage === "balance"
-              ? "If the balance isn't paid by your deadline, the nets are released and the deposit isn't refunded."
-              : "Your nets are held until the due time. If payment hasn't arrived by then, they're released for other partners."}{" "}
+            {invoice.stage === "initial"
+              ? "Your nets are held until then. If payment hasn't arrived in time, they're released."
+              : "Bookings can't be cancelled, so the full block fee remains payable."}{" "}
             Our bank details will never change by email.
           </p>
         </section>

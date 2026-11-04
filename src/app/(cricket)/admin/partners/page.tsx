@@ -1,11 +1,13 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- document links and the CSV are downloads, not pages */
 import Link from "next/link";
-import { documentKinds, getBlock, longDate, machineKey, releasedBlocks, slotKey, timeLabel } from "@/data/partners";
+import { documentKinds, getBlock, heldNets, holdOptions, machineKey, priorityEndsLabel, releasedBlocks, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
 import { MarkPaid } from "@/components/admin/MarkPaid";
-import { daysAgo, ukDateTime } from "@/data/invoicing";
+import { PriorityCodes } from "@/components/admin/PriorityCodes";
+import { invoiceDescription, monthsToInvoice, paidToDate, termsLabel } from "@/lib/partners/describe";
+import { daysAgo, isPast, ukDateTime } from "@/data/invoicing";
 import { Crest } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,7 @@ const statusBadge = { confirmed: "bg-[#e3f3e8] text-[#1d6b3a]", reserved: "bg-[#
 
 export default async function AdminPartnersPage() {
   const store = getPartnerStore();
-  const [partners, documents, bookings] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor()]);
+  const [partners, documents, bookings, codes] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor(), store.listPriorityCodes()]);
   const kb = (n: number) => `${Math.max(1, Math.round(n / 1024))} KB`;
 
   return (
@@ -41,11 +43,17 @@ export default async function AdminPartnersPage() {
         </p>
       )}
 
+      <PriorityCodes
+        codes={codes.map((c) => ({ ...c, holdLabel: holdOptions.find((h) => h.id === c.holdId)?.label, redeemedBy: c.redeemedBy ? (partners.find((p) => p.id === c.redeemedBy)?.orgName ?? "?") : undefined }))}
+        holds={holdOptions}
+        ends={priorityEndsLabel()}
+      />
+
       {(() => {
         const since = daysAgo(30);
         const awaiting = bookings.flatMap((b) =>
           (b.invoices ?? [])
-            .filter((i) => !i.paidAt && i.issuedAt > since && ["pending_payment", "expired", "reserved", "forfeited"].includes(b.status))
+            .filter((i) => !i.paidAt && (i.stage === "month" ? b.status === "confirmed" : i.issuedAt > since && ["pending_payment", "expired", "reserved", "forfeited"].includes(b.status)))
             .map((i) => ({ b, i, partner: partners.find((p) => p.id === b.partnerId) })),
         );
         return (
@@ -64,13 +72,14 @@ export default async function AdminPartnersPage() {
                       <tr key={i.number}>
                         <td className="px-4 py-3 font-mono"><Link href={`/admin/partners/invoice/${i.number}`} className="underline">{i.number}</Link></td>
                         <td className="px-4 py-3">{partner?.orgName ?? "?"}</td>
-                        <td className="px-4 py-3">{getBlock(b.blockId)?.label} — {i.stage === "balance" ? (b.holding ? "balance after holding deposit" : "balance") : b.plan === "deposit" ? "deposit" : "in full"}</td>
+                        <td className="px-4 py-3">{invoiceDescription(b, i)}</td>
                         <td className="px-4 py-3 text-right font-semibold">{formatPrice(i.amountPence)}</td>
                         <td className="px-4 py-3">
                           {ukDateTime(i.dueAt, "short")}
                           {(b.status === "expired" || b.status === "forfeited") && <span className="ml-2 rounded-full bg-[#fbeae8] px-2 py-0.5 text-xs font-semibold text-[#8c1d18]">overdue · nets released</span>}
+                          {i.stage === "month" && isPast(i.dueAt) && <span className="ml-2 rounded-full bg-[#fbeae8] px-2 py-0.5 text-xs font-semibold text-[#8c1d18]">overdue</span>}
                         </td>
-                        <td className="px-4 py-3 text-right"><MarkPaid bookingId={b.id} stage={i.stage} label={`${i.number} (${formatPrice(i.amountPence)})`} /></td>
+                        <td className="px-4 py-3 text-right"><MarkPaid number={i.number} label={`${i.number} (${formatPrice(i.amountPence)})`} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -83,11 +92,12 @@ export default async function AdminPartnersPage() {
 
       {releasedBlocks.map((block) => {
         const taken = new Map<string, string>();
+        for (const [key, hold] of heldNets(block.id)) taken.set(key, `Held: ${hold.label}`);
         for (const b of bookings) {
           if (b.blockId !== block.id || !holds(b)) continue;
           const name = partners.find((p) => p.id === b.partnerId)?.orgName ?? "?";
           for (const i of b.items) {
-            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? (b.method === "bank" ? " (invoice due)" : " (paying…)") : b.status === "reserved" ? " (deposit)" : ""}`);
+            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (invoice due)" : b.status === "reserved" ? " (deposit)" : ""}`);
             if (i.bowlingMachine) taken.set(machineKey(block.id, i), name);
           }
         }
@@ -107,7 +117,7 @@ export default async function AdminPartnersPage() {
                       {[1, 2, 3].map((n) => {
                         const released = s.nets.includes(n);
                         const who = taken.get(slotKey(block.id, s, n));
-                        return <td key={n} className={`px-4 py-2 ${!released ? "text-ink-muted/50" : who ? "font-semibold text-navy-950" : "text-[#1d6b3a]"}`}>{!released ? "—" : (who ?? "Free")}</td>;
+                        return <td key={n} className={`px-4 py-2 ${!released ? "text-ink-muted/50" : who?.startsWith("Held:") ? "italic text-[#7a5a00]" : who ? "font-semibold text-navy-950" : "text-[#1d6b3a]"}`}>{!released ? "—" : (who ?? "Free")}</td>;
                       })}
                       <td className="px-4 py-2">{taken.get(machineKey(block.id, s)) ?? <span className="text-[#1d6b3a]">Free</span>}</td>
                     </tr>
@@ -132,7 +142,7 @@ export default async function AdminPartnersPage() {
                   <h3 className="text-xl">{p.orgName} <span className="text-sm font-normal text-ink-muted">· {p.type}{p.sports ? ` · ${p.sports}` : ""}</span></h3>
                   <span className="text-xs text-ink-muted">Registered {new Date(p.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
-                <p className="mt-1 text-sm">{p.contactName} · <a className="underline" href={`mailto:${p.email}`}>{p.email}</a> · {p.phone}{p.website ? ` · ${p.website}` : ""}</p>
+                <p className="mt-1 text-sm">{p.contactName} · <a className="underline" href={`mailto:${p.email}`}>{p.email}</a> · {p.phone}{p.website ? ` · ${p.website}` : ""}{p.priorityCode ? ` · priority code ${p.priorityCode}` : ""}</p>
                 {p.about && <p className="mt-2 whitespace-pre-line text-sm text-ink-muted">{p.about}</p>}
                 <h4 className="mt-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">Documents</h4>
                 {docs.length === 0 ? (
@@ -157,13 +167,12 @@ export default async function AdminPartnersPage() {
                       {theirs.map((b) => (
                         <li key={b.id}>
                           <span className={`mr-2 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[b.status]}`}>
-                            {b.status === "forfeited" ? "balance not paid · released" : b.status === "reserved" ? "deposit paid" : b.status.replace("_", " ")}
+                            {b.status === "forfeited" ? "balance not paid · released" : b.status === "reserved" ? "deposit paid" : b.status === "pending_payment" ? "invoice due" : b.status}
                           </span>
                           {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}${i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}`).join("; ")} · {formatPrice(b.totalPence)}
                           {b.machineCoach ? ` · machine coach: ${b.machineCoach}` : ""}
-                          {b.plan === "deposit" && b.depositPence !== undefined
-                            ? ` · ${b.holding ? "holding deposit" : "deposit"} ${formatPrice(b.depositPence)}, balance ${formatPrice(b.totalPence - b.depositPence)} ${b.balancePaidAt ? "paid" : `due by ${b.holding && b.balanceDueAt ? ukDateTime(b.balanceDueAt, "short") : `midnight ${b.balanceDueDate ? longDate(b.balanceDueDate) : ""}`}`}`
-                            : ""}
+                          {` · ${termsLabel(b).toLowerCase()} · paid ${formatPrice(paidToDate(b))}`}
+                          {monthsToInvoice(b).length ? ` · ${monthsToInvoice(b).length} monthly invoice${monthsToInvoice(b).length === 1 ? "" : "s"} to come` : ""}
                         </li>
                       ))}
                     </ul>

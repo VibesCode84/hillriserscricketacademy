@@ -20,7 +20,9 @@ export async function POST(req: Request) {
       { status: 409 },
     );
   }
-  const { partner, token } = await getPartnerStore().createPartner({ ...input, orgName: input.orgName || input.contactName }); // sole traders needn't give one
+  const created = await getPartnerStore().createPartner({ ...input, orgName: input.orgName || input.contactName }); // sole traders needn't give one
+  if (!created.partner) return NextResponse.json({ ok: false, message: created.error, errors: { priorityCode: created.error } }, { status: 400 });
+  const { partner, token } = created;
   await sendPartnerWelcome(partner).catch((err) => console.error("[hillrisers] partner welcome email failed", err));
   const res = NextResponse.json({ ok: true });
   res.cookies.set(PARTNER_COOKIE, token, cookieOptions);

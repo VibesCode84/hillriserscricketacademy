@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   blockUnlocked,
   BOWLING_MACHINE_PENCE,
-  depositFor,
-  lastSessionDate,
-  longDate,
   documentKinds,
+  firstInvoiceMonths,
   itemPricePence,
   machineKey,
+  monthLabel,
+  monthlySplit,
+  MONTHLY_INVOICE_DAYS_BEFORE,
   PARTNER_RATE_PENCE,
   sessionAbilities,
   sessionAgeGroups,
@@ -23,7 +25,7 @@ import {
 } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import type { NetBooking, PartnerDocument } from "@/lib/partners/store";
-import { bankTransferEnabled, cardFeePence, INVOICE_DUE_HOURS } from "@/data/invoicing";
+import { INVOICE_DUE_HOURS } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 import { AccountHeader, Notice } from "./PartnerAccount";
 
@@ -39,7 +41,9 @@ export function PartnerPortal(props: {
   documents: PartnerDocument[];
   bookings: NetBooking[];
   blocks: PartnerBlock[];
-  banner?: { kind: "cancelled" | "welcome" };
+  /** Priority window: open until `ends` ("11:59pm on Sunday 8 November"); the partner's code, if any */
+  priority: { open: boolean; ends: string; code?: string; holdLabel?: string };
+  banner?: { kind: "welcome" };
 }) {
   const [documents, setDocuments] = useState(props.documents);
   const [bookings, setBookings] = useState(props.bookings);
@@ -64,12 +68,7 @@ export function PartnerPortal(props: {
           page with your email and password.
         </Notice>
       )}
-      {banner?.kind === "cancelled" && (
-        <Notice tone="warn" onClose={() => setBanner(undefined)}>
-          Payment wasn&rsquo;t completed, so those nets have been released. You can choose them again below if they&rsquo;re still free.
-        </Notice>
-      )}
-
+      <PriorityPanel {...props.priority} />
 
       <div className="mt-8 rounded-2xl border border-gold/30 bg-white p-5 md:p-6">
         <h2 className="text-2xl">Block bookings only</h2>
@@ -80,8 +79,8 @@ export function PartnerPortal(props: {
           separate session rate.
         </p>
         <p className="mt-3 max-w-3xl leading-relaxed text-ink-muted">
-          <strong className="text-navy-950">Bank transfer is free.</strong> Card payments include a card processing fee, shown before you pay.
-          {!bankTransferEnabled() && " Bank transfer will be available shortly; until then bookings are paid by card."}
+          <strong className="text-navy-950">Invoice only.</strong> Choose monthly or termly in advance. Each invoice is paid by bank transfer within{" "}
+          {INVOICE_DUE_HOURS} hours. Bookings can&rsquo;t be cancelled.
         </p>
       </div>
 
@@ -90,8 +89,8 @@ export function PartnerPortal(props: {
           key={block.id}
           block={block}
           onBooked={refreshMe}
-          bookings={bookings}
           lockedBy={blockUnlocked(block, bookings) ? undefined : props.blocks.find((b) => b.id === block.requiresBlock)?.label}
+          priorityOnly={!block.test && props.priority.open && !props.priority.code ? props.priority.ends : undefined}
         />
       ))}
 
@@ -107,7 +106,48 @@ type Who = { ageGroup: string; ability: string; gender: string };
 type Selection = Record<string, { bowlingMachine: boolean } & Who>;
 const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
-function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBlock; onBooked: () => void; bookings: NetBooking[]; lockedBy?: string }) {
+/** Priority booking: who can book now, and where to enter a code */
+function PriorityPanel({ open, ends, code, holdLabel }: { open: boolean; ends: string; code?: string; holdLabel?: string }) {
+  const router = useRouter();
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!open && !code) return null;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const res = await fetch("/api/partners/priority", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: value }) });
+    const json = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (res.ok && json.ok) router.refresh();
+    else setError(json.errors?.code ?? json.message ?? "Something went wrong.");
+  };
+  return (
+    <div className={`mt-6 rounded-2xl p-5 text-sm ${code ? "bg-[#e3f3e8] text-[#1d4f2f]" : "bg-[#fff4d6] text-[#5c4300]"}`}>
+      {code ? (
+        <p>
+          <strong>Priority access ✓</strong> (code {code}).{holdLabel ? ` The nets held for ${holdLabel} are available to you.` : ""}
+          {open ? ` Priority booking is open until ${ends}.` : ""}
+        </p>
+      ) : (
+        <>
+          <p>
+            <strong>Priority booking for invited partners until {ends}.</strong> Booking opens to everyone after that.
+          </p>
+          <form onSubmit={submit} className="mt-3 flex flex-wrap items-center gap-2">
+            <label htmlFor="priority-code" className="sr-only">Priority code</label>
+            <input id="priority-code" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Priority code, e.g. HR-7K3M9P" className="field !mt-0 max-w-xs uppercase" />
+            <button type="submit" disabled={busy || value.trim().length < 3} className={buttonClass("dark")}>{busy ? "Checking…" : "Add code"}</button>
+          </form>
+          {error && <p className="mt-2 text-[#8c1d18]" role="alert">{error}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
+function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: PartnerBlock; onBooked: () => void; lockedBy?: string; priorityOnly?: string }) {
   const [avail, setAvail] = useState<Availability | null>(null);
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<Selection>({});
@@ -115,8 +155,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
   const [coach, setCoach] = useState("");
   const [ownBalls, setOwnBalls] = useState(false);
   const [agree, setAgree] = useState(false);
-  const [plan, setPlan] = useState<"full" | "deposit">("full");
-  const [method, setMethod] = useState<"bank" | "card">(bankTransferEnabled() ? "bank" : "card");
+  const [terms, setTerms] = useState<"" | "termly" | "monthly">("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const clearError = (k: string) => setErrors(({ [k]: _gone, ...rest }) => (void _gone, rest));
@@ -204,17 +243,9 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
     .filter((i) => i.slot) as ({ key: string; slot: SlotTemplate; net: number; bowlingMachine: boolean } & Who)[];
   const total = items.reduce((n, i) => n + itemPricePence(i.slot, i.bowlingMachine), 0);
   const anyMachine = items.some((i) => i.bowlingMachine);
-  // Deposit option: the balance is due by midnight at the end of the partner's last paid session in the earlier block
-  const balanceDate = block.deposit ? lastSessionDate(block.deposit.dueAfterBlock, bookings) : undefined;
-  const depositPlan = plan === "deposit" && !!balanceDate;
-  const deposit = depositFor(block, total);
-  const dueNow = depositPlan ? deposit : total;
-  const byCard = method === "card" || !bankTransferEnabled();
-  const fee = cardFeePence(dueNow);
-  // Bank transfer on a block with a holding deposit: the deposit is paid by card first
-  const holdingPct = !byCard && !depositPlan ? block.holdingDeposit : undefined;
-  const holdDeposit = holdingPct ? Math.round((total * holdingPct) / 100) : 0;
-  const holdFee = cardFeePence(holdDeposit);
+  const months = monthlySplit(items.map((i) => ({ slotKey: i.key, pricePence: itemPricePence(i.slot, i.bowlingMachine), weeks: i.slot.dates.length })), block.id);
+  const firstPence = firstInvoiceMonths(months).reduce((n, m) => n + m.pence, 0);
+  const blocked = lockedBy ? `Book ${lockedBy} first.` : priorityOnly ? `Priority booking only until ${priorityOnly}. Booking opens to everyone after that.` : "";
 
   const pay = async () => {
     setBusy(true);
@@ -227,8 +258,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
         blockId: block.id,
         items: items.map((i) => ({ slotKey: i.key, bowlingMachine: i.bowlingMachine, ageGroup: i.ageGroup, ability: i.ability, gender: i.gender })),
         machineCoach: coach || undefined,
-        plan: depositPlan ? "deposit" : "full",
-        method: byCard ? "card" : "bank",
+        terms: terms || undefined,
         ownBalls,
         agreeTerms: agree,
       }),
@@ -262,9 +292,9 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
       <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
         {block.notes.map((n) => <li key={n}>{n}</li>)}
       </ul>
-      {lockedBy && (
+      {blocked && (
         <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
-          <strong>Book {lockedBy} first.</strong>
+          <strong>{blocked}</strong>
         </p>
       )}
 
@@ -302,10 +332,10 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                               <td key={n} className="px-2 py-1.5 text-center">
                                 <button
                                   type="button"
-                                  disabled={taken || !avail || !!lockedBy}
+                                  disabled={taken || !avail || !!blocked}
                                   onClick={() => toggleNet(s, n)}
                                   aria-pressed={on}
-                                  aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? "booked" : on ? "selected" : "available"}`}
+                                  aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? "unavailable" : on ? "selected" : "available"}`}
                                   className={`w-full rounded-lg border px-2 py-2 text-xs font-semibold transition ${
                                     taken
                                       ? "cursor-not-allowed border-transparent bg-cream-200 text-ink-muted line-through"
@@ -314,7 +344,7 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
                                         : "border-[#1d9b4b]/40 bg-[#e3f3e8] text-[#1d6b3a] hover:border-[#1d6b3a]"
                                   }`}
                                 >
-                                  {taken ? "Booked" : on ? "Selected ✓" : "Available"}
+                                  {taken ? "Unavailable" : on ? "Selected ✓" : "Available"}
                                 </button>
                               </td>
                             );
@@ -402,51 +432,22 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
           )}
           <p className="mt-4 flex justify-between text-lg font-semibold"><span>Total</span><span>{formatPrice(total)}</span></p>
 
-          {block.deposit && balanceDate && !lockedBy && items.length > 0 && (
+          {items.length > 0 && !blocked && (
             <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
-              <legend className="sr-only">How would you like to pay?</legend>
+              <legend className="mb-2 font-semibold text-gold">Payment terms</legend>
               <label className="flex cursor-pointer items-start gap-2">
-                <input type="radio" name={`plan-${block.id}`} checked={!depositPlan} onChange={() => setPlan("full")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-                <span><strong>Pay in full</strong> — {formatPrice(total)}</span>
+                <input type="radio" name={`terms-${block.id}`} checked={terms === "termly"} onChange={() => (setTerms("termly"), clearError("terms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
+                <span><strong>Termly in advance</strong> — one invoice for {formatPrice(total)}</span>
               </label>
               <label className="flex cursor-pointer items-start gap-2">
-                <input type="radio" name={`plan-${block.id}`} checked={depositPlan} onChange={() => setPlan("deposit")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
+                <input type="radio" name={`terms-${block.id}`} checked={terms === "monthly"} onChange={() => (setTerms("monthly"), clearError("terms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                 <span>
-                  <strong>{block.deposit.percent}% deposit</strong> — {formatPrice(deposit)}, balance of {formatPrice(total - deposit)} due by midnight
-                  on {longDate(balanceDate)}
+                  <strong>Monthly in advance</strong> — {months.map((m) => `${monthLabel(m.month).split(" ")[0]} ${formatPrice(m.pence)}`).join(", ")}
+                  {months.length > 1 && <span className="block text-xs text-slate">Later months are invoiced {MONTHLY_INVOICE_DAYS_BEFORE} days before their first session.</span>}
                 </span>
               </label>
-            </fieldset>
-          )}
-
-          {items.length > 0 && !lockedBy && (
-            <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
-              <legend className="mb-2 font-semibold text-gold">Payment method</legend>
-              {bankTransferEnabled() ? (
-                <>
-                  <label className="flex cursor-pointer items-start gap-2">
-                    <input type="radio" name={`method-${block.id}`} checked={!byCard} onChange={() => setMethod("bank")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-                    <span>
-                      {block.holdingDeposit && !depositPlan ? (
-                        <>
-                          <strong>Bank transfer.</strong> {block.holdingDeposit}% holding deposit by card now, then an invoice for the balance, payable within{" "}
-                          {INVOICE_DUE_HOURS} hours (no fee).
-                        </>
-                      ) : (
-                        <>
-                          <strong>Bank transfer — no fee.</strong> Invoice payable within {INVOICE_DUE_HOURS} hours.
-                        </>
-                      )}
-                    </span>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-2">
-                    <input type="radio" name={`method-${block.id}`} checked={byCard} onChange={() => setMethod("card")} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-                    <span><strong>Card — plus a {formatPrice(fee)} card processing fee.</strong></span>
-                  </label>
-                </>
-              ) : (
-                <p>Card payment, plus a {formatPrice(fee)} card processing fee.</p>
-              )}
+              {errors.terms && <p className="error-text">{errors.terms}</p>}
+              <p className="pt-1 text-xs text-slate">Invoices are paid by bank transfer within {INVOICE_DUE_HOURS} hours.</p>
             </fieldset>
           )}
 
@@ -469,21 +470,17 @@ function BookingGrid({ block, onBooked, bookings, lockedBy }: { block: PartnerBl
           <div className="mt-5 space-y-3 text-sm">
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Payments, including deposits and card fees, are non-refundable.</span>
+              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Bookings can&rsquo;t be cancelled, and I&rsquo;m liable for the full fee for the block.</span>
             </label>
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
           </div>
 
-          <button type="button" disabled={busy || items.length === 0} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
+          <button type="button" disabled={busy || items.length === 0 || !!blocked} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
             {busy
-              ? "Holding your nets…"
-              : !items.length
-                ? "Book and pay"
-                : byCard
-                  ? `Pay ${depositPlan ? "deposit " : ""}${formatPrice(dueNow + fee)} by card`
-                  : holdingPct
-                    ? `Pay holding deposit ${formatPrice(holdDeposit + holdFee)} by card`
-                    : `Book and get invoice for ${formatPrice(dueNow)}`}
+              ? "Booking your nets…"
+              : !items.length || !terms
+                ? "Book and get invoice"
+                : `Book and get invoice for ${formatPrice(terms === "monthly" ? firstPence : total)}`}
           </button>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>

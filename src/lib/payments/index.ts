@@ -3,9 +3,6 @@ import { site } from "../../data/site";
 import { sessionLabel, type AcademySession } from "../../data/sessions";
 import type { Booking, Parent, Player } from "../booking/types";
 import { STRIPE_CHECKOUT_MINUTES } from "../booking";
-import type { NetBooking, Partner } from "../partners/store";
-import { getBlock, PARTNER_HOLD_MINUTES, timeLabel } from "../../data/partners";
-import { cardFeePence } from "../../data/invoicing";
 
 /**
  * Payment layer. Stripe is replaceable: the rest of the app only talks to
@@ -120,74 +117,4 @@ export function getPaymentProvider(): PaymentProvider | undefined {
   if (stripe) return new StripeProvider(stripe);
   if (devPaymentsEnabled()) return new DevProvider();
   return undefined;
-}
-
-/* ── Delivery partner net booking──────────────────────────────────────────── */
-
-
-/**
- * Stripe Checkout for a block booking: the first payment (in full, or the deposit) or,
- * for a reserved booking, the balance. The dev stand-in is used locally without Stripe keys.
- */
-export async function createPartnerCheckout(booking: NetBooking, partner: Partner, baseUrl: string, stage: "initial" | "balance" = "initial"): Promise<CheckoutResult> {
-  const stripe = getStripe();
-  if (!stripe) {
-    if (!devPaymentsEnabled()) throw new Error("Payments are not set up yet");
-    return { id: `dev_cs_${stage}_${booking.id}`, url: `${baseUrl}/partners/dev-checkout?booking=${booking.id}` };
-  }
-  const block = getBlock(booking.blockId);
-  const label = block?.label ?? booking.blockId;
-  const nets = booking.items.map((i) => `Net ${i.net} ${i.day.slice(0, 3)} ${timeLabel(i.start)}${i.bowlingMachine ? " + machine" : ""}`).join(", ");
-  const single = (name: string, amount: number) => [
-    { quantity: 1, price_data: { currency: "gbp", unit_amount: amount, product_data: { name, description: `${nets} · ${site.venue.name}`.slice(0, 500) } } },
-  ];
-  const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
-    stage === "balance"
-      ? single(`${label} — balance`, booking.totalPence - (booking.depositPence ?? 0))
-      : booking.plan === "deposit"
-        ? single(
-            booking.holding ? `${label} — ${block?.holdingDeposit ?? ""}% holding deposit` : `${label} — ${block?.deposit?.percent ?? ""}% deposit to reserve`,
-            booking.depositPence ?? booking.totalPence,
-          )
-        : booking.items.map((i) => ({
-            quantity: 1,
-            price_data: {
-              currency: "gbp",
-              unit_amount: i.pricePence,
-              product_data: {
-                name: `Net ${i.net} · ${i.day} ${timeLabel(i.start)}–${timeLabel(i.end)}${i.bowlingMachine ? " + bowling machine" : ""}`,
-                description: `${label} · ${i.weeks} weeks · ${site.venue.name}`,
-              },
-            },
-          }));
-  // Card payments carry a processing fee so Stripe's charge doesn't come out of the booking price
-  const base = stage === "balance" ? booking.totalPence - (booking.depositPence ?? 0) : booking.plan === "deposit" ? (booking.depositPence ?? booking.totalPence) : booking.totalPence;
-  const fee = cardFeePence(base);
-  line_items.push({
-    quantity: 1,
-    price_data: {
-      currency: "gbp",
-      unit_amount: fee,
-      product_data: { name: "Card processing fee" },
-    },
-  });
-  const expiresAt = Math.floor(Date.now() / 1000) + PARTNER_HOLD_MINUTES * 60;
-  const metadata = { kind: "partner", partnerBookingId: booking.id, partnerId: partner.id, stage, cardFeePence: String(fee) };
-  const checkout = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: partner.email,
-    client_reference_id: booking.id,
-    line_items,
-    metadata,
-    payment_intent_data: {
-      description: `${partner.orgName} — delivery partner sessions, ${label}${stage === "balance" ? " (balance)" : booking.plan === "deposit" ? " (deposit)" : ""}`,
-      metadata,
-    },
-    expires_at: expiresAt,
-    success_url: `${baseUrl}/partners/account?paid=${booking.id}${stage === "balance" ? "&balance=1" : ""}`,
-    // Abandoning a balance payment leaves the reservation as it was
-    cancel_url: stage === "balance" || booking.method === "bank" ? `${baseUrl}/partners/account` : `${baseUrl}/partners/portal?cancelled=${booking.id}`,
-  });
-  if (!checkout.url) throw new Error("Stripe did not return a checkout URL");
-  return { id: checkout.id, url: checkout.url, expiresAt: new Date(expiresAt * 1000).toISOString() };
 }

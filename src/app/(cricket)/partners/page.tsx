@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { blockDays, documentKinds, releasedBlocks, shortDate, timeLabel } from "@/data/partners";
+import { blockDays, documentKinds, priorityEndsLabel, priorityWindowOpen, releasedBlocks, shortDate, timeLabel } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
 
@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function PartnersHome({ searchParams }: { searchParams: Promise<{ link?: string }> }) {
   if (await currentPartner()) redirect("/partners/account");
   const { link } = await searchParams;
+  const priorityEnds = priorityEndsLabel();
   return (
     <div>
       <section className="bg-navy-950 pb-16 pt-12 text-cream md:pb-20">
@@ -40,9 +41,14 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
               <li>Create an account.</li>
               <li>Choose your nets — the same slot every week of the block.</li>
-              <li>Pay by bank transfer (no fee) or card.</li>
+              <li>Choose monthly or termly in advance. We email an invoice, paid by bank transfer within 24 hours.</li>
               <li>Upload your documents.</li>
             </ol>
+            {priorityWindowOpen() && (
+              <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
+                <strong>Priority booking for invited partners until {priorityEnds}.</strong> Booking opens to everyone after that.
+              </p>
+            )}
           </div>
           <div>
             <h2 className="text-2xl">Sessions available</h2>
@@ -108,7 +114,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           </div>
           <div id="sign-in" className="scroll-mt-6 rounded-3xl bg-white p-6 md:p-8">
             <h2 className="text-2xl">Already registered? Sign in</h2>
-            <p className="mt-1 text-sm text-ink-muted">See your bookings and payments, and pay any balance.</p>
+            <p className="mt-1 text-sm text-ink-muted">See your bookings, invoices and payments.</p>
             <div className="mt-5"><SignIn /></div>
             <div className="mt-8 border-t border-navy-950/10 pt-6">
               <h3 className="text-lg">Forgotten your password, or haven&rsquo;t set one?</h3>

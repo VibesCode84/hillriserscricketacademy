@@ -1,9 +1,4 @@
-/**
- * How partners pay: bank transfer against an invoice (no fee, due on receipt, payable within 24 hours) or card through
- * Stripe with a card processing fee that covers Stripe's charge.
- *
- * Bank transfer stays switched off until the bank details below are filled in.
- */
+/** How partners pay: invoice only, by bank transfer within 24 hours of each invoice */
 
 export const company = {
   legalName: "HillRisers CIC",
@@ -18,22 +13,9 @@ export const bankDetails = {
   accountNumber: "67562992" as string | undefined,
 };
 
-export const bankTransferEnabled = () => !!(bankDetails.accountName && bankDetails.sortCode && bankDetails.accountNumber);
-
-/** Invoices are due on receipt and must be paid within this many hours; unpaid ones then release their nets */
+/** Invoices must be paid within this many hours; an unpaid first invoice then releases its nets */
 export const INVOICE_DUE_HOURS = 24;
 export const invoiceNumber = (n: number) => `HR-${String(n).padStart(4, "0")}`;
-
-/** Stripe's charge on a standard UK card */
-export const STRIPE_PERCENT = 1.5;
-export const STRIPE_FIXED_PENCE = 20;
-
-/**
- * Card processing fee added to a card payment, grossed up so that after Stripe takes its
- * 1.5% + 20p from the whole amount HillRisers still receives the full price. Rounded up.
- */
-export const cardFeePence = (amountPence: number) =>
-  Math.ceil((amountPence + STRIPE_FIXED_PENCE) / (1 - STRIPE_PERCENT / 100)) - amountPence;
 
 /** Whether a due time has passed */
 export const isPast = (iso: string) => Date.parse(iso) < Date.now();
