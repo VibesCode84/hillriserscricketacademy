@@ -212,6 +212,15 @@ export const partnerRegistrationSchema = z.object({
   company: z.string().max(0).optional(),
 });
 
+export const partnerEnquirySchema = z.object({
+  name: z.string().trim().min(2, "Please enter your name").max(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  phone: optionalText(30),
+  orgName: optionalText(120),
+  message: z.string().trim().min(5, "Please tell us a little about what you're looking for").max(2000),
+  company: z.string().max(0).optional(),
+});
+
 export const partnerLoginSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   password: z.string().min(1, "Please enter your password").max(200),

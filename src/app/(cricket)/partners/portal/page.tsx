@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { holdOptions, partnerBlocks, priorityEndsLabel, priorityWindowOpen } from "@/data/partners";
+import { partnerBlocks, priorityEndsLabel, priorityWindowOpen } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
 import { PartnerPortal } from "@/components/partners/PartnerPortal";
@@ -21,7 +21,7 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
       documents={documents}
       bookings={bookings}
       blocks={partnerBlocks.filter((b) => !b.test || isTestPartner(partner.email))}
-      priority={{ open: priorityWindowOpen(), ends: priorityEndsLabel(), code: code?.code, holdLabel: holdOptions.find((h) => h.id === code?.holdId)?.label }}
+      priority={{ open: priorityWindowOpen(), ends: priorityEndsLabel(), code: code?.code }}
       banner={sp.welcome ? { kind: "welcome" } : undefined}
     />
   );

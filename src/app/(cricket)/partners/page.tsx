@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
-import { blockDays, documentKinds, priorityEndsLabel, priorityWindowOpen, releasedBlocks, shortDate, timeLabel } from "@/data/partners";
+import { blockDays, documentKinds, priorityEndsLabel, REFUND_DAYS_BEFORE, priorityWindowOpen, releasedBlocks, shortDate, timeLabel } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
+import { PartnerEnquiryForm } from "@/components/partners/PartnerEnquiryForm";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +40,15 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           <div>
             <h2 className="text-3xl">How it works</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
-              <li>Create an account.</li>
-              <li>Choose your nets — the same slot every week of the block.</li>
-              <li>Choose monthly or termly in advance. We email an invoice, paid by bank transfer within 24 hours.</li>
-              <li>Upload your documents.</li>
+              <li>Create an account and upload your documents.</li>
+              <li>Send a booking request: choose your nets (the same slot every week of the block) and termly or monthly payment.</li>
+              <li>We review your request and email your invoice, paid by bank transfer within 24 hours.</li>
+              <li>Your first payment confirms the booking.</li>
             </ol>
+            <p className="mt-3 text-sm text-ink-muted">
+              Bookings are first come, first served. Sessions up to Christmas are invoiced in full. Refunds only if you cancel more than {REFUND_DAYS_BEFORE} days
+              before your first session.
+            </p>
             {priorityWindowOpen() && (
               <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
                 <strong>Priority booking for invited partners until {priorityEnds}.</strong> Booking opens to everyone after that.
@@ -111,6 +116,11 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <h2 className="text-3xl">Create a partner account</h2>
             <p className="mt-1 text-sm text-ink-muted">Takes a minute. You&rsquo;ll go straight to the booking grid.</p>
             <div className="mt-6"><RegisterPartner /></div>
+          </div>
+          <div id="talk-first" className="scroll-mt-6 rounded-3xl bg-white p-6 md:p-8">
+            <h2 className="text-2xl">Want to talk first?</h2>
+            <p className="mt-1 text-sm text-ink-muted">Not ready to send a booking request? Send us a message and we&rsquo;ll be in touch.</p>
+            <div className="mt-5"><PartnerEnquiryForm /></div>
           </div>
           <div id="sign-in" className="scroll-mt-6 rounded-3xl bg-white p-6 md:p-8">
             <h2 className="text-2xl">Already registered? Sign in</h2>

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { holdOptions } from "@/data/partners";
 import { parseJson } from "@/lib/http";
 import { getPartnerStore } from "@/lib/partners/store";
 
@@ -8,12 +7,9 @@ export const dynamic = "force-dynamic";
 
 /** Admin (behind the admin password, see middleware): create a priority code */
 export async function POST(req: Request) {
-  const parsed = await parseJson(
-    req,
-    z.object({ name: z.string().trim().min(2, "Please enter a name").max(100), holdId: z.enum(["", ...holdOptions.map((h) => h.id)] as [string, ...string[]]).default("") }),
-  );
+  const parsed = await parseJson(req, z.object({ name: z.string().trim().min(2, "Please enter a name").max(100) }));
   if ("error" in parsed) return parsed.error;
-  const code = await getPartnerStore().createPriorityCode(parsed.data.name, parsed.data.holdId || undefined);
+  const code = await getPartnerStore().createPriorityCode(parsed.data.name);
   return NextResponse.json({ ok: true, code });
 }
 

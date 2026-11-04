@@ -13,6 +13,8 @@ import {
   monthLabel,
   monthlySplit,
   MONTHLY_INVOICE_DAYS_BEFORE,
+  FULL_PAYMENT_UNTIL,
+  REFUND_DAYS_BEFORE,
   PARTNER_RATE_PENCE,
   sessionAbilities,
   sessionAgeGroups,
@@ -28,9 +30,11 @@ import type { NetBooking, PartnerDocument } from "@/lib/partners/store";
 import { INVOICE_DUE_HOURS } from "@/data/invoicing";
 import { buttonClass } from "../Button";
 import { AccountHeader, Notice } from "./PartnerAccount";
+import { PartnerEnquiryForm } from "./PartnerEnquiryForm";
 
 type Profile = { id: string; orgName: string; contactName: string };
-type Availability = { nets: Record<string, boolean>; machines: Record<string, boolean>; at: string };
+type NetState = "free" | "requested" | "booked";
+type Availability = { nets: Record<string, NetState>; machines: Record<string, boolean>; mine: string[]; at: string };
 
 const POLL_MS = 8000;
 const kindLabel = (k: string) => documentKinds.find((d) => d.value === k)?.label ?? k;
@@ -42,7 +46,7 @@ export function PartnerPortal(props: {
   bookings: NetBooking[];
   blocks: PartnerBlock[];
   /** Priority window: open until `ends` ("11:59pm on Sunday 8 November"); the partner's code, if any */
-  priority: { open: boolean; ends: string; code?: string; holdLabel?: string };
+  priority: { open: boolean; ends: string; code?: string };
   banner?: { kind: "welcome" };
 }) {
   const [documents, setDocuments] = useState(props.documents);
@@ -78,11 +82,9 @@ export function PartnerPortal(props: {
           {formatPrice(BOWLING_MACHINE_PENCE)} per hour on top. We don&rsquo;t take one-off or weekly bookings, so there&rsquo;s no
           separate session rate.
         </p>
-        <p className="mt-3 max-w-3xl leading-relaxed text-ink-muted">
-          <strong className="text-navy-950">Invoice only.</strong> Choose monthly or termly in advance. Each invoice is paid by bank transfer within{" "}
-          {INVOICE_DUE_HOURS} hours. Bookings can&rsquo;t be cancelled.
-        </p>
       </div>
+
+      <HowBookingWorks />
 
       {props.blocks.map((block) => (
         <BookingGrid
@@ -95,6 +97,12 @@ export function PartnerPortal(props: {
       ))}
 
       <Documents documents={documents} onChange={refreshMe} />
+
+      <section className="mt-14 max-w-2xl">
+        <h2 className="text-3xl">Want to talk first?</h2>
+        <p className="mt-2 text-ink-muted">Send us a message and we&rsquo;ll be in touch.</p>
+        <div className="mt-5 rounded-2xl bg-white p-5"><PartnerEnquiryForm defaults={{ name: props.partner.contactName, orgName: props.partner.orgName }} /></div>
+      </section>
     </div>
   );
 }
@@ -107,7 +115,7 @@ type Selection = Record<string, { bowlingMachine: boolean } & Who>;
 const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
 /** Priority booking: who can book now, and where to enter a code */
-function PriorityPanel({ open, ends, code, holdLabel }: { open: boolean; ends: string; code?: string; holdLabel?: string }) {
+function PriorityPanel({ open, ends, code }: { open: boolean; ends: string; code?: string }) {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
@@ -127,7 +135,7 @@ function PriorityPanel({ open, ends, code, holdLabel }: { open: boolean; ends: s
     <div className={`mt-6 rounded-2xl p-5 text-sm ${code ? "bg-[#e3f3e8] text-[#1d4f2f]" : "bg-[#fff4d6] text-[#5c4300]"}`}>
       {code ? (
         <p>
-          <strong>Priority access ✓</strong> (code {code}).{holdLabel ? ` The nets held for ${holdLabel} are available to you.` : ""}
+          <strong>Priority access ✓</strong> (code {code}).
           {open ? ` Priority booking is open until ${ends}.` : ""}
         </p>
       ) : (
@@ -173,7 +181,7 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
         let lost = false;
         for (const key of Object.keys(next)) {
           const s = parseKey(block, key);
-          if (json.nets[key]) {
+          if (json.nets[key] !== "free" && !json.mine.includes(key)) {
             delete next[key];
             lost = true;
           } else if (s && next[key].bowlingMachine && json.machines[machineKey(block.id, s)]) {
@@ -298,7 +306,9 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
         </p>
       )}
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
+      <NetLegend />
+
+      <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-6">
           {days.map(([day, slots]) => (
             <div key={day} className="overflow-hidden rounded-2xl bg-white">
@@ -326,7 +336,9 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
                           {[1, 2, 3].map((n) => {
                             if (!s.nets.includes(n)) return <td key={n} className="px-2 py-2 text-center text-ink-muted/40" aria-hidden="true">–</td>;
                             const key = slotKey(block.id, s, n);
-                            const taken = avail?.nets[key] ?? false;
+                            const state = avail?.nets[key] ?? "free";
+                            const mine = avail?.mine.includes(key) ?? false;
+                            const taken = state !== "free";
                             const on = !!selected[key];
                             return (
                               <td key={n} className="px-2 py-1.5 text-center">
@@ -335,16 +347,18 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
                                   disabled={taken || !avail || !!blocked}
                                   onClick={() => toggleNet(s, n)}
                                   aria-pressed={on}
-                                  aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? "unavailable" : on ? "selected" : "available"}`}
+                                  aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? (mine ? `your ${state}` : state) : on ? "selected" : "available"}`}
                                   className={`w-full rounded-lg border px-2 py-2 text-xs font-semibold transition ${
-                                    taken
-                                      ? "cursor-not-allowed border-transparent bg-cream-200 text-ink-muted line-through"
+                                    state === "booked"
+                                      ? "cursor-not-allowed border-[#c0392b]/40 bg-[#fbeae8] text-[#8c1d18]"
+                                      : state === "requested"
+                                        ? "cursor-not-allowed border-[#d4880f]/50 bg-[#fdf0d5] text-[#8a5a00]"
                                       : on
                                         ? "border-navy-950 bg-navy-950 text-cream"
                                         : "border-[#1d9b4b]/40 bg-[#e3f3e8] text-[#1d6b3a] hover:border-[#1d6b3a]"
                                   }`}
                                 >
-                                  {taken ? "Unavailable" : on ? "Selected ✓" : "Available"}
+                                  {state === "booked" ? (mine ? "Yours ✓" : "Booked") : state === "requested" ? (mine ? "Your request" : "Requested") : on ? "Selected ✓" : "Available"}
                                 </button>
                               </td>
                             );
@@ -442,12 +456,20 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
               <label className="flex cursor-pointer items-start gap-2">
                 <input type="radio" name={`terms-${block.id}`} checked={terms === "monthly"} onChange={() => (setTerms("monthly"), clearError("terms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
                 <span>
-                  <strong>Monthly in advance</strong> — {months.map((m) => `${monthLabel(m.month).split(" ")[0]} ${formatPrice(m.pence)}`).join(", ")}
-                  {months.length > 1 && <span className="block text-xs text-slate">Later months are invoiced {MONTHLY_INVOICE_DAYS_BEFORE} days before their first session.</span>}
+                  <strong>Monthly in advance</strong> — first invoice {formatPrice(firstPence)}
+                  {firstPence < total && (
+                    <span className="block text-xs text-slate">
+                      Then {months.filter((m) => !firstInvoiceMonths(months).includes(m)).map((m) => `${monthLabel(m.month).split(" ")[0]} ${formatPrice(m.pence)}`).join(", ")}, each invoiced {MONTHLY_INVOICE_DAYS_BEFORE} days before
+                      that month&rsquo;s first session.
+                    </span>
+                  )}
                 </span>
               </label>
+              {months.some((m) => m.firstSession <= FULL_PAYMENT_UNTIL) && <p className="text-xs text-slate">Sessions up to Christmas are invoiced in full.</p>}
               {errors.terms && <p className="error-text">{errors.terms}</p>}
-              <p className="pt-1 text-xs text-slate">Invoices are paid by bank transfer within {INVOICE_DUE_HOURS} hours.</p>
+              <p className="pt-1 text-xs text-slate">
+                We&rsquo;ll review your request and email the invoice, payable by bank transfer within {INVOICE_DUE_HOURS} hours. Your first payment confirms the booking.
+              </p>
             </fieldset>
           )}
 
@@ -470,22 +492,50 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
           <div className="mt-5 space-y-3 text-sm">
             <label className="flex cursor-pointer items-start gap-2">
               <input type="checkbox" checked={agree} onChange={(e) => (setAgree(e.target.checked), clearError("agreeTerms"))} className="mt-0.5 h-4 w-4 accent-[#e8b84e]" />
-              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Bookings can&rsquo;t be cancelled, and I&rsquo;m liable for the full fee for the block.</span>
+              <span>I agree to the <Link href="/partners/terms" target="_blank" className="underline">partner terms</Link>. Refunds only if I cancel more than {REFUND_DAYS_BEFORE} days before my first session.</span>
             </label>
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
           </div>
 
           <button type="button" disabled={busy || items.length === 0 || !!blocked} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
             {busy
-              ? "Booking your nets…"
-              : !items.length || !terms
-                ? "Book and get invoice"
-                : `Book and get invoice for ${formatPrice(terms === "monthly" ? firstPence : total)}`}
+              ? "Sending your request…"
+              : "Send booking request"}
           </button>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>
       </div>
     </section>
+  );
+}
+
+function NetLegend() {
+  const item = (cls: string, label: string) => (
+    <span className="inline-flex items-center gap-2"><span className={`h-3.5 w-3.5 rounded border ${cls}`} aria-hidden="true" />{label}</span>
+  );
+  return (
+    <p className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-muted">
+      {item("border-[#1d9b4b]/40 bg-[#e3f3e8]", "Available")}
+      {item("border-[#d4880f]/50 bg-[#fdf0d5]", "Requested")}
+      {item("border-[#c0392b]/40 bg-[#fbeae8]", "Booked")}
+    </p>
+  );
+}
+
+/** How booking works: request, invoice, payment — first come, first served */
+export function HowBookingWorks({ tone = "light" }: { tone?: "light" | "cream" }) {
+  return (
+    <div className={`mt-6 rounded-2xl p-5 md:p-6 ${tone === "light" ? "bg-white" : "bg-cream-200"}`}>
+      <h2 className="text-2xl">How booking works</h2>
+      <ol className="mt-3 max-w-3xl list-decimal space-y-2 pl-5 leading-relaxed text-ink-muted">
+        <li><strong className="text-navy-950">Send a booking request.</strong> Choose your nets and termly or monthly payment. Requests are first come, first served, and a requested net shows amber.</li>
+        <li><strong className="text-navy-950">We review it and email your invoice.</strong> Pay by bank transfer within {INVOICE_DUE_HOURS} hours.</li>
+        <li><strong className="text-navy-950">Your first payment confirms the booking.</strong> Once your documents are in too, the net shows red.</li>
+      </ol>
+      <p className="mt-3 max-w-3xl text-sm text-ink-muted">
+        Sessions up to Christmas are invoiced in full. Refunds only if you cancel more than {REFUND_DAYS_BEFORE} days before your first session.
+      </p>
+    </div>
   );
 }
 

@@ -5,11 +5,11 @@ import { parseJson } from "@/lib/http";
 import { partnerCheckoutSchema } from "@/lib/validation";
 import { currentPartner } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
-import { sendInvoice } from "@/lib/partners/notify";
+import { sendRequestReceived } from "@/lib/partners/notify";
 
 export const dynamic = "force-dynamic";
 
-/** Books the chosen nets (and bowling machine) and emails the first invoice */
+/** A booking request for the chosen nets (and bowling machine): HillRisers then approves it and sends the invoice */
 export async function POST(req: Request) {
   const partner = await currentPartner();
   if (!partner) return NextResponse.json({ ok: false, message: "Please sign in again" }, { status: 401 });
@@ -19,7 +19,6 @@ export async function POST(req: Request) {
   if (getBlock(blockId)?.test && !isTestPartner(partner.email)) return NextResponse.json({ ok: false, message: "That block isn't available." }, { status: 400 });
   const held = await getPartnerStore().reserve({ partnerId: partner.id, blockId, items, machineCoach, terms });
   if (!held.ok) return NextResponse.json({ ok: false, message: held.message, taken: held.keys }, { status: held.reason === "taken" ? 409 : 400 });
-  const invoice = held.booking.invoices![0];
-  await sendInvoice(held.booking, invoice);
-  return NextResponse.json({ ok: true, url: `/partners/account?invoice=${invoice.number}` });
+  await sendRequestReceived(held.booking);
+  return NextResponse.json({ ok: true, url: `/partners/account?requested=${held.booking.id}` });
 }

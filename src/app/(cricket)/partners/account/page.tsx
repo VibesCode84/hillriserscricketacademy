@@ -7,7 +7,7 @@ import { PartnerAccount } from "@/components/partners/PartnerAccount";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My account" };
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ invoice?: string }> }) {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ invoice?: string; requested?: string }> }) {
   const partner = await currentPartner();
   if (!partner) redirect("/partners#sign-in");
   const sp = await searchParams;
@@ -17,7 +17,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName, email: partner.email, phone: partner.phone, hasPassword: !!partner.passwordHash }}
       bookings={bookings}
       blocks={partnerBlocks}
-      banner={sp.invoice ? { kind: "invoice", number: sp.invoice } : undefined}
+      banner={sp.requested ? { kind: "requested" } : sp.invoice ? { kind: "invoice", number: sp.invoice } : undefined}
     />
   );
 }

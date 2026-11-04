@@ -8,8 +8,8 @@ import {
   blockUnlocked,
   findSlot,
   firstInvoiceMonths,
+  requiredDocumentKinds,
   getBlock,
-  heldNets,
   itemPricePence,
   londonDate,
   londonTime,
@@ -60,7 +60,7 @@ export type PriorityCode = {
   code: string;
   /** Who it's for, e.g. "Sanjiv" */
   name: string;
-  /** netHolds id this code can book */
+  /** No longer used (held nets were removed) */
   holdId?: string;
   createdAt: string;
   redeemedBy?: string;
@@ -117,8 +117,12 @@ export type PartnerInvoice = {
   remindersSent?: string[];
 };
 
-/** reserved = deposit paid, balance still due; forfeited = balance missed its deadline (shown, never stored) */
-export type NetBookingStatus = "pending_payment" | "reserved" | "confirmed" | "cancelled" | "expired" | "forfeited";
+/**
+ * requested = booking request, awaiting HillRisers' approval; pending_payment = approved and invoiced;
+ * confirmed = first payment received; declined = request not approved.
+ * reserved/forfeited belong to the earlier deposit scheme (forfeited is shown, never stored).
+ */
+export type NetBookingStatus = "requested" | "pending_payment" | "reserved" | "confirmed" | "declined" | "cancelled" | "expired" | "forfeited";
 
 export type NetBooking = {
   id: string;
@@ -150,6 +154,9 @@ export type NetBooking = {
   /** Balance reminder days already emailed (ISO dates) */
   remindersSent?: string[];
   status: NetBookingStatus;
+  /** When HillRisers approved the request (and issued the first invoice) or declined it */
+  approvedAt?: string;
+  declinedAt?: string;
   holdExpiresAt?: string;
   checkoutId?: string;
   paymentIntentId?: string;
@@ -157,7 +164,10 @@ export type NetBooking = {
   paidAt?: string;
 };
 
-type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; priorityCodes?: PriorityCode[]; invoiceSeq?: number };
+/** "I'd like to talk first": an enquiry that isn't a booking request */
+export type PartnerEnquiry = { id: string; name: string; email: string; phone?: string; orgName?: string; message: string; createdAt: string; partnerId?: string; handledAt?: string };
+
+type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; priorityCodes?: PriorityCode[]; enquiries?: PartnerEnquiry[]; invoiceSeq?: number };
 const empty = (): Data => ({ partners: [], documents: [], bookings: [] });
 
 /* ── Storage backends: a versioned JSON document plus file blobs ───────── */
@@ -285,8 +295,9 @@ function addSession(p: Partner) {
 export type LoginResult = { ok: true; partner: Partner; token: string } | { ok: false; locked: boolean };
 const now = () => new Date().toISOString();
 
-/** A slot is taken by a confirmed booking or by an invoice that's still within its payment time */
+/** A slot is taken by a booking request, a confirmed booking, or an invoice that's still within its payment time */
 export const holds = (b: NetBooking, at = Date.now()) =>
+  b.status === "requested" ||
   b.status === "confirmed" ||
   (b.status === "pending_payment" && !!b.holdExpiresAt && Date.parse(b.holdExpiresAt) > at) ||
   (b.status === "reserved" && !!b.balanceDueAt && Date.parse(b.balanceDueAt) > at);
@@ -314,8 +325,6 @@ function openInvoice(d: Data, partnerId: string, at = Date.now()) {
   return undefined;
 }
 
-const unpaidMessage = (i: PartnerInvoice) => `You have an unpaid invoice (${i.number}). Please pay it before making another booking.`;
-
 function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, at: number, months?: string[]): PartnerInvoice {
   d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
   return { number: invoiceNumber(d.invoiceSeq), stage, months, amountPence, issuedAt: new Date(at).toISOString(), dueAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString() };
@@ -334,6 +343,11 @@ const normaliseCode = (code: string) => {
   const c = code.trim().toUpperCase().replace(/\s+/g, "");
   return c.startsWith("HR-") ? c : `HR-${c.replace(/^HR/, "")}`;
 };
+
+/** Every required compliance document uploaded (being checked or approved, not rejected) */
+function documentsComplete(d: Data, partnerId: string) {
+  return requiredDocumentKinds.every((k) => d.documents.some((x) => x.partnerId === partnerId && x.kind === k && x.review !== "rejected"));
+}
 
 /** The priority code a partner has redeemed */
 const codeFor = (d: Data, partnerId: string) => {
@@ -422,9 +436,9 @@ export class PartnerStore {
   /* Priority codes */
 
   /** Admin: a new priority code for a named partner, optionally linked to a hold */
-  createPriorityCode(name: string, holdId?: string) {
+  createPriorityCode(name: string) {
     return this.tx((d) => {
-      const code: PriorityCode = { code: newCode(new Set((d.priorityCodes ?? []).map((c) => c.code))), name: name.trim(), holdId: holdId || undefined, createdAt: now() };
+      const code: PriorityCode = { code: newCode(new Set((d.priorityCodes ?? []).map((c) => c.code))), name: name.trim(), createdAt: now() };
       d.priorityCodes = [...(d.priorityCodes ?? []), code];
       return code;
     });
@@ -454,7 +468,7 @@ export class PartnerStore {
     });
   }
 
-  /** A partner's priority code (and the hold it unlocks), if they have one */
+  /** A partner's priority code, if they have one */
   async priorityFor(partnerId: string) {
     return codeFor(await this.read(), partnerId);
   }
@@ -582,28 +596,35 @@ export class PartnerStore {
 
   /* Availability and bookings */
 
-  /**
-   * Taken keys (nets and the bowling machine) for a block, from live bookings and held nets.
-   * Nets held for `holdId` count as free (that partner may book them).
-   */
-  async taken(blockId: string, holdId?: string) {
-    const at = Date.now();
-    const set = new Set<string>();
-    if (getBlock(blockId)?.test) return set;
-    for (const [key, hold] of heldNets(blockId)) if (hold.id !== holdId) set.add(key);
-    for (const b of (await this.read()).bookings) {
-      if (b.blockId !== blockId || !holds(b, at)) continue;
-      for (const i of b.items) {
-        set.add(i.slotKey);
-        if (i.bowlingMachine) set.add(machineKey(blockId, i));
-      }
-    }
-    return set;
+  /** Taken keys (nets and the bowling machine) for a block: booking requests and live bookings */
+  async taken(blockId: string) {
+    return new Set((await this.netStates(blockId)).keys());
   }
 
   /**
-   * Books the requested nets (and bowling machine) and issues the first invoice. The nets are held for
-   * INVOICE_DUE_HOURS while it's paid. Atomic: either every item is free and all are held, or nothing changes.
+   * Each taken key in a block: "requested" (amber) from a booking request or an unpaid invoice, or "booked"
+   * (red) once the first payment is in and the partner's compliance documents have been received.
+   */
+  async netStates(blockId: string) {
+    const at = Date.now();
+    const out = new Map<string, { state: "requested" | "booked"; partnerId: string; bookingId: string }>();
+    if (getBlock(blockId)?.test) return out;
+    const d = await this.read();
+    for (const b of d.bookings) {
+      if (b.blockId !== blockId || !holds(b, at)) continue;
+      const state = b.status === "confirmed" && documentsComplete(d, b.partnerId) ? "booked" : "requested";
+      for (const i of b.items) {
+        out.set(i.slotKey, { state, partnerId: b.partnerId, bookingId: b.id });
+        if (i.bowlingMachine) out.set(machineKey(blockId, i), { state, partnerId: b.partnerId, bookingId: b.id });
+      }
+    }
+    return out;
+  }
+
+  /**
+   * A booking request: holds the requested nets (and bowling machine) for the partner, first come, first
+   * served, until HillRisers approves or declines it. Atomic: either every item is free and all are
+   * requested, or nothing changes.
    */
   reserve(input: {
     partnerId: string;
@@ -618,16 +639,13 @@ export class PartnerStore {
       const at = input.at ?? Date.now();
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
-      const code = codeFor(d, input.partnerId);
-      if (!block.test && priorityWindowOpen(at) && !code) {
-        return { ok: false, reason: "locked", message: `Priority booking is open to invited partners until ${priorityEndsLabel()}. Booking opens to everyone after that. If you have a priority code, enter it above.` };
+      if (!block.test && priorityWindowOpen(at) && !codeFor(d, input.partnerId)) {
+        return { ok: false, reason: "locked", message: `Priority booking is open to invited partners until ${priorityEndsLabel()}. Booking requests open to everyone after that. If you have a priority code, enter it above.` };
       }
       if (!blockUnlocked(block, d.bookings.filter((b) => b.partnerId === input.partnerId))) {
         const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
-        return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please book ${needed} first.` };
+        return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please request ${needed} first.` };
       }
-      const open = openInvoice(d, input.partnerId, at);
-      if (open) return { ok: false, reason: "invalid", message: unpaidMessage(open) };
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();
       for (const it of input.items) {
@@ -646,7 +664,6 @@ export class PartnerStore {
       }
       const clash = new Set<string>();
       if (!block.test) {
-        for (const [key, hold] of heldNets(input.blockId)) if (wanted.has(key) && hold.id !== code?.holdId) clash.add(key);
         for (const b of d.bookings) {
           if (b.blockId !== input.blockId || !holds(b, at)) continue;
           for (const i of b.items) {
@@ -657,9 +674,8 @@ export class PartnerStore {
         }
       }
       if (clash.size) {
-        return { ok: false, reason: "taken", keys: [...clash], message: "Sorry — one of those has just been booked or isn't available. The grid has been updated." };
+        return { ok: false, reason: "taken", keys: [...clash], message: "Sorry — someone has just requested one of those. The grid has been updated." };
       }
-      const terms: PaymentTerms = input.terms ?? "termly";
       const booking: NetBooking = {
         id: randomUUID(),
         partnerId: input.partnerId,
@@ -667,22 +683,74 @@ export class PartnerStore {
         items,
         machineCoach: items.some((i) => i.bowlingMachine) ? input.machineCoach : undefined,
         totalPence: items.reduce((n, i) => n + i.pricePence, 0),
-        plan: terms,
+        plan: input.terms ?? "termly",
         method: "bank",
-        status: "pending_payment",
-        holdExpiresAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString(),
+        status: "requested",
         createdAt: new Date(at).toISOString(),
       };
-      if (terms === "monthly") {
-        // The first invoice covers the first month, plus any month whose invoice would already be due
-        const due = firstInvoiceMonths(monthsToInvoice(booking), at);
-        booking.invoices = [newInvoice(d, "initial", due.reduce((n, m) => n + m.pence, 0), at, due.map((m) => m.month))];
-      } else {
-        booking.invoices = [newInvoice(d, "initial", booking.totalPence, at)];
-      }
       d.bookings.push(booking);
       return { ok: true, booking };
     });
+  }
+
+  /**
+   * Admin approves a booking request: issues the first invoice, payable within INVOICE_DUE_HOURS (the
+   * nets stay held until then). Termly: the whole block. Monthly: the first month, everything up to
+   * Christmas, and any month whose invoice would already be due.
+   */
+  approve(bookingId: string, at = Date.now()) {
+    return this.tx<{ ok: true; booking: NetBooking; invoice: PartnerInvoice } | { ok: false; message: string }>((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      if (!b) return { ok: false, message: "Booking request not found." };
+      if (b.status !== "requested") return { ok: false, message: "This request has already been dealt with." };
+      const open = openInvoice(d, b.partnerId, at);
+      if (open) return { ok: false, message: `This partner has an unpaid invoice (${open.number}). Approve once it's paid.` };
+      const months = b.plan === "monthly" ? firstInvoiceMonths(monthsToInvoice(b), at) : [];
+      const inv = months.length
+        ? newInvoice(d, "initial", months.reduce((n, m) => n + m.pence, 0), at, months.map((m) => m.month))
+        : newInvoice(d, "initial", b.totalPence, at);
+      Object.assign(b, { status: "pending_payment", approvedAt: new Date(at).toISOString(), holdExpiresAt: inv.dueAt, invoices: [...(b.invoices ?? []), inv] });
+      return { ok: true, booking: b, invoice: inv };
+    });
+  }
+
+  /** Admin declines a booking request: the nets are released */
+  decline(bookingId: string) {
+    return this.tx<{ ok: true; booking: NetBooking } | { ok: false; message: string }>((d) => {
+      const b = d.bookings.find((x) => x.id === bookingId);
+      if (!b) return { ok: false, message: "Booking request not found." };
+      if (b.status !== "requested") return { ok: false, message: "This request has already been dealt with." };
+      Object.assign(b, { status: "declined", declinedAt: now() });
+      return { ok: true, booking: b };
+    });
+  }
+
+  /* Enquiries */
+
+  addEnquiry(input: Omit<PartnerEnquiry, "id" | "createdAt" | "handledAt">) {
+    return this.tx((d) => {
+      const e: PartnerEnquiry = { ...input, id: randomUUID(), createdAt: now() };
+      d.enquiries = [...(d.enquiries ?? []), e];
+      return e;
+    });
+  }
+
+  async listEnquiries() {
+    return [...((await this.read()).enquiries ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  /** Admin: mark an enquiry as dealt with (or not) */
+  setEnquiryHandled(id: string, handled: boolean) {
+    return this.tx((d) => {
+      const e = d.enquiries?.find((x) => x.id === id);
+      if (e) e.handledAt = handled ? now() : undefined;
+      return e;
+    });
+  }
+
+  /** Whether a partner has sent in every compliance document (not rejected) */
+  async documentsComplete(partnerId: string) {
+    return documentsComplete(await this.read(), partnerId);
   }
 
   /**

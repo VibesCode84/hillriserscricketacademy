@@ -45,27 +45,32 @@ export function PartnerAccount(props: {
   partner: Profile;
   bookings: NetBooking[];
   blocks: PartnerBlock[];
-  banner?: { kind: "invoice"; number: string };
+  banner?: { kind: "invoice"; number: string } | { kind: "requested" };
 }) {
   const { bookings } = props;
   const [banner, setBanner] = useState(props.banner);
   const label = (id: string) => props.blocks.find((b) => b.id === id)?.label ?? id;
-  const issued = banner ? bookings.flatMap((b) => b.invoices ?? []).find((i) => i.number === banner.number) : undefined;
+  const issued = banner?.kind === "invoice" ? bookings.flatMap((b) => b.invoices ?? []).find((i) => i.number === banner.number) : undefined;
   // Unpaid invoices: a first invoice while its nets are held; monthly invoices on a confirmed booking
   const toPay = bookings.flatMap((b) =>
     (b.invoices ?? [])
       .filter((i) => !i.paidAt && ((i.stage === "initial" && b.status === "pending_payment") || (i.stage === "month" && b.status === "confirmed")))
       .map((i) => ({ b, i })),
   );
-  const live = bookings.filter((b) => b.status !== "cancelled" && b.status !== "expired");
+  const live = bookings.filter((b) => b.status !== "cancelled" && b.status !== "expired" && b.status !== "declined");
 
   return (
     <div className="container-x py-10 md:py-14">
       <AccountHeader partner={props.partner} current="account" />
 
-      {banner && (
+      {banner?.kind === "requested" && (
         <Notice tone="good" onClose={() => setBanner(undefined)}>
-          <strong>Booked — invoice {banner.number} is on its way to your email.</strong>{" "}
+          <strong>Booking request sent.</strong> Your nets are held for you while we review it. We&rsquo;ll email your invoice once it&rsquo;s approved, and your first payment confirms the booking.
+        </Notice>
+      )}
+      {banner?.kind === "invoice" && (
+        <Notice tone="good" onClose={() => setBanner(undefined)}>
+          <strong>Invoice {banner.number} is on its way to your email.</strong>{" "}
           {issued ? `Please pay ${formatPrice(issued.amountPence)} by bank transfer by ${dueText(issued.dueAt)}, using ${issued.number} as the reference.` : ""}
         </Notice>
       )}
@@ -110,16 +115,18 @@ export function PartnerAccount(props: {
                     <p className="font-semibold">{label(b.blockId)}</p>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        b.status === "confirmed" ? "bg-[#e3f3e8] text-[#1d6b3a]" : b.status === "forfeited" ? "bg-[#fbeae8] text-[#8c1d18]" : b.status === "reserved" ? "bg-[#e6eefc] text-[#1d3f7a]" : "bg-[#fff4d6] text-[#7a5a00]"
+                        b.status === "confirmed" ? "bg-[#e3f3e8] text-[#1d6b3a]" : b.status === "requested" ? "bg-[#fdf0d5] text-[#8a5a00]" : b.status === "forfeited" ? "bg-[#fbeae8] text-[#8c1d18]" : b.status === "reserved" ? "bg-[#e6eefc] text-[#1d3f7a]" : "bg-[#fff4d6] text-[#7a5a00]"
                       }`}
                     >
-                      {b.status === "confirmed"
+                      {b.status === "requested"
+                        ? "Request sent · awaiting approval"
+                        : b.status === "confirmed"
                         ? "Booked"
                         : b.status === "forfeited"
                           ? "Not paid · nets released"
                           : b.status === "reserved"
                             ? "Deposit paid"
-                            : `Awaiting payment${b.holdExpiresAt ? ` · due ${dueText(b.holdExpiresAt)}` : ""}`}
+                            : `Invoice sent · pay by ${b.holdExpiresAt ? dueText(b.holdExpiresAt) : "the due time"}`}
                     </span>
                   </div>
                   <ul className="mt-2 space-y-1 text-sm text-ink-muted">
@@ -132,7 +139,7 @@ export function PartnerAccount(props: {
                   {b.machineCoach && <p className="mt-2 text-sm">Bowling machine operator (Level 2): {b.machineCoach}</p>}
                   <p className="mt-2 font-semibold">Total {formatPrice(b.totalPence)}</p>
                   <p className="mt-1 text-sm text-ink-muted">
-                    {termsLabel(b)} · paid {formatPrice(paidToDate(b))}
+                    {termsLabel(b)}{b.status === "requested" ? "" : ` · paid ${formatPrice(paidToDate(b))}`}
                     {next ? ` · next invoice: ${monthLabel(next.month)} (${formatPrice(next.pence)}), issued ${ukDateTime(new Date(next.issueAt).toISOString(), "short")}` : ""}
                   </p>
                 </li>

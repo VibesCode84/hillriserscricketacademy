@@ -229,6 +229,68 @@ ${signOff}
   });
 }
 
+/** A booking request has been received: HillRisers will review it and send the invoice */
+export async function sendBookingRequestReceived(p: PartnerContact, r: { blockLabel: string; nets: string[]; totalPence: number; terms: string; reference: string }) {
+  await send({
+    to: p.email,
+    subject: `Booking request received: ${r.blockLabel} (ref ${r.reference})`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Thank you — we've received your booking request. Your nets are held for you while we review it, and we'll email your invoice once it's approved.
+
+${r.blockLabel} (${r.terms.toLowerCase()}), total ${formatPrice(r.totalPence)}:
+${r.nets.map((n) => `• ${n}`).join("\n")}
+
+Your first payment confirms the booking. Invoices are paid by bank transfer within 24 hours.
+
+See your requests: ${site.url}/partners/account
+
+${contactLine()}
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `Booking request: ${p.orgName} — ${r.blockLabel} ${formatPrice(r.totalPence)}`,
+    `${p.orgName} — ${p.contactName} <${p.email}> ${p.phone}\n${r.terms}\n\n${r.nets.join("\n")}\n\nApprove or decline: ${site.url}/admin/partners`,
+  );
+}
+
+/** A booking request wasn't approved */
+export async function sendBookingDeclined(p: PartnerContact, r: { blockLabel: string; nets: string[] }) {
+  await send({
+    to: p.email,
+    subject: `Your ${r.blockLabel} booking request`,
+    text: `Hi ${p.contactName.split(" ")[0]},
+
+Thank you for your booking request. Unfortunately we can't accept it this time, and the nets have been released:
+${r.nets.map((n) => `• ${n}`).join("\n")}
+
+We're happy to talk through other options — just reply to this email.
+
+${signOff}
+`,
+  });
+}
+
+/** "I'd like to talk first": acknowledges the enquiry and passes it to HillRisers */
+export async function sendPartnerEnquiry(e: { name: string; email: string; phone?: string; orgName?: string; message: string }) {
+  await send({
+    to: e.email,
+    subject: "Thanks for getting in touch with HillRisers",
+    text: `Hi ${e.name.split(" ")[0]},
+
+Thanks for your message. We'll be in touch soon.
+
+${signOff}
+`,
+  });
+  await notifyAcademy(
+    `Partner enquiry: ${e.orgName ?? e.name}`,
+    `${e.name}${e.orgName ? ` (${e.orgName})` : ""} <${e.email}>${e.phone ? ` ${e.phone}` : ""}\n\n${e.message}\n\nSee ${site.url}/admin/partners`,
+  );
+}
+
 /** An invoice as the emails describe it */
 type InvoiceEmail = {
   number: string;

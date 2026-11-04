@@ -3,9 +3,10 @@
  *
  * - Block bookings only: a net at the same time every week for a whole block.
  * - £18.80 per net per hour (the block rate); the bowling machine is £10 per hour on top.
- * - Invoice only: paid by bank transfer within 24 hours of each invoice, monthly or termly in advance.
- * - Until PRIORITY_UNTIL_DATE ends, only partners with a priority code can book.
- * - Some nets are held (netHolds below) and can only be booked with the linked priority code.
+ * - Partners send a booking request (first come, first served); HillRisers approves it, which issues
+ *   the invoice (bank transfer within 24 hours); the first payment confirms the booking.
+ * - Monthly or termly in advance; sessions up to Christmas are invoiced in full.
+ * - Until PRIORITY_UNTIL_DATE ends, only partners with a priority code can send requests.
  * - There is ONE bowling machine, so it can go on one net per time slot.
  * - Only the slots listed here are released. Update this file to release the
  *   next block or change what is available.
@@ -23,6 +24,10 @@ export const PRIORITY_UNTIL_DATE = "2026-11-08";
 export type PaymentTerms = "termly" | "monthly";
 /** A month's invoice is issued this many days before that month's first session (8am UK time) */
 export const MONTHLY_INVOICE_DAYS_BEFORE = 7;
+/** Sessions up to this date are invoiced in full in the first invoice, whatever the payment terms */
+export const FULL_PAYMENT_UNTIL = "2026-12-31";
+/** Refunds only if a booking is cancelled more than this many days before its first session */
+export const REFUND_DAYS_BEFORE = 7;
 
 export type PartnerDay = "Wednesday" | "Thursday" | "Saturday" | "Sunday";
 
@@ -61,10 +66,10 @@ const hourly = (day: PartnerDay, from: string, to: string, nets: number[], dates
   return out;
 };
 
-/** Autumn: from the week commencing 16 November; Wednesdays from 25 November */
+/** Autumn: from the week commencing 16 November; Wednesdays from 25 November; Saturdays from 5 December */
 const wednesdays = ["2026-11-25", "2026-12-02", "2026-12-09"];
 const thursdays = ["2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10"];
-const saturdays = ["2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"];
+const saturdays = ["2026-12-05", "2026-12-12"];
 const sundays = ["2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13"];
 
 /** Spring 2027: 12 weeks, 4 January – 28 March, including half term (15–21 February) */
@@ -82,7 +87,9 @@ export const partnerBlocks: PartnerBlock[] = [
     label: "Autumn block 2026",
     summary: "Week commencing 16 November to 13 December 2026",
     notes: [
-      "Thursdays, Saturdays and Sundays start in the week commencing 16 November. Wednesdays start on 25 November.",
+      "Thursdays and Sundays start in the week commencing 16 November. Wednesdays start on 25 November.",
+      "Saturdays: 5 and 12 December only (not available on 21 or 28 November).",
+      "Sessions up to Christmas are invoiced in full.",
       "No sessions over the Christmas shutdown (21 December – 3 January).",
     ],
     slots: [
@@ -120,40 +127,6 @@ export const partnerBlocks: PartnerBlock[] = [
   },
 ];
 
-/**
- * Nets held for a named partner: nobody else can book them. A priority code linked to the hold
- * (set when the code is created in admin) lets its partner book them.
- */
-export type NetHold = { id: string; label: string; blockId: string; day: PartnerDay; from: string; to: string; nets: number[] };
-
-const both = (h: Omit<NetHold, "blockId">): NetHold[] => ["autumn-2026", "spring-2027"].map((blockId) => ({ ...h, blockId }));
-
-export const netHolds: NetHold[] = [
-  { id: "bessborough", label: "Bessborough CC", blockId: "spring-2027", day: "Sunday", from: "14:00", to: "17:00", nets: [1, 2, 3] },
-  ...both({ id: "sanjiv", label: "Sanjiv", day: "Wednesday", from: "18:00", to: "21:00", nets: [1] }),
-  ...both({ id: "sanjiv", label: "Sanjiv", day: "Thursday", from: "18:00", to: "21:00", nets: [1] }),
-  ...both({ id: "sanjiv", label: "Sanjiv", day: "Saturday", from: "14:30", to: "17:30", nets: [1] }),
-  ...both({ id: "sanjiv", label: "Sanjiv", day: "Sunday", from: "09:00", to: "13:00", nets: [1] }),
-];
-
-/** The holds partners' priority codes can be linked to */
-export const holdOptions = [...new Map(netHolds.map((h) => [h.id, h.label])).entries()].map(([id, label]) => ({ id, label }));
-
-/** Held net keys in a block, and who for */
-export function heldNets(blockId: string) {
-  const out = new Map<string, NetHold>();
-  const block = getBlock(blockId);
-  if (!block) return out;
-  for (const h of netHolds) {
-    if (h.blockId !== blockId) continue;
-    for (const s of block.slots) {
-      if (s.day !== h.day || s.start < h.from || s.end > h.to) continue;
-      for (const n of h.nets) if (s.nets.includes(n)) out.set(slotKey(blockId, s, n), h);
-    }
-  }
-  return out;
-}
-
 /** Real blocks (everything bar the test booking) */
 export const releasedBlocks = partnerBlocks.filter((b) => !b.test);
 
@@ -171,9 +144,9 @@ export function blockDays(block: PartnerBlock) {
   }));
 }
 
-/** Whether a partner's bookings let them book this block (see requiresBlock) */
+/** Whether a partner's bookings let them request this block: a live request or booking in requiresBlock */
 export const blockUnlocked = (block: PartnerBlock, bookings: { blockId: string; status: string }[]) =>
-  !block.requiresBlock || bookings.some((b) => b.blockId === block.requiresBlock && b.status === "confirmed");
+  !block.requiresBlock || bookings.some((b) => b.blockId === block.requiresBlock && ["requested", "pending_payment", "confirmed"].includes(b.status));
 
 /** One bookable net in one weekly slot, e.g. "autumn-2026:Saturday:14:30:n2" */
 export const slotKey = (blockId: string, s: Pick<SlotTemplate, "day" | "start">, net: number) => `${blockId}:${s.day}:${s.start}:n${net}`;
@@ -209,9 +182,12 @@ export function monthlySplit(items: { slotKey: string; pricePence: number; weeks
 /** When a month's invoice is issued: 8am UK time, MONTHLY_INVOICE_DAYS_BEFORE days before its first session */
 export const monthInvoiceAt = (firstSession: string) => londonTime(addDays(firstSession, -MONTHLY_INVOICE_DAYS_BEFORE), REMINDER_HOUR);
 
-/** Months the first invoice covers on monthly terms: the first month, plus any whose invoice would already be due */
+/**
+ * Months the first invoice covers on monthly terms: the first month, every month up to FULL_PAYMENT_UNTIL
+ * (sessions up to Christmas are paid in full), and any whose invoice would already be due.
+ */
 export const firstInvoiceMonths = <T extends { firstSession: string }>(months: T[], at = Date.now()) =>
-  months.filter((m, idx) => idx === 0 || monthInvoiceAt(m.firstSession).getTime() <= at);
+  months.filter((m, idx) => idx === 0 || m.firstSession <= FULL_PAYMENT_UNTIL || monthInvoiceAt(m.firstSession).getTime() <= at);
 
 /** "November 2026" */
 export const monthLabel = (month: string) =>
@@ -279,6 +255,8 @@ export const documentKinds = [
   { value: "other", label: "Other" },
 ] as const;
 export type DocumentKind = (typeof documentKinds)[number]["value"];
+/** Compliance documents every partner must send before a booking shows as booked */
+export const requiredDocumentKinds: DocumentKind[] = ["qualification", "dbs", "safeguarding", "insurance"];
 
 /** Who each booked session is for — partners choose one of each per net */
 export const sessionAgeGroups = ["Under 7", "Under 9", "Under 11", "Under 13", "Under 15", "Under 18", "Adults", "Mixed ages"] as const;

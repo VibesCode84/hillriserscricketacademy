@@ -1,11 +1,12 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- document links and the CSV are downloads, not pages */
 import Link from "next/link";
-import { documentKinds, getBlock, heldNets, holdOptions, machineKey, priorityEndsLabel, releasedBlocks, slotKey, timeLabel } from "@/data/partners";
+import { documentKinds, getBlock, machineKey, priorityEndsLabel, releasedBlocks, requiredDocumentKinds, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
 import { MarkPaid } from "@/components/admin/MarkPaid";
 import { PriorityCodes } from "@/components/admin/PriorityCodes";
+import { EnquiryHandled, RequestActions } from "@/components/admin/RequestActions";
 import { invoiceDescription, monthsToInvoice, paidToDate, termsLabel } from "@/lib/partners/describe";
 import { daysAgo, isPast, ukDateTime } from "@/data/invoicing";
 import { Crest } from "@/components/Logo";
@@ -14,11 +15,13 @@ export const dynamic = "force-dynamic";
 
 const kindLabel = (k: string) => documentKinds.find((d) => d.value === k)?.label ?? k;
 const reviewBadge = { pending: "bg-[#fff4d6] text-[#7a5a00]", approved: "bg-[#e3f3e8] text-[#1d6b3a]", rejected: "bg-[#fbeae8] text-[#8c1d18]" };
-const statusBadge = { confirmed: "bg-[#e3f3e8] text-[#1d6b3a]", reserved: "bg-[#e6eefc] text-[#1d3f7a]", forfeited: "bg-[#fbeae8] text-[#8c1d18]", pending_payment: "bg-[#fff4d6] text-[#7a5a00]", cancelled: "bg-cream-200 text-ink-muted", expired: "bg-cream-200 text-ink-muted" };
+const statusBadge: Record<string, string> = { requested: "bg-[#fdf0d5] text-[#8a5a00]", declined: "bg-cream-200 text-ink-muted", confirmed: "bg-[#e3f3e8] text-[#1d6b3a]", reserved: "bg-[#e6eefc] text-[#1d3f7a]", forfeited: "bg-[#fbeae8] text-[#8c1d18]", pending_payment: "bg-[#fff4d6] text-[#7a5a00]", cancelled: "bg-cream-200 text-ink-muted", expired: "bg-cream-200 text-ink-muted" };
 
 export default async function AdminPartnersPage() {
   const store = getPartnerStore();
-  const [partners, documents, bookings, codes] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor(), store.listPriorityCodes()]);
+  const [partners, documents, bookings, codes, enquiries] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor(), store.listPriorityCodes(), store.listEnquiries()]);
+  const docsIn = (partnerId: string) => requiredDocumentKinds.every((k) => documents.some((d) => d.partnerId === partnerId && d.kind === k && d.review !== "rejected"));
+  const requests = bookings.filter((b) => b.status === "requested").sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const kb = (n: number) => `${Math.max(1, Math.round(n / 1024))} KB`;
 
   return (
@@ -43,9 +46,43 @@ export default async function AdminPartnersPage() {
         </p>
       )}
 
+      <section className="mt-10">
+        <h2 className="text-2xl">Booking requests</h2>
+        <p className="mt-1 text-sm text-ink-muted">First come, first served — oldest first. Approving emails the invoice, payable within 24 hours.</p>
+        {requests.length === 0 ? (
+          <p className="mt-2 text-sm text-ink-muted">No requests waiting.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-navy-950/10 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-navy-950/10 text-xs uppercase tracking-wider text-ink-muted">
+                <tr><th className="px-4 py-3">Received</th><th className="px-4 py-3">Partner</th><th className="px-4 py-3">Nets</th><th className="px-4 py-3">Terms</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3">Documents</th><th className="px-4 py-3" /></tr>
+              </thead>
+              <tbody className="divide-y divide-navy-950/10 align-top">
+                {requests.map((b) => {
+                  const p = partners.find((x) => x.id === b.partnerId);
+                  return (
+                    <tr key={b.id}>
+                      <td className="whitespace-nowrap px-4 py-3">{ukDateTime(b.createdAt, "short")}</td>
+                      <td className="px-4 py-3">{p?.orgName ?? "?"}<span className="block text-xs text-ink-muted">{p?.email}</span></td>
+                      <td className="px-4 py-3">
+                        <span className="font-semibold">{getBlock(b.blockId)?.label}</span>
+                        {b.items.map((i) => <span key={i.slotKey} className="block text-xs">{i.day.slice(0, 3)} {timeLabel(i.start)} net {i.net}{i.bowlingMachine ? " + machine" : ""}{i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}</span>)}
+                      </td>
+                      <td className="px-4 py-3">{termsLabel(b)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{formatPrice(b.totalPence)}</td>
+                      <td className="px-4 py-3">{docsIn(b.partnerId) ? <span className="text-[#1d6b3a]">All in</span> : <span className="text-[#8c1d18]">Missing</span>}</td>
+                      <td className="px-4 py-3 text-right"><RequestActions bookingId={b.id} label={`${p?.orgName ?? "this"}'s request (${formatPrice(b.totalPence)})`} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <PriorityCodes
-        codes={codes.map((c) => ({ ...c, holdLabel: holdOptions.find((h) => h.id === c.holdId)?.label, redeemedBy: c.redeemedBy ? (partners.find((p) => p.id === c.redeemedBy)?.orgName ?? "?") : undefined }))}
-        holds={holdOptions}
+        codes={codes.map((c) => ({ ...c, redeemedBy: c.redeemedBy ? (partners.find((p) => p.id === c.redeemedBy)?.orgName ?? "?") : undefined }))}
         ends={priorityEndsLabel()}
       />
 
@@ -58,7 +95,7 @@ export default async function AdminPartnersPage() {
         );
         return (
           <section className="mt-10">
-            <h2 className="text-2xl">Awaiting bank transfer</h2>
+            <h2 className="text-2xl">Invoices awaiting payment</h2>
             {awaiting.length === 0 ? (
               <p className="mt-2 text-sm text-ink-muted">No unpaid invoices.</p>
             ) : (
@@ -91,14 +128,16 @@ export default async function AdminPartnersPage() {
       })()}
 
       {releasedBlocks.map((block) => {
-        const taken = new Map<string, string>();
-        for (const [key, hold] of heldNets(block.id)) taken.set(key, `Held: ${hold.label}`);
+        // Amber: requested or invoiced; red: paid and documents in
+        const taken = new Map<string, { text: string; red: boolean }>();
         for (const b of bookings) {
           if (b.blockId !== block.id || !holds(b)) continue;
           const name = partners.find((p) => p.id === b.partnerId)?.orgName ?? "?";
+          const red = b.status === "confirmed" && docsIn(b.partnerId);
+          const note = b.status === "requested" ? " (request)" : b.status === "pending_payment" ? " (invoice due)" : b.status === "confirmed" && !red ? " (paid · documents missing)" : b.status === "reserved" ? " (deposit)" : "";
           for (const i of b.items) {
-            taken.set(i.slotKey, `${name}${b.status === "pending_payment" ? " (invoice due)" : b.status === "reserved" ? " (deposit)" : ""}`);
-            if (i.bowlingMachine) taken.set(machineKey(block.id, i), name);
+            taken.set(i.slotKey, { text: `${name}${note}`, red });
+            if (i.bowlingMachine) taken.set(machineKey(block.id, i), { text: name, red });
           }
         }
         return (
@@ -117,9 +156,9 @@ export default async function AdminPartnersPage() {
                       {[1, 2, 3].map((n) => {
                         const released = s.nets.includes(n);
                         const who = taken.get(slotKey(block.id, s, n));
-                        return <td key={n} className={`px-4 py-2 ${!released ? "text-ink-muted/50" : who?.startsWith("Held:") ? "italic text-[#7a5a00]" : who ? "font-semibold text-navy-950" : "text-[#1d6b3a]"}`}>{!released ? "—" : (who ?? "Free")}</td>;
+                        return <td key={n} className={`px-4 py-2 ${!released ? "text-ink-muted/50" : who?.red ? "bg-[#fbeae8] font-semibold text-[#8c1d18]" : who ? "bg-[#fdf0d5] font-semibold text-[#8a5a00]" : "bg-[#e3f3e8] text-[#1d6b3a]"}`}>{!released ? "—" : (who?.text ?? "Free")}</td>;
                       })}
-                      <td className="px-4 py-2">{taken.get(machineKey(block.id, s)) ?? <span className="text-[#1d6b3a]">Free</span>}</td>
+                      <td className="px-4 py-2">{taken.get(machineKey(block.id, s))?.text ?? <span className="text-[#1d6b3a]">Free</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -128,6 +167,29 @@ export default async function AdminPartnersPage() {
           </section>
         );
       })}
+
+      <section className="mt-10">
+        <h2 className="text-2xl">Enquiries</h2>
+        <p className="mt-1 text-sm text-ink-muted">People who&rsquo;d like to talk before sending a booking request.</p>
+        {enquiries.length === 0 ? (
+          <p className="mt-2 text-sm text-ink-muted">No enquiries yet.</p>
+        ) : (
+          <ul className="mt-4 grid gap-3">
+            {enquiries.map((e) => (
+              <li key={e.id} className={`rounded-2xl border border-navy-950/10 p-4 text-sm ${e.handledAt ? "bg-cream-200 text-ink-muted" : "bg-white"}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p>
+                    <strong>{e.name}</strong>{e.orgName ? ` (${e.orgName})` : ""} · <a className="underline" href={`mailto:${e.email}`}>{e.email}</a>{e.phone ? ` · ${e.phone}` : ""}
+                    <span className="ml-2 text-xs text-ink-muted">{ukDateTime(e.createdAt, "short")}{e.handledAt ? " · dealt with" : ""}</span>
+                  </p>
+                  <EnquiryHandled id={e.id} handled={!!e.handledAt} />
+                </div>
+                <p className="mt-2 whitespace-pre-line">{e.message}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="mt-10">
         <h2 className="text-2xl">Partners and documents</h2>
@@ -167,7 +229,7 @@ export default async function AdminPartnersPage() {
                       {theirs.map((b) => (
                         <li key={b.id}>
                           <span className={`mr-2 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusBadge[b.status]}`}>
-                            {b.status === "forfeited" ? "balance not paid · released" : b.status === "reserved" ? "deposit paid" : b.status === "pending_payment" ? "invoice due" : b.status}
+                            {b.status === "forfeited" ? "balance not paid · released" : b.status === "reserved" ? "deposit paid" : b.status === "pending_payment" ? "invoice due" : b.status === "requested" ? "request" : b.status}
                           </span>
                           {getBlock(b.blockId)?.label}: {b.items.map((i) => `${i.day.slice(0, 3)} ${timeLabel(i.start)} net ${i.net}${i.bowlingMachine ? " + machine" : ""}${i.ageGroup ? ` (${[i.ageGroup, i.ability, i.gender].join(", ")})` : ""}`).join("; ")} · {formatPrice(b.totalPence)}
                           {b.machineCoach ? ` · machine coach: ${b.machineCoach}` : ""}
