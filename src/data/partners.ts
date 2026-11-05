@@ -92,7 +92,7 @@ export const partnerBlocks: PartnerBlock[] = [
     ],
     slots: [
       ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], wednesdays),
-      ...hourly("Thursday", "18:00", "21:00", [1, 2], thursdays),
+      ...hourly("Thursday", "18:00", "21:00", [1, 2, 3], thursdays),
       ...hourly("Saturday", "14:30", "17:30", [1, 2, 3], saturdays),
       ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], sundays),
     ],
@@ -106,7 +106,7 @@ export const partnerBlocks: PartnerBlock[] = [
     ],
     slots: [
       ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], springWeek("2027-01-06")),
-      ...hourly("Thursday", "18:00", "21:00", [1, 2], springWeek("2027-01-07")),
+      ...hourly("Thursday", "18:00", "21:00", [1, 2, 3], springWeek("2027-01-07")),
       ...hourly("Saturday", "14:30", "17:30", [1, 2, 3], springWeek("2027-01-09")),
       ...hourly("Sunday", "09:00", "17:00", [1, 2, 3], springWeek("2027-01-10")),
     ],

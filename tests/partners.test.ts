@@ -36,7 +36,7 @@ test("autumn: Thursdays and Sundays from w/c 16 November; Wednesdays from 25 Nov
   assert.deepEqual(thu.dates, ["2026-11-19", "2026-11-26", "2026-12-03", "2026-12-10"]);
   assert.deepEqual(sat.dates, ["2026-12-05", "2026-12-12"]);
   assert.equal(block.slots.find((s) => s.day === "Sunday")!.dates[0], "2026-11-22");
-  assert.deepEqual(thu.nets, [1, 2]);
+  assert.deepEqual(thu.nets, [1, 2, 3]);
   assert.equal(block.slots.filter((s) => s.day === "Sunday").length, 8);
   assert.ok(block.slots.every((s) => s.dates.every((d) => d >= "2026-11-16" && d <= "2026-12-13")));
 });
@@ -100,7 +100,7 @@ for (const [name, make] of [
     const { partner: a } = await store.createPartner(partner);
     const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
     assert.ok(a && b);
-    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(thu, 3)], at: OPEN })).ok, false); // net 3 isn't released on Thursdays
+    assert.equal((await store.reserve({ partnerId: a.id, blockId: block.id, items: [{ slotKey: "autumn-2026:Thursday:18:00:n4", bowlingMachine: false }], at: OPEN })).ok, false); // no net 4
     const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2), net(thu, 2)], terms: "termly", at: OPEN });
     assert.ok(r.ok);
     assert.equal(r.booking.status, "requested");
