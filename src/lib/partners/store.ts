@@ -5,7 +5,6 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hashPassword, verifyPassword } from "./password";
 import { INVOICE_DUE_HOURS, invoiceNumber } from "../../data/invoicing";
 import {
-  blockUnlocked,
   findSlot,
   firstInvoiceMonths,
   requiredDocumentKinds,
@@ -641,10 +640,6 @@ export class PartnerStore {
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
       if (!block.test && priorityWindowOpen(at) && !codeFor(d, input.partnerId)) {
         return { ok: false, reason: "locked", message: `Priority booking is open to invited partners until ${priorityEndsLabel()}. Booking requests open to everyone after that. If you have a priority code, enter it above.` };
-      }
-      if (!blockUnlocked(block, d.bookings.filter((b) => b.partnerId === input.partnerId))) {
-        const needed = getBlock(block.requiresBlock!)?.label ?? "the previous block";
-        return { ok: false, reason: "locked", message: `${block.label} is only open to partners who have booked ${needed}. Please request ${needed} first.` };
       }
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();

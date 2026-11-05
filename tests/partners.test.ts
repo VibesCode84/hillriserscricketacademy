@@ -233,17 +233,13 @@ for (const [name, make] of [
     assert.ok(await store.deletePriorityCode(spare.code));
   });
 
-  test(`${name}: spring can only be requested once the partner has an autumn request or booking`, async () => {
+  test(`${name}: spring can be requested without an autumn booking`, async () => {
     const store = make();
     const spring = getBlock("spring-2027")!;
     const sSat = spring.slots.find((x) => x.day === "Saturday" && x.start === "14:30")!;
     const { partner: a } = await store.createPartner(partner);
     assert.ok(a);
-    const item = [{ slotKey: slotKey(spring.id, sSat, 2), bowlingMachine: false }];
-    const locked = await store.reserve({ partnerId: a.id, blockId: spring.id, items: item, at: OPEN });
-    assert.ok(!locked.ok && locked.reason === "locked");
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: OPEN })).ok);
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: item, terms: "monthly", at: OPEN })).ok);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, sSat, 2), bowlingMachine: false }], terms: "monthly", at: OPEN })).ok);
   });
 
   test(`${name}: partner enquiries are stored and can be marked dealt with`, async () => {

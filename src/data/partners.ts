@@ -52,8 +52,6 @@ export type PartnerBlock = {
   summary: string;
   notes: string[];
   slots: SlotTemplate[];
-  /** Only partners with a paid booking in this block can book this one */
-  requiresBlock?: string;
   /** Test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up, ignores the priority window */
   test?: boolean;
 };
@@ -102,10 +100,8 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "spring-2027",
     label: "Spring block 2027",
-    requiresBlock: "autumn-2026",
     summary: "6 January to 28 March 2027 (12 weeks, including half term)",
     notes: [
-      "Open to partners who have booked the autumn block.",
       "Includes the Easter weekend (27–28 March).",
     ],
     slots: [
@@ -143,10 +139,6 @@ export function blockDays(block: PartnerBlock) {
     dates: slots[0].dates,
   }));
 }
-
-/** Whether a partner's bookings let them request this block: a live request or booking in requiresBlock */
-export const blockUnlocked = (block: PartnerBlock, bookings: { blockId: string; status: string }[]) =>
-  !block.requiresBlock || bookings.some((b) => b.blockId === block.requiresBlock && ["requested", "pending_payment", "confirmed"].includes(b.status));
 
 /** One bookable net in one weekly slot, e.g. "autumn-2026:Saturday:14:30:n2" */
 export const slotKey = (blockId: string, s: Pick<SlotTemplate, "day" | "start">, net: number) => `${blockId}:${s.day}:${s.start}:n${net}`;

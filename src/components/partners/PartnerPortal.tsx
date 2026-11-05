@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  blockUnlocked,
   BOWLING_MACHINE_PENCE,
   documentKinds,
   firstInvoiceMonths,
@@ -50,7 +49,6 @@ export function PartnerPortal(props: {
   banner?: { kind: "welcome" };
 }) {
   const [documents, setDocuments] = useState(props.documents);
-  const [bookings, setBookings] = useState(props.bookings);
   const [banner, setBanner] = useState(props.banner);
 
   const refreshMe = useCallback(async () => {
@@ -58,7 +56,6 @@ export function PartnerPortal(props: {
     if (!res.ok) return;
     const json = await res.json();
     setDocuments(json.documents);
-    setBookings(json.bookings);
     return json.bookings as NetBooking[];
   }, []);
 
@@ -91,7 +88,6 @@ export function PartnerPortal(props: {
           key={block.id}
           block={block}
           onBooked={refreshMe}
-          lockedBy={blockUnlocked(block, bookings) ? undefined : props.blocks.find((b) => b.id === block.requiresBlock)?.label}
           priorityOnly={!block.test && props.priority.open && !props.priority.code ? props.priority.ends : undefined}
         />
       ))}
@@ -155,7 +151,8 @@ function PriorityPanel({ open, ends, code }: { open: boolean; ends: string; code
   );
 }
 
-function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: PartnerBlock; onBooked: () => void; lockedBy?: string; priorityOnly?: string }) {
+/** The live net grid for a block. `guest`: view-only, for the public partner page (no account needed) */
+export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: PartnerBlock; onBooked?: () => void; priorityOnly?: string; guest?: boolean }) {
   const [avail, setAvail] = useState<Availability | null>(null);
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<Selection>({});
@@ -253,7 +250,7 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
   const anyMachine = items.some((i) => i.bowlingMachine);
   const months = monthlySplit(items.map((i) => ({ slotKey: i.key, pricePence: itemPricePence(i.slot, i.bowlingMachine), weeks: i.slot.dates.length })), block.id);
   const firstPence = firstInvoiceMonths(months).reduce((n, m) => n + m.pence, 0);
-  const blocked = lockedBy ? `Book ${lockedBy} first.` : priorityOnly ? `Priority booking only until ${priorityOnly}. Booking opens to everyone after that.` : "";
+  const blocked = priorityOnly ? `Priority booking only until ${priorityOnly}. Booking opens to everyone after that.` : "";
 
   const pay = async () => {
     setBusy(true);
@@ -281,7 +278,7 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
     setNotice(json.message ?? "Something went wrong. Please try again.");
     if (res.status === 409) {
       await load();
-      onBooked();
+      onBooked?.();
     }
   };
 
@@ -344,7 +341,7 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
                               <td key={n} className="px-2 py-1.5 text-center">
                                 <button
                                   type="button"
-                                  disabled={taken || !avail || !!blocked}
+                                  disabled={taken || !avail || !!blocked || guest}
                                   onClick={() => toggleNet(s, n)}
                                   aria-pressed={on}
                                   aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? (mine ? `your ${state}` : state) : on ? "selected" : "available"}`}
@@ -395,6 +392,15 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
           ))}
         </div>
 
+        {guest ? (
+          <aside className="self-start rounded-3xl bg-navy-950 p-6 text-cream lg:sticky lg:top-6">
+            <h3 className="text-2xl">Like what you see?</h3>
+            <p className="mt-3 text-sm text-slate">Create an account or sign in to send a booking request. Requests are first come, first served.</p>
+            <a href="#register" className={`${buttonClass("primary")} mt-5 w-full`}>Create an account</a>
+            <a href="#sign-in" className="mt-3 block text-center text-sm font-semibold underline underline-offset-4">Sign in</a>
+            <a href="#talk-first" className="mt-2 block text-center text-sm text-slate underline underline-offset-4">Or talk to us first</a>
+          </aside>
+        ) : (
         <aside className="self-start rounded-3xl bg-navy-950 p-6 text-cream lg:sticky lg:top-6">
           <h3 className="text-2xl">Your selection</h3>
           {items.length === 0 ? (
@@ -504,6 +510,7 @@ function BookingGrid({ block, onBooked, lockedBy, priorityOnly }: { block: Partn
           </button>
           {notice && <p className="mt-3 rounded-xl bg-[#fff4d6] p-3 text-xs text-[#5c4300]" role="alert">{notice}</p>}
         </aside>
+        )}
       </div>
     </section>
   );

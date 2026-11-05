@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { blockDays, documentKinds, priorityEndsLabel, REFUND_DAYS_BEFORE, priorityWindowOpen, releasedBlocks, shortDate, timeLabel } from "@/data/partners";
+import { documentKinds, priorityEndsLabel, REFUND_DAYS_BEFORE, priorityWindowOpen, releasedBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
 import { PartnerEnquiryForm } from "@/components/partners/PartnerEnquiryForm";
+import { BookingGrid } from "@/components/partners/PartnerPortal";
 
 export const dynamic = "force-dynamic";
 
@@ -55,45 +56,10 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
               </p>
             )}
           </div>
-          <div>
-            <h2 className="text-2xl">Sessions available</h2>
-            <p className="mt-1 text-sm text-ink-muted">Hourly slots in the John Lyon School sports hall.</p>
-            <div className="mt-4 space-y-6">
-              {releasedBlocks.map((block) => (
-                <div key={block.id} className="overflow-hidden rounded-2xl bg-white">
-                  <div className="border-b border-navy-950/10 px-5 py-3">
-                    <h3 className="text-xl">{block.label}</h3>
-                    <p className="text-sm text-ink-muted">{block.summary}</p>
-                  </div>
-                  <table className="w-full text-left text-sm">
-                    <thead className="text-xs uppercase tracking-wider text-ink-muted">
-                      <tr>
-                        <th className="px-5 py-2 font-semibold">Day</th>
-                        <th className="px-5 py-2 font-semibold">Times</th>
-                        <th className="px-5 py-2 font-semibold">Weeks</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-navy-950/5">
-                      {blockDays(block).map((d) => (
-                        <tr key={d.day} className="align-top">
-                          <td className="px-5 py-2.5 font-semibold">{d.day}s</td>
-                          <td className="whitespace-nowrap px-5 py-2.5">{timeLabel(d.from)}–{timeLabel(d.to)}</td>
-                          <td className="px-5 py-2.5 text-ink-muted">
-                            {d.dates.length} weeks · {shortDate(d.dates[0])} – {shortDate(d.dates.at(-1)!)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {block.notes.length > 0 && (
-                    <ul className="list-disc space-y-1 border-t border-navy-950/10 py-3 pl-10 pr-5 text-sm text-ink-muted">
-                      {block.notes.map((n) => <li key={n}>{n}</li>)}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <p>
+            <a href="#availability" className="font-semibold underline underline-offset-4">See live availability</a>
+            <span className="text-ink-muted"> — no account needed.</span>
+          </p>
           <div>
             <h2 className="text-2xl">Documents you&rsquo;ll need</h2>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-muted">
@@ -112,7 +78,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
               That sign-in link has expired or been used. Ask for a new one below.
             </p>
           )}
-          <div className="rounded-3xl bg-white p-6 shadow-[0_30px_70px_-45px_rgba(7,24,47,0.45)] md:p-9">
+          <div id="register" className="scroll-mt-6 rounded-3xl bg-white p-6 shadow-[0_30px_70px_-45px_rgba(7,24,47,0.45)] md:p-9">
             <h2 className="text-3xl">Create a partner account</h2>
             <p className="mt-1 text-sm text-ink-muted">Takes a minute. You&rsquo;ll go straight to the booking grid.</p>
             <div className="mt-6"><RegisterPartner /></div>
@@ -132,6 +98,14 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
               <div className="mt-4"><ResendLink /></div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="availability" className="scroll-mt-6 border-t border-navy-950/10 bg-cream-200/60 py-14">
+        <div className="container-x">
+          <h2 className="text-4xl">Live availability</h2>
+          <p className="mt-2 max-w-2xl text-ink-muted">Hourly slots in the John Lyon School sports hall. Create an account to send a booking request.</p>
+          {releasedBlocks.map((block) => <BookingGrid key={block.id} block={block} guest />)}
         </div>
       </section>
     </div>
