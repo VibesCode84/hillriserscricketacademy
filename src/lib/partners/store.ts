@@ -292,22 +292,6 @@ export const balanceOverdue = (b: NetBooking, at = Date.now()) => b.status === "
 const view = (b: NetBooking): NetBooking =>
   balanceOverdue(b) ? { ...b, status: "forfeited" } : b.status === "pending_payment" && !holds(b) ? { ...b, status: "expired" } : b;
 
-/**
- * A partner's unpaid invoice, if any — partners can have one at a time. A first invoice counts while its
- * nets are held; a monthly invoice counts until it's paid.
- */
-function openInvoice(d: Data, partnerId: string, at = Date.now()) {
-  for (const b of d.bookings) {
-    if (b.partnerId !== partnerId) continue;
-    for (const i of b.invoices ?? []) {
-      if (i.paidAt) continue;
-      if (i.stage === "initial" && b.status === "pending_payment" && Date.parse(i.dueAt) > at) return i;
-      if (i.stage === "month" && b.status === "confirmed") return i;
-    }
-  }
-  return undefined;
-}
-
 function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number, at: number, months?: string[]): PartnerInvoice {
   d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
   return { number: invoiceNumber(d.invoiceSeq), stage, months, amountPence, issuedAt: new Date(at).toISOString(), dueAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString() };
@@ -599,8 +583,6 @@ export class PartnerStore {
       const b = d.bookings.find((x) => x.id === bookingId);
       if (!b) return { ok: false, message: "Booking request not found." };
       if (b.status !== "requested") return { ok: false, message: "This request has already been dealt with." };
-      const open = openInvoice(d, b.partnerId, at);
-      if (open) return { ok: false, message: `This partner has an unpaid invoice (${open.number}). Approve once it's paid.` };
       const months = b.plan === "monthly" ? firstInvoiceMonths(monthsToInvoice(b), at) : [];
       const inv = months.length
         ? newInvoice(d, "initial", months.reduce((n, m) => n + m.pence, 0), at, months.map((m) => m.month))

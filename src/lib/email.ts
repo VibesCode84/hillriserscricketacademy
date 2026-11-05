@@ -386,7 +386,11 @@ ${b.nets.map((n) => `• ${n}`).join("\n")}
 ${b.machineCoach ? `\nBowling machine operator (Level 2): ${b.machineCoach}. Please bring your own balls.\n` : ""}
 Booking reference: ${b.reference}
 
-Please upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account before your first session if you haven't already.
+Before your first session:
+• We'll send you the building access code. Please only share it with those who need it for your sessions.
+• Your attendees must park in the designated car park. Coaches have a separate car park.
+• You set up and pack away the nets and mats.
+• Upload your coaching documents (qualifications, DBS, safeguarding, insurance) in your account, if you haven't already.
 
 See your bookings and payment history: ${site.url}/partners/account
 

@@ -6,8 +6,7 @@ export const metadata: Metadata = { title: "Partner terms" };
 export default function PartnerTermsPage() {
   return (
     <div className="container-x max-w-3xl py-14">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-deep">Draft — to be reviewed</p>
-      <h1 className="mt-3 text-4xl md:text-5xl">Partner terms</h1>
+      <h1 className="text-4xl md:text-5xl">Partner terms</h1>
       <ol className="mt-10 space-y-7">
         {partnerTerms.map((x, i) => (
           <li key={x.t}>

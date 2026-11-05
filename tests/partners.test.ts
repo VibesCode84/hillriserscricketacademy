@@ -136,31 +136,30 @@ for (const [name, make] of [
     assert.ok((await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(sat, 2)], at: OPEN })).ok);
   });
 
-  test(`${name}: an unpaid first invoice releases the nets after 24 hours; one unpaid invoice at a time`, async () => {
+  test(`${name}: an unpaid first invoice releases the nets after 24 hours`, async () => {
     const store = make();
     const { partner: a } = await store.createPartner(partner);
     const { partner: b } = await store.createPartner({ ...partner, email: "b@example.com" });
     assert.ok(a && b);
-    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], terms: "termly", at: OPEN });
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(thu, 2)], terms: "termly", at: OPEN });
     assert.ok(r.ok);
-    const r2 = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 3)], terms: "termly", at: OPEN });
-    assert.ok(r2.ok);
-    const ok = await store.approve(r.booking.id);
-    assert.ok(ok.ok);
-    const blocked = await store.approve(r2.booking.id);
-    assert.ok(!blocked.ok && /unpaid invoice/.test(blocked.message));
-    const late = await store.approve(r2.booking.id, Date.now() - 25 * 3_600_000);
-    assert.ok(late.ok === false); // still blocked by the live invoice
-    // The first invoice lapses
-    const old = await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(thu, 2)], terms: "termly", at: OPEN });
-    assert.ok(old.ok);
-    const lapsed = await store.approve(old.booking.id, Date.now() - 25 * 3_600_000);
+    const lapsed = await store.approve(r.booking.id, Date.now() - 25 * 3_600_000);
     assert.ok(lapsed.ok);
-    assert.equal((await store.getBooking(old.booking.id))?.status, "expired");
+    assert.equal((await store.getBooking(r.booking.id))?.status, "expired");
     assert.ok(!(await store.taken(block.id)).has(slotKey(block.id, thu, 2)));
-    const c = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(thu, 2)], at: OPEN });
-    assert.ok(c.ok);
+    assert.ok((await store.reserve({ partnerId: b.id, blockId: block.id, items: [net(thu, 2)], at: OPEN })).ok);
     assert.equal((await store.markInvoicePaid(lapsed.invoice.number)).ok, false); // someone else has the net now
+  });
+
+  test(`${name}: a partner can have more than one invoice open`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    const r1 = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: OPEN });
+    const r2 = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 3)], at: OPEN });
+    assert.ok(r1.ok && r2.ok);
+    assert.ok((await store.approve(r1.booking.id)).ok);
+    assert.ok((await store.approve(r2.booking.id)).ok);
   });
 
   test(`${name}: monthly: sessions up to Christmas invoiced in full; spring months a week before, with daily 8am reminders`, async () => {
