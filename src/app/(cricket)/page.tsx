@@ -2,7 +2,7 @@ import Link from "next/link";
 import { coaches } from "@/data/coaches";
 import { specialistSkills } from "@/data/programmes";
 import { HomeHero } from "@/components/Hero";
-import { TrustBand, TrustStrip } from "@/components/TrustStrip";
+import { TrustStrip } from "@/components/TrustStrip";
 import { Section, SectionHeader } from "@/components/Section";
 import { ButtonLink } from "@/components/Button";
 import { Reveal } from "@/components/Reveal";
@@ -18,12 +18,12 @@ import { photos } from "@/data/photos";
 const pillars = [
   {
     title: "The area's best coaches",
-    body: "We're bringing together the very best coaches from the area — experienced, qualified and passionate about developing young players.",
+    body: "Experienced, qualified and passionate about developing young players.",
     icon: "M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z",
   },
   {
     title: "Small groups, own coach",
-    body: "A maximum of six players per net, and each net has its own coach — so every player gets plenty of turns and expert feedback.",
+    body: "A maximum of six players per net, each net with its own coach.",
     icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0",
   },
   {
@@ -33,7 +33,7 @@ const pillars = [
   },
   {
     title: "Specialist skills",
-    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")} — with fielding in every session, in small groups, groups of three or 1-to-1.`,
+    body: `${specialistSkills.join(", ").replace(/, ([^,]*)$/, " and $1")}, with fielding in every session.`,
     icon: "M4 20 18 6m-4 0h4v4M6 14l4 4",
   },
 ];
@@ -42,7 +42,6 @@ export default function HomePage() {
   return (
     <>
       <HomeHero trust={<TrustStrip />} />
-      <TrustBand />
 
       {/* What HillRisers offers */}
       <Section tone="light">
@@ -53,9 +52,8 @@ export default function HomePage() {
               title="The finest junior cricket coaching in Harrow."
               intro={
                 <p className="text-ink-muted">
-                  HillRisers brings the very best coaches from the area to John Lyon School, Harrow on the Hill. Every
-                  child gets outstanding, individual coaching in small groups — and because we build the timetable around the families who
-                  register, it fits around your life too.
+                  Individual coaching in small groups at John Lyon School, Harrow on the Hill, with a timetable built around the families who
+                  register.
                 </p>
               }
             />

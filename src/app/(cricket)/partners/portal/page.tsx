@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { partnerBlocks, priorityEndsLabel, priorityWindowOpen } from "@/data/partners";
+import { partnerBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { getPartnerStore } from "@/lib/partners/store";
 import { PartnerPortal } from "@/components/partners/PartnerPortal";
@@ -14,14 +14,13 @@ export default async function PortalPage({ searchParams }: { searchParams: Promi
   if (!partner) redirect("/partners#sign-in");
   const sp = await searchParams;
   const store = getPartnerStore();
-  const [documents, bookings, code] = await Promise.all([store.documentsFor(partner.id), store.bookingsFor(partner.id), store.priorityFor(partner.id)]);
+  const [documents, bookings] = await Promise.all([store.documentsFor(partner.id), store.bookingsFor(partner.id)]);
   return (
     <PartnerPortal
       partner={{ id: partner.id, orgName: partner.orgName, contactName: partner.contactName }}
       documents={documents}
       bookings={bookings}
       blocks={partnerBlocks.filter((b) => !b.test || isTestPartner(partner.email))}
-      priority={{ open: priorityWindowOpen(), ends: priorityEndsLabel(), code: code?.code }}
       banner={sp.welcome ? { kind: "welcome" } : undefined}
     />
   );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { interestOptions } from "@/lib/interest-options";
-import { holidayOptions, holidayPeriods, shutdown } from "@/data/calendar";
+import { holidayOptions, holidayPeriods } from "@/data/calendar";
 import { buttonClass } from "./Button";
 
 type Child = {
@@ -222,7 +222,7 @@ export function InterestForm() {
           {field("ri-name", "Your name", "parentName", { autoComplete: "name" })}
           {field("ri-email", "Email", "email", { type: "email", autoComplete: "email" })}
           {field("ri-mobile", "Mobile", "mobile", { type: "tel", autoComplete: "tel" })}
-          {field("ri-postcode", "Postcode", "postcode", { autoComplete: "postal-code", hint: "Helps us understand where families travel from" })}
+          {field("ri-postcode", "Postcode", "postcode", { autoComplete: "postal-code" })}
           <div className="sm:col-span-2">
             <label htmlFor="ri-heard" className="label">How did you hear about us? <span className="font-normal text-ink-muted">(optional)</span></label>
             <select id="ri-heard" className="field sm:max-w-xs" value={parent.heardAbout} onChange={(e) => setParent({ ...parent, heardAbout: e.target.value })}>
@@ -314,9 +314,7 @@ export function InterestForm() {
               <div className="rounded-2xl border border-navy-950/10 p-5">
                 <p className="label">School holidays</p>
                 <p className="text-sm leading-relaxed text-ink-muted">
-                  Would they like weekly sessions to carry on in their normal slot, or a part-day or full-day camp? Tick any that suit, or
-                  leave a holiday blank. We&rsquo;re closed over Christmas, {shutdown.dates}.{" "}
-                  <Link href="/calendar" className="font-semibold text-navy-950 underline underline-offset-4">See the 2026/27 calendar</Link>.
+                  Tick any that suit.
                 </p>
                 <div className="mt-5 space-y-5">
                   {holidayPeriods.map((p) => (
@@ -375,8 +373,7 @@ export function InterestForm() {
           </label>
         </div>
         <p className="mt-5 text-sm leading-relaxed text-ink-muted">
-          We use these details only to plan sessions and contact you about HillRisers. We don&rsquo;t ask for medical information at this
-          stage. See our <Link href="/privacy" className="underline underline-offset-2">privacy policy</Link>.
+          We use these details only to plan sessions and contact you about HillRisers. See our <Link href="/privacy" className="underline underline-offset-2">privacy policy</Link>.
         </p>
 
         <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />

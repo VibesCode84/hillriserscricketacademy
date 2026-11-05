@@ -57,10 +57,6 @@ export function HomeHero({ trust }: { trust: ReactNode }) {
             className="absolute bottom-0 left-0 h-[17rem] w-[52%] rounded-[1.75rem] ring-8 ring-navy-950"
             sizes="25vw"
           />
-          <div className="absolute bottom-10 right-4 max-w-[13rem] rounded-2xl border border-gold/25 bg-navy-900/90 p-5 backdrop-blur">
-            <p className="font-serif text-4xl text-gold">6</p>
-            <p className="mt-1 text-sm leading-snug text-slate">players maximum per net, and each net has its own coach</p>
-          </div>
         </div>
       </div>
     </section>

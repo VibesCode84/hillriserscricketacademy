@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BOWLING_MACHINE_PENCE,
@@ -44,8 +43,6 @@ export function PartnerPortal(props: {
   documents: PartnerDocument[];
   bookings: NetBooking[];
   blocks: PartnerBlock[];
-  /** Priority window: open until `ends` ("11:59pm on Sunday 8 November"); the partner's code, if any */
-  priority: { open: boolean; ends: string; code?: string };
   banner?: { kind: "welcome" };
 }) {
   const [documents, setDocuments] = useState(props.documents);
@@ -69,17 +66,7 @@ export function PartnerPortal(props: {
           page with your email and password.
         </Notice>
       )}
-      <PriorityPanel {...props.priority} />
 
-      <div className="mt-8 rounded-2xl border border-gold/30 bg-white p-5 md:p-6">
-        <h2 className="text-2xl">Block bookings only</h2>
-        <p className="mt-2 max-w-3xl leading-relaxed text-ink-muted">
-          We only accept block bookings: you book the same net, at the same time, every week of the block. Our block rate is{" "}
-          <strong className="text-navy-950">{formatPrice(PARTNER_RATE_PENCE)} per net per hour</strong>, with the bowling machine{" "}
-          {formatPrice(BOWLING_MACHINE_PENCE)} per hour on top. We don&rsquo;t take one-off or weekly bookings, so there&rsquo;s no
-          separate session rate.
-        </p>
-      </div>
 
       <HowBookingWorks />
 
@@ -88,7 +75,6 @@ export function PartnerPortal(props: {
           key={block.id}
           block={block}
           onBooked={refreshMe}
-          priorityOnly={!block.test && props.priority.open && !props.priority.code ? props.priority.ends : undefined}
         />
       ))}
 
@@ -110,49 +96,8 @@ type Who = { ageGroup: string; ability: string; gender: string };
 type Selection = Record<string, { bowlingMachine: boolean } & Who>;
 const noWho: Who = { ageGroup: "", ability: "", gender: "" };
 
-/** Priority booking: who can book now, and where to enter a code */
-function PriorityPanel({ open, ends, code }: { open: boolean; ends: string; code?: string }) {
-  const router = useRouter();
-  const [value, setValue] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  if (!open && !code) return null;
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const res = await fetch("/api/partners/priority", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: value }) });
-    const json = await res.json().catch(() => ({}));
-    setBusy(false);
-    if (res.ok && json.ok) router.refresh();
-    else setError(json.errors?.code ?? json.message ?? "Something went wrong.");
-  };
-  return (
-    <div className={`mt-6 rounded-2xl p-5 text-sm ${code ? "bg-[#e3f3e8] text-[#1d4f2f]" : "bg-[#fff4d6] text-[#5c4300]"}`}>
-      {code ? (
-        <p>
-          <strong>Priority access ✓</strong> (code {code}).
-          {open ? ` Priority booking is open until ${ends}.` : ""}
-        </p>
-      ) : (
-        <>
-          <p>
-            <strong>Priority booking for invited partners until {ends}.</strong> Booking opens to everyone after that.
-          </p>
-          <form onSubmit={submit} className="mt-3 flex flex-wrap items-center gap-2">
-            <label htmlFor="priority-code" className="sr-only">Priority code</label>
-            <input id="priority-code" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Priority code, e.g. HR-7K3M9P" className="field !mt-0 max-w-xs uppercase" />
-            <button type="submit" disabled={busy || value.trim().length < 3} className={buttonClass("dark")}>{busy ? "Checking…" : "Add code"}</button>
-          </form>
-          {error && <p className="mt-2 text-[#8c1d18]" role="alert">{error}</p>}
-        </>
-      )}
-    </div>
-  );
-}
-
 /** The live net grid for a block. `guest`: view-only, for the public partner page (no account needed) */
-export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: PartnerBlock; onBooked?: () => void; priorityOnly?: string; guest?: boolean }) {
+export function BookingGrid({ block, onBooked, guest }: { block: PartnerBlock; onBooked?: () => void; guest?: boolean }) {
   const [avail, setAvail] = useState<Availability | null>(null);
   const [live, setLive] = useState(true);
   const [selected, setSelected] = useState<Selection>({});
@@ -250,7 +195,6 @@ export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: P
   const anyMachine = items.some((i) => i.bowlingMachine);
   const months = monthlySplit(items.map((i) => ({ slotKey: i.key, pricePence: itemPricePence(i.slot, i.bowlingMachine), weeks: i.slot.dates.length })), block.id);
   const firstPence = firstInvoiceMonths(months).reduce((n, m) => n + m.pence, 0);
-  const blocked = priorityOnly ? `Priority booking only until ${priorityOnly}. Booking opens to everyone after that.` : "";
 
   const pay = async () => {
     setBusy(true);
@@ -294,13 +238,10 @@ export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: P
           {live ? `Live${avail ? ` · updated ${clock(avail.at)}` : ""}` : "Reconnecting…"}
         </p>
       </div>
-      <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
-        {block.notes.map((n) => <li key={n}>{n}</li>)}
-      </ul>
-      {blocked && (
-        <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
-          <strong>{blocked}</strong>
-        </p>
+      {block.notes.length > 0 && (
+        <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm text-ink-muted">
+          {block.notes.map((n) => <li key={n}>{n}</li>)}
+        </ul>
       )}
 
       <NetLegend />
@@ -341,7 +282,7 @@ export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: P
                               <td key={n} className="px-2 py-1.5 text-center">
                                 <button
                                   type="button"
-                                  disabled={taken || !avail || !!blocked || guest}
+                                  disabled={taken || !avail || guest}
                                   onClick={() => toggleNet(s, n)}
                                   aria-pressed={on}
                                   aria-label={`${day} ${timeLabel(s.start)} net ${n}: ${taken ? (mine ? `your ${state}` : state) : on ? "selected" : "available"}`}
@@ -452,7 +393,7 @@ export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: P
           )}
           <p className="mt-4 flex justify-between text-lg font-semibold"><span>Total</span><span>{formatPrice(total)}</span></p>
 
-          {items.length > 0 && !blocked && (
+          {items.length > 0 && (
             <fieldset className="mt-5 space-y-2 rounded-2xl bg-navy-900 p-4 text-sm">
               <legend className="mb-2 font-semibold text-gold">Payment terms</legend>
               <label className="flex cursor-pointer items-start gap-2">
@@ -503,7 +444,7 @@ export function BookingGrid({ block, onBooked, priorityOnly, guest }: { block: P
             {errors.agreeTerms && <p className="error-text">{errors.agreeTerms}</p>}
           </div>
 
-          <button type="button" disabled={busy || items.length === 0 || !!blocked} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
+          <button type="button" disabled={busy || items.length === 0} onClick={pay} className={`${buttonClass("primary")} mt-6 w-full`}>
             {busy
               ? "Sending your request…"
               : "Send booking request"}
@@ -534,10 +475,14 @@ export function HowBookingWorks({ tone = "light" }: { tone?: "light" | "cream" }
   return (
     <div className={`mt-6 rounded-2xl p-5 md:p-6 ${tone === "light" ? "bg-white" : "bg-cream-200"}`}>
       <h2 className="text-2xl">How booking works</h2>
+      <p className="mt-2 max-w-3xl text-ink-muted">
+        Block bookings only: the same net and time every week of the block, at {formatPrice(PARTNER_RATE_PENCE)} per net per hour (bowling machine{" "}
+        {formatPrice(BOWLING_MACHINE_PENCE)} per hour extra).
+      </p>
       <ol className="mt-3 max-w-3xl list-decimal space-y-2 pl-5 leading-relaxed text-ink-muted">
-        <li><strong className="text-navy-950">Send a booking request.</strong> Choose your nets and termly or monthly payment. Requests are first come, first served, and a requested net shows amber.</li>
-        <li><strong className="text-navy-950">We review it and email your invoice.</strong> Pay by bank transfer within {INVOICE_DUE_HOURS} hours.</li>
-        <li><strong className="text-navy-950">Your first payment confirms the booking.</strong> Once your documents are in too, the net shows red.</li>
+        <li><strong className="text-navy-950">Send a booking request</strong> with your nets and termly or monthly payment. First come, first served.</li>
+        <li><strong className="text-navy-950">We email your invoice</strong>, payable by bank transfer within {INVOICE_DUE_HOURS} hours.</li>
+        <li><strong className="text-navy-950">Your first payment confirms the booking.</strong></li>
       </ol>
       <p className="mt-3 max-w-3xl text-sm text-ink-muted">
         Sessions up to Christmas are invoiced in full. Refunds only if you cancel more than {REFUND_DAYS_BEFORE} days before your first session.

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { documentKinds, priorityEndsLabel, REFUND_DAYS_BEFORE, priorityWindowOpen, releasedBlocks } from "@/data/partners";
+import { documentKinds, REFUND_DAYS_BEFORE, releasedBlocks } from "@/data/partners";
 import { currentPartner } from "@/lib/partners/session";
 import { RegisterPartner, ResendLink, SignIn } from "@/components/partners/RegisterPartner";
 import { PartnerEnquiryForm } from "@/components/partners/PartnerEnquiryForm";
@@ -10,7 +10,6 @@ export const dynamic = "force-dynamic";
 export default async function PartnersHome({ searchParams }: { searchParams: Promise<{ link?: string }> }) {
   if (await currentPartner()) redirect("/partners/account");
   const { link } = await searchParams;
-  const priorityEnds = priorityEndsLabel();
   return (
     <div>
       <section className="bg-navy-950 pb-16 pt-12 text-cream md:pb-20">
@@ -19,8 +18,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <p className="eyebrow">Coaches and delivery partners</p>
             <h1 className="mt-5 text-[2.6rem] leading-[1.05] md:text-6xl">Deliver sessions with HillRisers at John Lyon School.</h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-slate">
-              Run your coaching sessions as a HillRisers delivery partner in the John Lyon School sports hall, Harrow on the Hill — scheduled by the
-              block, with live availability.
+              Book nets by the block in the John Lyon School sports hall, Harrow on the Hill.
             </p>
           </div>
           <dl className="grid gap-4 self-end sm:grid-cols-2">
@@ -42,19 +40,14 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
             <h2 className="text-3xl">How it works</h2>
             <ol className="mt-4 list-decimal space-y-2 pl-5 text-ink-muted">
               <li>Create an account and upload your documents.</li>
-              <li>Send a booking request: choose your nets (the same slot every week of the block) and termly or monthly payment.</li>
-              <li>We review your request and email your invoice, paid by bank transfer within 24 hours.</li>
+              <li>Send a booking request with your nets and termly or monthly payment.</li>
+              <li>We email your invoice, payable by bank transfer within 24 hours.</li>
               <li>Your first payment confirms the booking.</li>
             </ol>
             <p className="mt-3 text-sm text-ink-muted">
-              Bookings are first come, first served. Sessions up to Christmas are invoiced in full. Refunds only if you cancel more than {REFUND_DAYS_BEFORE} days
-              before your first session.
+              First come, first served. Sessions up to Christmas are invoiced in full. Refunds only if you cancel more than {REFUND_DAYS_BEFORE} days before
+              your first session.
             </p>
-            {priorityWindowOpen() && (
-              <p className="mt-4 rounded-2xl bg-[#fff4d6] p-4 text-sm text-[#5c4300]">
-                <strong>Priority booking for invited partners until {priorityEnds}.</strong> Booking opens to everyone after that.
-              </p>
-            )}
           </div>
           <p>
             <a href="#availability" className="font-semibold underline underline-offset-4">See live availability</a>
@@ -80,7 +73,6 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
           )}
           <div id="register" className="scroll-mt-6 rounded-3xl bg-white p-6 shadow-[0_30px_70px_-45px_rgba(7,24,47,0.45)] md:p-9">
             <h2 className="text-3xl">Create a partner account</h2>
-            <p className="mt-1 text-sm text-ink-muted">Takes a minute. You&rsquo;ll go straight to the booking grid.</p>
             <div className="mt-6"><RegisterPartner /></div>
           </div>
           <div id="talk-first" className="scroll-mt-6 rounded-3xl bg-white p-6 md:p-8">
@@ -104,7 +96,7 @@ export default async function PartnersHome({ searchParams }: { searchParams: Pro
       <section id="availability" className="scroll-mt-6 border-t border-navy-950/10 bg-cream-200/60 py-14">
         <div className="container-x">
           <h2 className="text-4xl">Live availability</h2>
-          <p className="mt-2 max-w-2xl text-ink-muted">Hourly slots in the John Lyon School sports hall. Create an account to send a booking request.</p>
+          <p className="mt-2 max-w-2xl text-ink-muted">Hourly slots in the John Lyon School sports hall.</p>
           {releasedBlocks.map((block) => <BookingGrid key={block.id} block={block} guest />)}
         </div>
       </section>

@@ -1,11 +1,10 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- document links and the CSV are downloads, not pages */
 import Link from "next/link";
-import { documentKinds, getBlock, machineKey, priorityEndsLabel, releasedBlocks, requiredDocumentKinds, slotKey, timeLabel } from "@/data/partners";
+import { documentKinds, getBlock, machineKey, releasedBlocks, requiredDocumentKinds, slotKey, timeLabel } from "@/data/partners";
 import { formatPrice } from "@/data/site";
 import { getPartnerStore, holds, partnerStorageIsPermanent } from "@/lib/partners/store";
 import { DocumentReview } from "@/components/admin/DocumentReview";
 import { MarkPaid } from "@/components/admin/MarkPaid";
-import { PriorityCodes } from "@/components/admin/PriorityCodes";
 import { EnquiryHandled, RequestActions } from "@/components/admin/RequestActions";
 import { invoiceDescription, monthsToInvoice, paidToDate, termsLabel } from "@/lib/partners/describe";
 import { daysAgo, isPast, ukDateTime } from "@/data/invoicing";
@@ -19,7 +18,7 @@ const statusBadge: Record<string, string> = { requested: "bg-[#fdf0d5] text-[#8a
 
 export default async function AdminPartnersPage() {
   const store = getPartnerStore();
-  const [partners, documents, bookings, codes, enquiries] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor(), store.listPriorityCodes(), store.listEnquiries()]);
+  const [partners, documents, bookings, enquiries] = await Promise.all([store.listPartners(), store.documentsFor(), store.bookingsFor(), store.listEnquiries()]);
   const docsIn = (partnerId: string) => requiredDocumentKinds.every((k) => documents.some((d) => d.partnerId === partnerId && d.kind === k && d.review !== "rejected"));
   const requests = bookings.filter((b) => b.status === "requested").sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const kb = (n: number) => `${Math.max(1, Math.round(n / 1024))} KB`;
@@ -81,10 +80,6 @@ export default async function AdminPartnersPage() {
         )}
       </section>
 
-      <PriorityCodes
-        codes={codes.map((c) => ({ ...c, redeemedBy: c.redeemedBy ? (partners.find((p) => p.id === c.redeemedBy)?.orgName ?? "?") : undefined }))}
-        ends={priorityEndsLabel()}
-      />
 
       {(() => {
         const since = daysAgo(30);
@@ -204,7 +199,7 @@ export default async function AdminPartnersPage() {
                   <h3 className="text-xl">{p.orgName} <span className="text-sm font-normal text-ink-muted">· {p.type}{p.sports ? ` · ${p.sports}` : ""}</span></h3>
                   <span className="text-xs text-ink-muted">Registered {new Date(p.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
-                <p className="mt-1 text-sm">{p.contactName} · <a className="underline" href={`mailto:${p.email}`}>{p.email}</a> · {p.phone}{p.website ? ` · ${p.website}` : ""}{p.priorityCode ? ` · priority code ${p.priorityCode}` : ""}</p>
+                <p className="mt-1 text-sm">{p.contactName} · <a className="underline" href={`mailto:${p.email}`}>{p.email}</a> · {p.phone}{p.website ? ` · ${p.website}` : ""}</p>
                 {p.about && <p className="mt-2 whitespace-pre-line text-sm text-ink-muted">{p.about}</p>}
                 <h4 className="mt-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">Documents</h4>
                 {docs.length === 0 ? (

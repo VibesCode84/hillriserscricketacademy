@@ -27,7 +27,7 @@ export function RegisterPartner() {
     const res = await fetch("/api/partners/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...fd, orgName: fd.orgName || undefined, website: fd.website || undefined, about: fd.about || undefined, priorityCode: fd.priorityCode || undefined, company: fd.company || undefined, agreeTerms: agree }),
+      body: JSON.stringify({ ...fd, orgName: fd.orgName || undefined, website: fd.website || undefined, about: fd.about || undefined, company: fd.company || undefined, agreeTerms: agree }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.ok) {
@@ -67,7 +67,6 @@ export function RegisterPartner() {
           {errors.type && <p className="error-text">{errors.type}</p>}
         </div>
         {field("website", "Website", { optional: true, placeholder: "https://" })}
-        {field("priorityCode", "Priority code", { optional: true, placeholder: "If we've sent you one" })}
       </div>
       <div>
         <label htmlFor="pr-about" className="label">About your sessions <span className="font-normal text-ink-muted">(optional)</span></label>

@@ -52,7 +52,7 @@ export const interestOptions = {
   ],
   /** Early Risers session preference (ages 4–6) */
   earlyRisersSlots: ["9:00–9:40am", "9:40–10:20am", "10:20–11:00am"],
-  otherInterests: ["1-to-1 coaching", "Summer outdoor coaching"],
+  otherInterests: ["1-to-1 coaching"],
   paymentPreference: [
     { value: "termly", label: "Termly" },
     { value: "monthly", label: "Monthly" },

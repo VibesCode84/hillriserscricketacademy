@@ -208,7 +208,6 @@ export const partnerRegistrationSchema = z.object({
   website: optionalText(200),
   about: optionalText(1000),
   agreeTerms: z.literal(true, { errorMap: () => ({ message: "Please accept the partner terms" }) }),
-  priorityCode: optionalText(20),
   company: z.string().max(0).optional(),
 });
 

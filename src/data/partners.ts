@@ -6,7 +6,6 @@
  * - Partners send a booking request (first come, first served); HillRisers approves it, which issues
  *   the invoice (bank transfer within 24 hours); the first payment confirms the booking.
  * - Monthly or termly in advance; sessions up to Christmas are invoiced in full.
- * - Until PRIORITY_UNTIL_DATE ends, only partners with a priority code can send requests.
  * - There is ONE bowling machine, so it can go on one net per time slot.
  * - Only the slots listed here are released. Update this file to release the
  *   next block or change what is available.
@@ -16,9 +15,6 @@
 export const PARTNER_RATE_PENCE = 1880;
 export const BOWLING_MACHINE_PENCE = 1000;
 export const NETS = [1, 2, 3] as const;
-
-/** Priority booking for invited partners (with a priority code) until 11:59pm UK time on this date */
-export const PRIORITY_UNTIL_DATE = "2026-11-08";
 
 /** Payment terms: one invoice for the whole block, or one per calendar month, both in advance */
 export type PaymentTerms = "termly" | "monthly";
@@ -52,7 +48,7 @@ export type PartnerBlock = {
   summary: string;
   notes: string[];
   slots: SlotTemplate[];
-  /** Test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up, ignores the priority window */
+  /** Test booking: only shown to test accounts (PARTNER_TEST_EMAILS), never fills up */
   test?: boolean;
 };
 
@@ -83,13 +79,8 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "autumn-2026",
     label: "Autumn block 2026",
-    summary: "Week commencing 16 November to 13 December 2026",
-    notes: [
-      "Thursdays and Sundays start in the week commencing 16 November. Wednesdays start on 25 November.",
-      "Saturdays: 5 and 12 December only (not available on 21 or 28 November).",
-      "Sessions up to Christmas are invoiced in full.",
-      "No sessions over the Christmas shutdown (21 December – 3 January).",
-    ],
+    summary: "19 November to 13 December 2026",
+    notes: [],
     slots: [
       ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], wednesdays),
       ...hourly("Thursday", "18:00", "21:00", [1, 2, 3], thursdays),
@@ -100,10 +91,8 @@ export const partnerBlocks: PartnerBlock[] = [
   {
     id: "spring-2027",
     label: "Spring block 2027",
-    summary: "6 January to 28 March 2027 (12 weeks, including half term)",
-    notes: [
-      "Includes the Easter weekend (27–28 March).",
-    ],
+    summary: "6 January to 28 March 2027",
+    notes: [],
     slots: [
       ...hourly("Wednesday", "18:00", "21:00", [1, 2, 3], springWeek("2027-01-06")),
       ...hourly("Thursday", "18:00", "21:00", [1, 2, 3], springWeek("2027-01-07")),
@@ -184,12 +173,6 @@ export const firstInvoiceMonths = <T extends { firstSession: string }>(months: T
 /** "November 2026" */
 export const monthLabel = (month: string) =>
   new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
-
-/** Priority booking ends at midnight UK time at the end of PRIORITY_UNTIL_DATE */
-export const priorityEndsAt = () => endOfDayLondon(PRIORITY_UNTIL_DATE);
-export const priorityWindowOpen = (at = Date.now()) => at < priorityEndsAt().getTime();
-/** "11:59pm on Sunday 8 November" */
-export const priorityEndsLabel = () => `11:59pm on ${longDate(PRIORITY_UNTIL_DATE)}`;
 
 /** Midnight UK time at the end of a date ("2026-12-13" → 14 Dec 00:00 London) */
 export function endOfDayLondon(iso: string) {

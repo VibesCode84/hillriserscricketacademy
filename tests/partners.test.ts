@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { endOfDayLondon, getBlock, londonTime, monthInvoiceAt, monthlySplit, partnerBlocks, itemPricePence, machineKey, priorityWindowOpen, slotKey } from "../src/data/partners";
+import { endOfDayLondon, getBlock, londonTime, monthInvoiceAt, monthlySplit, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
 import { createD1PartnerStore, createFilePartnerStore, monthsToInvoice } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
@@ -26,9 +26,9 @@ const sat = block.slots.find((s) => s.day === "Saturday" && s.start === "14:30")
 const wed = block.slots.find((s) => s.day === "Wednesday")!;
 const thu = block.slots.find((s) => s.day === "Thursday")!;
 const partner = { orgName: "Test CC", contactName: "Sam", email: "Sam@Example.com", phone: "07000 000000", type: "Club" };
-/** After the priority window (11:59pm, 8 November) */
+/** A time after the hold examples */
 const OPEN = Date.parse("2026-11-10T10:00:00Z");
-const PRIORITY = Date.parse("2026-11-05T10:00:00Z");
+const EARLY = Date.parse("2026-11-05T10:00:00Z");
 const net = (s: typeof sat, n: number, bowlingMachine = false) => ({ slotKey: slotKey(block.id, s, n), bowlingMachine });
 
 test("autumn: Thursdays and Sundays from w/c 16 November; Wednesdays from 25 November; Saturdays 5 and 12 December", () => {
@@ -45,11 +45,6 @@ test("pricing: £18.80 block rate per net per hour for every week, bowling machi
   assert.equal(itemPricePence(wed, false), 3 * 1880);
   assert.equal(itemPricePence(sat, false), 2 * 1880);
   assert.equal(itemPricePence(sat, true), 2 * 2880);
-});
-
-test("priority booking ends at 11:59pm UK time on Sunday 8 November", () => {
-  assert.ok(priorityWindowOpen(Date.parse("2026-11-08T23:59:00Z")));
-  assert.ok(!priorityWindowOpen(Date.parse("2026-11-09T00:00:00Z")));
 });
 
 test("monthly split and invoice dates: a week before each month's first session, 8am UK time", () => {
@@ -211,28 +206,6 @@ for (const [name, make] of [
     assert.equal((await store.dueInvoiceReminders(Date.parse("2027-02-02T08:30:00Z"))).length, 0);
   });
 
-  test(`${name}: priority window: only partners with a code can send requests until 11:59pm on 8 November`, async () => {
-    const store = make();
-    const code = await store.createPriorityCode("Friend CC");
-    assert.match(code.code, /^HR-[A-Z2-9]{6}$/);
-    const { partner: a } = await store.createPartner(partner);
-    assert.ok(a);
-    const early = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: PRIORITY });
-    assert.ok(!early.ok && early.reason === "locked" && /11:59pm on Sunday 8 November/.test(early.message));
-    assert.equal((await store.redeemPriorityCode(a.id, "HR-NOPE00")).ok, false);
-    assert.ok((await store.redeemPriorityCode(a.id, ` ${code.code.toLowerCase()} `)).ok);
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: PRIORITY })).ok);
-    assert.ok((await store.createPartner({ ...partner, email: "c@example.com", priorityCode: code.code })).error);
-    assert.ok((await store.createPartner({ ...partner, email: "d@example.com", priorityCode: "HR-ZZZZZZ" })).error);
-    assert.equal((await store.listPartners()).length, 1);
-    const second = await store.createPriorityCode("Second CC");
-    const { partner: e } = await store.createPartner({ ...partner, email: "e@example.com", priorityCode: second.code });
-    assert.equal(e?.priorityCode, second.code);
-    assert.equal(await store.deletePriorityCode(second.code), false);
-    const spare = await store.createPriorityCode("Spare");
-    assert.ok(await store.deletePriorityCode(spare.code));
-  });
-
   test(`${name}: spring can be requested without an autumn booking`, async () => {
     const store = make();
     const spring = getBlock("spring-2027")!;
@@ -263,18 +236,18 @@ for (const [name, make] of [
     assert.equal((await store.documentsFor(a.id))[0].review, "approved");
   });
 
-  test(`${name}: the test booking costs £1, never fills up and ignores the priority window`, async () => {
+  test(`${name}: the test booking costs £1 and never fills up`, async () => {
     const store = make();
     const t = getBlock("stripe-test")!;
     const { partner: a } = await store.createPartner(partner);
     assert.ok(a);
     const item = [{ slotKey: slotKey(t.id, t.slots[0], 1), bowlingMachine: false }];
-    const first = await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: PRIORITY });
+    const first = await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: EARLY });
     assert.ok(first.ok && first.booking.totalPence === 100);
     const inv = await store.approve(first.booking.id);
     assert.ok(inv.ok && inv.invoice.amountPence === 100);
     await store.markInvoicePaid(inv.invoice.number);
-    assert.ok((await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: PRIORITY })).ok);
+    assert.ok((await store.reserve({ partnerId: a.id, blockId: t.id, items: item, at: EARLY })).ok);
     assert.equal((await store.taken(t.id)).size, 0);
   });
 

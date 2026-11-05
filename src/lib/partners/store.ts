@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hashPassword, verifyPassword } from "./password";
 import { INVOICE_DUE_HOURS, invoiceNumber } from "../../data/invoicing";
@@ -13,8 +13,6 @@ import {
   londonDate,
   londonTime,
   machineKey,
-  priorityEndsLabel,
-  priorityWindowOpen,
   REMINDER_HOUR,
   slotKey,
   type DocumentKind,
@@ -49,21 +47,7 @@ export type Partner = {
   sports?: string;
   website?: string;
   about?: string;
-  /** Redeemed priority code (see PriorityCode) */
-  priorityCode?: string;
   createdAt: string;
-};
-
-/** A priority code for an invited partner: books during the priority window, and unlocks a hold if linked */
-export type PriorityCode = {
-  code: string;
-  /** Who it's for, e.g. "Sanjiv" */
-  name: string;
-  /** No longer used (held nets were removed) */
-  holdId?: string;
-  createdAt: string;
-  redeemedBy?: string;
-  redeemedAt?: string;
 };
 
 export type DocumentReview = "pending" | "approved" | "rejected";
@@ -166,7 +150,7 @@ export type NetBooking = {
 /** "I'd like to talk first": an enquiry that isn't a booking request */
 export type PartnerEnquiry = { id: string; name: string; email: string; phone?: string; orgName?: string; message: string; createdAt: string; partnerId?: string; handledAt?: string };
 
-type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; priorityCodes?: PriorityCode[]; enquiries?: PartnerEnquiry[]; invoiceSeq?: number };
+type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; enquiries?: PartnerEnquiry[]; invoiceSeq?: number };
 const empty = (): Data => ({ partners: [], documents: [], bookings: [] });
 
 /* ── Storage backends: a versioned JSON document plus file blobs ───────── */
@@ -329,40 +313,9 @@ function newInvoice(d: Data, stage: PartnerInvoice["stage"], amountPence: number
   return { number: invoiceNumber(d.invoiceSeq), stage, months, amountPence, issuedAt: new Date(at).toISOString(), dueAt: new Date(at + INVOICE_DUE_HOURS * 3_600_000).toISOString() };
 }
 
-/** Readable code, no look-alike characters: "HR-7K3M9P" */
-function newCode(existing: Set<string>) {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  for (;;) {
-    const code = `HR-${Array.from({ length: 6 }, () => chars[randomInt(chars.length)]).join("")}`;
-    if (!existing.has(code)) return code;
-  }
-}
-
-const normaliseCode = (code: string) => {
-  const c = code.trim().toUpperCase().replace(/\s+/g, "");
-  return c.startsWith("HR-") ? c : `HR-${c.replace(/^HR/, "")}`;
-};
-
 /** Every required compliance document uploaded (being checked or approved, not rejected) */
 function documentsComplete(d: Data, partnerId: string) {
   return requiredDocumentKinds.every((k) => d.documents.some((x) => x.partnerId === partnerId && x.kind === k && x.review !== "rejected"));
-}
-
-/** The priority code a partner has redeemed */
-const codeFor = (d: Data, partnerId: string) => {
-  const p = d.partners.find((x) => x.id === partnerId);
-  return p?.priorityCode ? d.priorityCodes?.find((c) => c.code === p.priorityCode) : undefined;
-};
-
-export type RedeemResult = { ok: true; code: PriorityCode } | { ok: false; message: string };
-
-function redeem(d: Data, p: Partner, raw: string): RedeemResult {
-  const code = d.priorityCodes?.find((c) => c.code === normaliseCode(raw));
-  if (!code) return { ok: false, message: "That priority code isn't recognised. Please check it and try again." };
-  if (code.redeemedBy && code.redeemedBy !== p.id) return { ok: false, message: "That priority code has already been used." };
-  Object.assign(code, { redeemedBy: p.id, redeemedAt: code.redeemedAt ?? now() });
-  p.priorityCode = code.code;
-  return { ok: true, code };
 }
 
 /** Records a first payment (→ confirmed) or a deposit balance from the earlier scheme */
@@ -411,65 +364,16 @@ export class PartnerStore {
 
   /* Partners */
 
-  /**
-   * Creates a partner and signs them in: returns a session token for the cookie. A priority code, if
-   * given, must be valid (nothing is created otherwise).
-   */
-  async createPartner(
-    input: Omit<Partner, "id" | "createdAt" | "keyHash" | "keyExpiresAt" | "passwordHash" | "sessions" | "failedLogins" | "lockedUntil"> & { password?: string },
-  ): Promise<{ partner: Partner; token: string; error?: undefined } | { error: string; partner?: undefined; token?: undefined }> {
-    const { password, priorityCode, ...details } = input;
+  /** Creates a partner and signs them in: returns a session token for the cookie */
+  async createPartner(input: Omit<Partner, "id" | "createdAt" | "keyHash" | "keyExpiresAt" | "passwordHash" | "sessions" | "failedLogins" | "lockedUntil"> & { password?: string }) {
+    const { password, ...details } = input;
     const passwordHash = password ? await hashPassword(password) : undefined;
     return this.tx((d) => {
       const p: Partner = { ...details, email: details.email.trim().toLowerCase(), id: randomUUID(), passwordHash, createdAt: now() };
-      if (priorityCode) {
-        const r = redeem(d, p, priorityCode);
-        if (!r.ok) return { error: r.message };
-      }
       const token = addSession(p);
       d.partners.push(p);
       return { partner: p, token };
     });
-  }
-
-  /* Priority codes */
-
-  /** Admin: a new priority code for a named partner, optionally linked to a hold */
-  createPriorityCode(name: string) {
-    return this.tx((d) => {
-      const code: PriorityCode = { code: newCode(new Set((d.priorityCodes ?? []).map((c) => c.code))), name: name.trim(), createdAt: now() };
-      d.priorityCodes = [...(d.priorityCodes ?? []), code];
-      return code;
-    });
-  }
-
-  /** Admin: removes a code that hasn't been used */
-  deletePriorityCode(code: string) {
-    return this.tx((d) => {
-      const c = d.priorityCodes?.find((x) => x.code === code);
-      if (!c || c.redeemedBy) return false;
-      d.priorityCodes = d.priorityCodes!.filter((x) => x !== c);
-      return true;
-    });
-  }
-
-  async listPriorityCodes() {
-    return [...((await this.read()).priorityCodes ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }
-
-  /** A partner enters a priority code in the portal */
-  redeemPriorityCode(partnerId: string, raw: string) {
-    return this.tx<RedeemResult>((d) => {
-      const p = d.partners.find((x) => x.id === partnerId);
-      if (!p) return { ok: false, message: "Please sign in again." };
-      if (p.priorityCode && p.priorityCode !== normaliseCode(raw)) return { ok: false, message: "Your account already has a priority code." };
-      return redeem(d, p, raw);
-    });
-  }
-
-  /** A partner's priority code, if they have one */
-  async priorityFor(partnerId: string) {
-    return codeFor(await this.read(), partnerId);
   }
 
   async partnerByEmail(email: string) {
@@ -638,9 +542,6 @@ export class PartnerStore {
       const at = input.at ?? Date.now();
       const block = getBlock(input.blockId);
       if (!block || !input.items.length) return { ok: false, reason: "invalid", message: "Please choose at least one slot." };
-      if (!block.test && priorityWindowOpen(at) && !codeFor(d, input.partnerId)) {
-        return { ok: false, reason: "locked", message: `Priority booking is open to invited partners until ${priorityEndsLabel()}. Booking requests open to everyone after that. If you have a priority code, enter it above.` };
-      }
       const items: NetBookingItem[] = [];
       const wanted = new Set<string>();
       for (const it of input.items) {

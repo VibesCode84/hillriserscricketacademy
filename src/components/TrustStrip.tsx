@@ -1,5 +1,3 @@
-import { site } from "@/data/site";
-
 const items = ["The area's best coaches", "Max six per net", "Boys and girls aged 4–15", "John Lyon School"];
 
 export function TrustStrip({ className = "" }: { className?: string }) {
@@ -12,26 +10,5 @@ export function TrustStrip({ className = "" }: { className?: string }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-/** Full-width band version used under the hero */
-export function TrustBand() {
-  const facts = [
-    { k: "6", v: "Maximum players per net, each net with its own coach" },
-    { k: site.ages, v: "Ages, placed by ability — not just age" },
-    { k: "Every skill", v: "Batting, seam, spin and wicket-keeping, with fielding in every session" },
-  ];
-  return (
-    <section className="border-y border-gold/15 bg-navy-900" aria-label="HillRisers at a glance">
-      <div className="container-x grid gap-px sm:grid-cols-3">
-        {facts.map((f) => (
-          <div key={f.k} className="py-8 pr-4 md:py-10">
-            <p className="font-serif text-4xl text-gold md:text-5xl">{f.k}</p>
-            <p className="mt-2 max-w-[16rem] text-sm leading-relaxed text-slate">{f.v}</p>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }

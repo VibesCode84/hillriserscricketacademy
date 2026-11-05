@@ -19,7 +19,7 @@ const notes = [
   { t: "Placed by ability", b: "Players are placed by ability, not just age, and move up when they're ready." },
   {
     t: "Small groups",
-    b: `Every programme is coached in small groups: a maximum of ${groupSizes.perNet} players per net, each with its own coach. Early Risers is our only larger group (maximum ${groupSizes.earlyRisers}).`,
+    b: `A maximum of ${groupSizes.perNet} players per net, each with its own coach. Early Risers: up to ${groupSizes.earlyRisers}.`,
   },
   { t: "Fielding every session", b: "Every session includes fielding, whatever the programme." },
   { t: "Session length", b: "1 hour, 90 minutes or 2 hours." },

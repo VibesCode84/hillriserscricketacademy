@@ -44,35 +44,34 @@ export const examDates = ["Thursday 20 May 2027", "Wednesday 26 May 2027", "Thur
 
 const holiday = (id: HolidayPeriodId) => holidayPeriods.find((p) => p.id === id)!;
 
-const holidayDetail =
-  "Likely: holiday camps (part-day or full-day), with weekly sessions possibly continuing in their normal slot. To be confirmed — tell us what you'd like when you register.";
+const holidayDetail = "Holiday camps likely. To be confirmed.";
 
 export const calendarTerms: { term: string; entries: CalendarEntry[] }[] = [
   {
     term: "Autumn term 2026",
     entries: [
-      { id: "launch", kind: "launch", dates: "Coming soon", title: "HillRisers programmes announced", detail: "Our own programmes at John Lyon School are coming soon. Register your interest and tell us what you'd like." },
-      { id: "autumn-term", kind: "term", dates: "Until Friday 11 December", title: "Autumn term", detail: "School term time." },
-      { id: "christmas", kind: "holiday", dates: holiday("christmas-2026").dates, title: "Christmas holidays (first week)", detail: holidayDetail },
-      { id: "shutdown", kind: "shutdown", dates: shutdown.dates, title: shutdown.label, detail: "The venue is closed. No sessions or camps." },
+      { id: "launch", kind: "launch", dates: "Coming soon", title: "HillRisers programmes announced", detail: "Register your interest to hear first." },
+      { id: "autumn-term", kind: "term", dates: "Until Friday 11 December", title: "Autumn term", detail: "" },
+      { id: "christmas", kind: "holiday", dates: holiday("christmas-2026").dates, title: "Christmas holidays", detail: holidayDetail },
+      { id: "shutdown", kind: "shutdown", dates: shutdown.dates, title: shutdown.label, detail: "No sessions or camps." },
     ],
   },
   {
     term: "Spring term 2027",
     entries: [
-      { id: "spring-start", kind: "term", dates: "Week commencing 4 January", title: "Spring term starts", detail: "The venue reopens after the shutdown." },
+      { id: "spring-start", kind: "term", dates: "Week commencing 4 January", title: "Spring term starts", detail: "" },
       { id: "spring-half", kind: "holiday", dates: holiday("spring-half-term-2027").dates, title: "Spring half term", detail: holidayDetail },
-      { id: "easter", kind: "holiday", dates: holiday("easter-2027").dates, title: "Easter holidays", detail: `${holidayDetail} Sessions over the Easter weekend (26–29 March) will be confirmed nearer the time.` },
+      { id: "easter", kind: "holiday", dates: holiday("easter-2027").dates, title: "Easter holidays", detail: holidayDetail },
     ],
   },
   {
     term: "Summer term 2027",
     entries: [
-      { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "Summer arrangements are to be confirmed." },
-      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No indoor sessions on these dates." },
+      { id: "summer-start", kind: "term", dates: "Week commencing 12 April", title: "Summer term starts", detail: "" },
+      { id: "exams", kind: "affected", dates: "20 May, 26 May and 10 June 2027", title: "Sports hall unavailable (exams)", detail: "No sessions on these dates." },
       { id: "summer-half", kind: "holiday", dates: holiday("summer-half-term-2027").dates, title: "Summer half term", detail: holidayDetail },
       { id: "summer-holidays", kind: "holiday", dates: holiday("summer-holidays-2027").dates, title: "Summer holidays", detail: holidayDetail },
-      { id: "summer-end", kind: "term", dates: "Saturday 31 July", title: "Last sessions", detail: "Weekly sessions run to the end of July." },
+      { id: "summer-end", kind: "term", dates: "Saturday 31 July", title: "Last sessions", detail: "" },
     ],
   },
 ];

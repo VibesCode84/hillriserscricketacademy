@@ -66,7 +66,7 @@ export default function CalendarPage() {
                       </div>
                       <div>
                         <h3 className="text-2xl text-navy-950">{e.title}</h3>
-                        <p className="mt-1.5 max-w-2xl leading-relaxed text-ink-muted">{e.detail}</p>
+                        {e.detail && <p className="mt-1.5 max-w-2xl leading-relaxed text-ink-muted">{e.detail}</p>}
                       </div>
                     </Reveal>
                   );

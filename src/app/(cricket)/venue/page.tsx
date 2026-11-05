@@ -17,20 +17,16 @@ export const metadata: Metadata = {
 
 const info = [
   {
-    t: "Autumn and spring: indoors",
-    b: `Coaching takes place in the ${site.venue.name} sports hall, Harrow on the Hill, which has three indoor nets.`,
+    t: "Indoor nets",
+    b: `Three indoor nets in the ${site.venue.name} sports hall.`,
   },
   {
-    t: "About the run-up",
-    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations. Batting, spin and fielding are unaffected.",
+    t: "Run-up",
+    b: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths.",
   },
   {
     t: "Bowling machine",
-    b: "A bowling machine with an automatic ball feeder is available through autumn and spring.",
-  },
-  {
-    t: "Summer",
-    b: "Summer arrangements are to be confirmed.",
+    b: "A bowling machine with an automatic ball feeder.",
   },
   {
     t: "Arrival and collection",
@@ -38,7 +34,7 @@ const info = [
   },
   {
     t: "Accessibility",
-    b: "Tell us about any access needs and we'll make sure arrival and sessions work for your child and your family.",
+    b: "Tell us about any access needs and we'll make sessions work for your child.",
   },
 ];
 

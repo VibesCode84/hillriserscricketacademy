@@ -12,7 +12,7 @@ export const faqGroups: FAQGroup[] = [
       },
       {
         q: "Do sessions run in the school holidays?",
-        a: "We're planning part-day and full-day holiday camps. We're closed from 21 December to 3 January — see the 2026/27 calendar.",
+        a: "We're planning part-day and full-day holiday camps.",
       },
       {
         q: "Is my child good enough?",
@@ -58,11 +58,11 @@ export const faqGroups: FAQGroup[] = [
     items: [
       {
         q: "Where are sessions held?",
-        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and a bowling machine. Summer arrangements are to be confirmed.",
+        a: "In the John Lyon School sports hall, Harrow on the Hill, with three indoor nets and a bowling machine.",
       },
       {
         q: "Can seam bowlers bowl off a full run-up indoors?",
-        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths, and indoor seam coaching focuses on action, accuracy and variations.",
+        a: "The hall allows an 11-yard run-up. Younger groups bowl from junior pitch lengths.",
       },
       {
         q: "Who are the coaches?",

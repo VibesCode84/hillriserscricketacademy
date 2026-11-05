@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { InterestForm } from "@/components/InterestForm";
-import { KeyDates } from "@/components/KeyDates";
 
 export const metadata: Metadata = {
   title: "Register Your Interest",
@@ -37,10 +36,6 @@ export default function RegisterPage() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div>
-            <h2 className="mb-3 text-2xl text-navy-950">Key dates</h2>
-            <KeyDates />
           </div>
         </aside>
       </div>
