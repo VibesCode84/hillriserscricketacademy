@@ -7,25 +7,22 @@ export function LegalPage({
   title,
   intro,
   children,
-  draft = true,
+  mayChange = true,
 }: {
   eyebrow: string;
   title: string;
   intro?: ReactNode;
   children: ReactNode;
-  draft?: boolean;
+  /** Shows a note that the page may be updated */
+  mayChange?: boolean;
 }) {
   return (
     <>
       <PageHero eyebrow={eyebrow} title={title} intro={intro} />
       <Section tone="light">
         <div className="prose-academy mx-auto max-w-3xl">
-          {draft && (
-            <p className="!mb-10 rounded-xl border border-gold-deep/40 bg-cream-200 p-4 text-sm !text-navy-950" role="note">
-              <strong>Draft – to be reviewed.</strong> This page is a working draft and will be confirmed by HillRisers before bookings open.
-            </p>
-          )}
           {children}
+          {mayChange && <p className="!mt-12 text-sm">We may update this page from time to time. The latest version will always be published here.</p>}
         </div>
       </Section>
     </>

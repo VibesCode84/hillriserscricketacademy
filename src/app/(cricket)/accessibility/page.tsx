@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Accessibility", alternates: { canoni
 
 export default function Page() {
   return (
-    <LegalPage eyebrow="Policies" title="Accessibility" draft={false}>
+    <LegalPage eyebrow="Policies" title="Accessibility" mayChange={false}>
       <h2>This website</h2>
       <p>
         We want everyone to be able to use this website. It is designed to work with screen readers, keyboard navigation and browser
