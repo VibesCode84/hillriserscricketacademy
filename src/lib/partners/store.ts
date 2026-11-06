@@ -150,7 +150,45 @@ export type NetBooking = {
 /** "I'd like to talk first": an enquiry that isn't a booking request */
 export type PartnerEnquiry = { id: string; name: string; email: string; phone?: string; orgName?: string; message: string; createdAt: string; partnerId?: string; handledAt?: string };
 
-type Data = { partners: Partner[]; documents: PartnerDocument[]; bookings: NetBooking[]; enquiries?: PartnerEnquiry[]; invoiceSeq?: number };
+/** Someone HillRisers invoices directly (e.g. Eagles Netball Club) */
+export type Customer = { id: string; name: string; contactName?: string; email: string; address?: string; createdAt: string };
+
+export type InvoiceLine = { description: string; quantity: number; unitPence: number };
+
+/**
+ * An invoice raised in admin (not from a partner booking). Drafts have no number; sending one gives it the
+ * next HR- number (shared with partner invoices) and emails the customer a link to view it.
+ */
+export type ManualInvoice = {
+  id: string;
+  customerId: string;
+  number?: string;
+  lines: InvoiceLine[];
+  notes?: string;
+  /** Payment terms in days after sending (0 = due on receipt) */
+  dueDays: number;
+  status: "draft" | "sent" | "paid" | "void";
+  /** Secret for the customer's view link */
+  key: string;
+  createdAt: string;
+  issuedAt?: string;
+  dueAt?: string;
+  paidAt?: string;
+  voidedAt?: string;
+  remindersSent?: string[];
+};
+
+export const invoiceTotal = (inv: Pick<ManualInvoice, "lines">) => inv.lines.reduce((n, l) => n + Math.round(l.quantity * l.unitPence), 0);
+
+type Data = {
+  partners: Partner[];
+  documents: PartnerDocument[];
+  bookings: NetBooking[];
+  enquiries?: PartnerEnquiry[];
+  customers?: Customer[];
+  manualInvoices?: ManualInvoice[];
+  invoiceSeq?: number;
+};
 const empty = (): Data => ({ partners: [], documents: [], bookings: [] });
 
 /* ── Storage backends: a versioned JSON document plus file blobs ───────── */
@@ -601,6 +639,96 @@ export class PartnerStore {
       Object.assign(b, { status: "declined", declinedAt: now() });
       return { ok: true, booking: b };
     });
+  }
+
+  /* Customers and invoices raised in admin */
+
+  saveCustomer(input: Omit<Customer, "id" | "createdAt"> & { id?: string }) {
+    return this.tx((d) => {
+      const existing = input.id ? d.customers?.find((c) => c.id === input.id) : undefined;
+      if (existing) return Object.assign(existing, { ...input, id: existing.id });
+      const c: Customer = { ...input, id: randomUUID(), email: input.email.trim().toLowerCase(), createdAt: now() };
+      d.customers = [...(d.customers ?? []), c];
+      return c;
+    });
+  }
+
+  async listCustomers() {
+    return [...((await this.read()).customers ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /** Creates or updates a draft invoice */
+  saveDraftInvoice(input: { id?: string; customerId: string; lines: InvoiceLine[]; notes?: string; dueDays: number }) {
+    return this.tx<{ ok: true; invoice: ManualInvoice } | { ok: false; message: string }>((d) => {
+      if (!d.customers?.some((c) => c.id === input.customerId)) return { ok: false, message: "Choose a customer." };
+      const existing = input.id ? d.manualInvoices?.find((i) => i.id === input.id) : undefined;
+      if (existing) {
+        if (existing.status !== "draft") return { ok: false, message: "Only drafts can be edited." };
+        Object.assign(existing, { customerId: input.customerId, lines: input.lines, notes: input.notes, dueDays: input.dueDays });
+        return { ok: true, invoice: existing };
+      }
+      const inv: ManualInvoice = { id: randomUUID(), customerId: input.customerId, lines: input.lines, notes: input.notes, dueDays: input.dueDays, status: "draft", key: newToken(), createdAt: now() };
+      d.manualInvoices = [...(d.manualInvoices ?? []), inv];
+      return { ok: true, invoice: inv };
+    });
+  }
+
+  /**
+   * Sends a draft (numbers it, sets its issue and due dates), marks it paid or voids it. Sending again
+   * (a reminder) is recorded but changes nothing else.
+   */
+  invoiceAction(id: string, action: "send" | "paid" | "unpaid" | "void" | "remind", at = Date.now(), paidOn?: string) {
+    return this.tx<{ ok: true; invoice: ManualInvoice } | { ok: false; message: string }>((d) => {
+      const inv = d.manualInvoices?.find((i) => i.id === id);
+      if (!inv) return { ok: false, message: "Invoice not found." };
+      const iso = new Date(at).toISOString();
+      if (action === "send") {
+        if (inv.status !== "draft") return { ok: false, message: "This invoice has already been sent." };
+        if (!inv.lines.length || invoiceTotal(inv) <= 0) return { ok: false, message: "Add at least one line with an amount." };
+        d.invoiceSeq = (d.invoiceSeq ?? 0) + 1;
+        Object.assign(inv, { number: invoiceNumber(d.invoiceSeq), status: "sent", issuedAt: iso, dueAt: new Date(at + inv.dueDays * 86_400_000).toISOString() });
+      } else if (action === "paid") {
+        if (inv.status !== "sent") return { ok: false, message: "Only sent invoices can be marked as paid." };
+        Object.assign(inv, { status: "paid", paidAt: paidOn ? new Date(`${paidOn}T12:00:00Z`).toISOString() : iso });
+      } else if (action === "unpaid") {
+        if (inv.status !== "paid") return { ok: false, message: "This invoice isn't marked as paid." };
+        Object.assign(inv, { status: "sent", paidAt: undefined });
+      } else if (action === "void") {
+        if (inv.status === "paid") return { ok: false, message: "A paid invoice can't be voided. Mark it unpaid first." };
+        if (inv.status === "draft") {
+          d.manualInvoices = d.manualInvoices!.filter((i) => i !== inv);
+          return { ok: true, invoice: inv };
+        }
+        Object.assign(inv, { status: "void", voidedAt: iso });
+      } else {
+        if (inv.status !== "sent") return { ok: false, message: "Only unpaid, sent invoices can be reminded." };
+        inv.remindersSent = [...(inv.remindersSent ?? []), iso];
+      }
+      return { ok: true, invoice: inv };
+    });
+  }
+
+  async listManualInvoices() {
+    return [...((await this.read()).manualInvoices ?? [])].sort((a, b) => (b.issuedAt ?? b.createdAt).localeCompare(a.issuedAt ?? a.createdAt));
+  }
+
+  async getManualInvoice(id: string) {
+    const d = await this.read();
+    const invoice = d.manualInvoices?.find((i) => i.id === id);
+    return invoice && { invoice, customer: d.customers?.find((c) => c.id === invoice.customerId) };
+  }
+
+  /** The customer's view link: the number and its secret key must both match */
+  async manualInvoiceByNumber(number: string, key?: string) {
+    const d = await this.read();
+    const invoice = d.manualInvoices?.find((i) => i.number === number && (key === undefined || i.key === key));
+    return invoice && { invoice, customer: d.customers?.find((c) => c.id === invoice.customerId) };
+  }
+
+  /** Every partner booking invoice, for the admin ledger */
+  async allPartnerInvoices() {
+    const d = await this.read();
+    return d.bookings.flatMap((b) => (b.invoices ?? []).map((invoice) => ({ invoice, booking: view(b), partner: d.partners.find((p) => p.id === b.partnerId) })));
   }
 
   /* Enquiries */

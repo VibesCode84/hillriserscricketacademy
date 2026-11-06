@@ -220,6 +220,31 @@ export const partnerEnquirySchema = z.object({
   company: z.string().max(0).optional(),
 });
 
+export const customerSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(2, "Please enter a name").max(120),
+  contactName: optionalText(100),
+  email: z.string().trim().email("Please enter a valid email").max(200),
+  address: optionalText(300),
+});
+
+export const draftInvoiceSchema = z.object({
+  id: z.string().uuid().optional(),
+  customerId: z.string().uuid({ message: "Choose a customer" }),
+  lines: z
+    .array(
+      z.object({
+        description: z.string().trim().min(1, "Add a description").max(200),
+        quantity: z.number().positive("Quantity must be more than 0").max(10000),
+        unitPence: z.number().int().min(0).max(100_000_000),
+      }),
+    )
+    .min(1, "Add at least one line")
+    .max(50),
+  notes: optionalText(1000),
+  dueDays: z.number().int().min(0).max(120),
+});
+
 export const partnerLoginSchema = z.object({
   email: z.string().trim().email("Please enter a valid email").max(200),
   password: z.string().min(1, "Please enter your password").max(200),

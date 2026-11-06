@@ -420,3 +420,33 @@ ${signOff}
 `,
   });
 }
+
+/* ── Invoices raised in admin ───────────────────────────────────────────── */
+
+/** An invoice (or a reminder for it) to a customer such as Eagles Netball Club */
+export async function sendCustomerInvoice(
+  c: { name: string; contactName?: string; email: string },
+  inv: { number: string; totalPence: number; dueAt: string; dueDays: number; link: string },
+  reminder = false,
+) {
+  const due = inv.dueDays === 0 && !reminder ? "on receipt" : `by ${ukDate(inv.dueAt)}`;
+  await send({
+    to: c.email,
+    subject: reminder ? `Reminder: invoice ${inv.number} for ${formatPrice(inv.totalPence)}` : `Invoice ${inv.number} from HillRisers: ${formatPrice(inv.totalPence)}`,
+    text: `Hi ${(c.contactName ?? c.name).split(" ")[0]},
+
+${reminder ? `A reminder that invoice ${inv.number} for ${formatPrice(inv.totalPence)} was due ${due}.` : `Please find invoice ${inv.number} for ${formatPrice(inv.totalPence)}, due ${due}.`}
+
+View or print it: ${inv.link}
+
+${bankLines(inv.number)}
+
+${reminder ? "If you've already paid, thank you — please ignore this email." : "Thank you."}
+
+${signOff}
+`,
+  });
+}
+
+/** "13 December 2026" (UK time) */
+const ukDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });

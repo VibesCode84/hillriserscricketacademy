@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { endOfDayLondon, getBlock, londonTime, monthInvoiceAt, monthlySplit, partnerBlocks, itemPricePence, machineKey, slotKey } from "../src/data/partners";
-import { createD1PartnerStore, createFilePartnerStore, monthsToInvoice } from "../src/lib/partners/store";
+import { createD1PartnerStore, createFilePartnerStore, invoiceTotal, monthsToInvoice } from "../src/lib/partners/store";
 import type { D1Database } from "../src/lib/booking/d1-store";
 import { partnerCheckoutSchema } from "../src/lib/validation";
 
@@ -212,6 +212,46 @@ for (const [name, make] of [
     const { partner: a } = await store.createPartner(partner);
     assert.ok(a);
     assert.ok((await store.reserve({ partnerId: a.id, blockId: spring.id, items: [{ slotKey: slotKey(spring.id, sSat, 2), bowlingMachine: false }], terms: "monthly", at: OPEN })).ok);
+  });
+
+  test(`${name}: invoices raised in admin: draft → sent (numbered after partner invoices) → paid; void`, async () => {
+    const store = make();
+    const { partner: a } = await store.createPartner(partner);
+    assert.ok(a);
+    const r = await store.reserve({ partnerId: a.id, blockId: block.id, items: [net(sat, 2)], at: OPEN });
+    assert.ok(r.ok);
+    const pInv = await store.approve(r.booking.id);
+    assert.ok(pInv.ok && pInv.invoice.number === "HR-0001");
+    const eagles = await store.saveCustomer({ name: "Eagles Netball Club", email: "Treasurer@Eagles.example", contactName: "Pat" });
+    assert.equal(eagles.email, "treasurer@eagles.example");
+    assert.equal((await store.saveDraftInvoice({ customerId: "00000000-0000-4000-8000-000000000000", lines: [], dueDays: 14 })).ok, false);
+    const draft = await store.saveDraftInvoice({ customerId: eagles.id, lines: [{ description: "Sports hall, November", quantity: 4, unitPence: 4500 }, { description: "Equipment", quantity: 1, unitPence: 1250 }], dueDays: 14 });
+    assert.ok(draft.ok);
+    assert.equal(draft.invoice.number, undefined);
+    assert.equal(invoiceTotal(draft.invoice), 4 * 4500 + 1250);
+    // Drafts can be edited; sent ones can't
+    assert.ok((await store.saveDraftInvoice({ id: draft.invoice.id, customerId: eagles.id, lines: [{ description: "Sports hall, November", quantity: 4, unitPence: 5000 }], dueDays: 30 })).ok);
+    const at = Date.parse("2026-11-06T10:00:00Z");
+    const sent = await store.invoiceAction(draft.invoice.id, "send", at);
+    assert.ok(sent.ok);
+    assert.equal(sent.invoice.number, "HR-0002");
+    assert.equal(sent.invoice.dueAt, "2026-12-06T10:00:00.000Z");
+    assert.equal((await store.invoiceAction(draft.invoice.id, "send")).ok, false);
+    assert.equal((await store.saveDraftInvoice({ id: draft.invoice.id, customerId: eagles.id, lines: [{ description: "x", quantity: 1, unitPence: 1 }], dueDays: 0 })).ok, false);
+    // The customer link needs the key
+    assert.ok(await store.manualInvoiceByNumber("HR-0002", sent.invoice.key));
+    assert.equal(await store.manualInvoiceByNumber("HR-0002", "wrong"), undefined);
+    assert.ok((await store.invoiceAction(draft.invoice.id, "remind")).ok);
+    const paid = await store.invoiceAction(draft.invoice.id, "paid", Date.now(), "2026-11-20");
+    assert.ok(paid.ok && paid.invoice.paidAt === "2026-11-20T12:00:00.000Z");
+    assert.equal((await store.invoiceAction(draft.invoice.id, "void")).ok, false); // paid
+    assert.ok((await store.invoiceAction(draft.invoice.id, "unpaid")).ok);
+    assert.ok((await store.invoiceAction(draft.invoice.id, "void")).ok);
+    // Deleting a draft removes it
+    const d2 = await store.saveDraftInvoice({ customerId: eagles.id, lines: [{ description: "x", quantity: 1, unitPence: 100 }], dueDays: 0 });
+    assert.ok(d2.ok);
+    await store.invoiceAction(d2.invoice.id, "void");
+    assert.equal((await store.listManualInvoices()).length, 1);
   });
 
   test(`${name}: partner enquiries are stored and can be marked dealt with`, async () => {
